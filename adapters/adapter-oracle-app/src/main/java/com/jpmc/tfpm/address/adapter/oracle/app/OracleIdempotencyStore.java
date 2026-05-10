@@ -90,10 +90,9 @@ public final class OracleIdempotencyStore implements IdempotencyStore {
             }
 
             if (attempt < MAX_RESULT_POLL_ATTEMPTS - 1) {
-                try {
-                    Thread.sleep(POLL_INTERVAL_MS * (attempt + 1));
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
+                java.util.concurrent.locks.LockSupport.parkNanos(
+                        POLL_INTERVAL_MS * (attempt + 1) * 1_000_000L);
+                if (Thread.currentThread().isInterrupted()) {
                     return Optional.empty();
                 }
             }

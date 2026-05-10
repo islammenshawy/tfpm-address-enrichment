@@ -13,6 +13,7 @@ public record LlmProperties(
         boolean enabled,
         String endpoint,
         int timeoutMs,
+        String apiKey,
         List<String> fieldsAllowed,
         BulkheadProperties bulkhead,
         PromptProperties prompt) {

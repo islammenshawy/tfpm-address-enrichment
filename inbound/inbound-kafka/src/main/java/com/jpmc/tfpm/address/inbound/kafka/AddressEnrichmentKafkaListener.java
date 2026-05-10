@@ -4,6 +4,8 @@ import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
 import com.jpmc.tfpm.address.domain.RawAddress;
 
+import com.jpmc.tfpm.address.domain.ThreadSafe;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -21,6 +23,7 @@ import java.util.UUID;
  * Manual ack only after service returns (Oracle commit inside).
  */
 @Component
+@ThreadSafe
 public class AddressEnrichmentKafkaListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AddressEnrichmentKafkaListener.class);

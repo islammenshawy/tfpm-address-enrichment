@@ -75,7 +75,7 @@ public class LlmGatewayConfig {
                 metadata,
                 llmWebClient,
                 objectMapper,
-                "${LLM_API_KEY:}",
+                props.apiKey() != null ? props.apiKey() : "",
                 cb,
                 2);
     }

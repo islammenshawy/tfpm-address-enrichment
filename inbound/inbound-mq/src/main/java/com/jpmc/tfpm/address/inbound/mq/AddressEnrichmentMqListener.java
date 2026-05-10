@@ -1,6 +1,7 @@
 package com.jpmc.tfpm.address.inbound.mq;
 
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
+import com.jpmc.tfpm.address.domain.ThreadSafe;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
 import com.jpmc.tfpm.address.domain.RawAddress;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
  * Client-ack mode: acknowledge after service returns (Oracle commit inside).
  */
 @Component
+@ThreadSafe
 public class AddressEnrichmentMqListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AddressEnrichmentMqListener.class);

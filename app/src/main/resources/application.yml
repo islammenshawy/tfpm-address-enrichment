@@ -158,6 +158,7 @@ enrichment:
   llm:
     enabled: ${LLM_ENABLED:false}
     endpoint: ${LLM_ENDPOINT:http://localhost:8089}
+    api-key: ${LLM_API_KEY:}
     timeout-ms: 2000
     fields-allowed: [CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM]
     bulkhead:

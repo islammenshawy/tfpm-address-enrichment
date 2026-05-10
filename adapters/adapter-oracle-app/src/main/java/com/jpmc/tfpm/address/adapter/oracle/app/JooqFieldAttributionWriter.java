@@ -63,7 +63,8 @@ public final class JooqFieldAttributionWriter implements FieldAttributionWriter 
                                     result.structurerName(),
                                     result.diagnostics().getOrDefault("version", "unknown").toString(),
                                     fv.confidence(),
-                                    fv.confidence(),
+                                    wasSelected && mergedFv.isPresent()
+                                            ? mergedFv.get().confidence() : fv.confidence(),
                                     wasSelected ? "Y" : "N",
                                     fv.value(),
                                     result.latency().toMillis(),

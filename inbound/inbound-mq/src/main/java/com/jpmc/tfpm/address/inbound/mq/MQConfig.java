@@ -4,7 +4,6 @@ import jakarta.jms.ConnectionFactory;
 import jakarta.jms.Session;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,18 +15,8 @@ import org.springframework.jms.support.destination.DynamicDestinationResolver;
  * IBM MQ JMS configuration. Creates the {@code jmsListenerContainerFactory}
  * referenced by the {@link AddressEnrichmentMqListener}.
  *
- * <p>The underlying {@link ConnectionFactory} is auto-configured by the
- * IBM MQ Spring Boot starter based on {@code ibm.mq.*} properties in
- * application.yml.
- *
- * <p>Key design decisions:
- * <ul>
- *   <li>Client-ack mode — messages are only acknowledged after Oracle commit.
- *   <li>No XA — the idempotency table provides exactly-once semantics.
- *   <li>MQ's native backout mechanism handles poison messages. When a message
- *       exceeds the backout threshold configured on the queue, MQ routes it
- *       to the designated backout queue (DLQ).
- * </ul>
+ * <p>Client-ack mode, no XA — idempotency table provides exactly-once.
+ * MQ's native backout mechanism handles poison messages.
  */
 @Configuration
 @ConditionalOnProperty(name = "enrichment.mq.enabled", havingValue = "true", matchIfMissing = true)
@@ -35,11 +24,13 @@ public class MQConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(MQConfig.class);
 
-    @Value("${spring.jms.listener.concurrency:10}")
-    private String concurrency;
+    private final String concurrency;
+    private final String maxConcurrency;
 
-    @Value("${spring.jms.listener.max-concurrency:25}")
-    private String maxConcurrency;
+    public MQConfig(org.springframework.core.env.Environment env) {
+        this.concurrency = env.getProperty("spring.jms.listener.concurrency", "10");
+        this.maxConcurrency = env.getProperty("spring.jms.listener.max-concurrency", "25");
+    }
 
     @Bean
     public JmsListenerContainerFactory<?> jmsListenerContainerFactory(

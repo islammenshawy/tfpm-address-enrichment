@@ -1,12 +1,10 @@
 package com.jpmc.tfpm.address.inbound.kafka;
 
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -22,8 +20,7 @@ import java.util.Map;
 
 /**
  * Kafka infrastructure configuration for the address enrichment listener.
- * Wires a {@link DefaultErrorHandler} with exponential backoff and
- * dead-letter topic (DLT) routing so poison messages don't cause infinite redelivery.
+ * Wires a {@link DefaultErrorHandler} with fixed backoff and DLT routing.
  */
 @Configuration
 @ConditionalOnProperty(name = "enrichment.kafka.enabled", havingValue = "true", matchIfMissing = true)
@@ -31,11 +28,14 @@ public class KafkaConfig {
 
     private static final Logger LOG = LoggerFactory.getLogger(KafkaConfig.class);
 
-    @Value("${spring.kafka.bootstrap-servers:localhost:29092}")
-    private String bootstrapServers;
+    private final String bootstrapServers;
+    private final String dltTopic;
 
-    @Value("${enrichment.kafka.dlt-topic:tfpm.address.enrichment.input.dlt}")
-    private String dltTopic;
+    public KafkaConfig(
+            org.springframework.core.env.Environment env) {
+        this.bootstrapServers = env.getProperty("spring.kafka.bootstrap-servers", "localhost:29092");
+        this.dltTopic = env.getProperty("enrichment.kafka.dlt-topic", "tfpm.address.enrichment.input.dlt");
+    }
 
     @Bean
     public KafkaTemplate<String, String> dltKafkaTemplate() {
@@ -60,7 +60,6 @@ public class KafkaConfig {
 
     @Bean
     public CommonErrorHandler kafkaErrorHandler(DeadLetterPublishingRecoverer recoverer) {
-        // 3 retries with 1-second fixed backoff, then route to DLT
         var errorHandler = new DefaultErrorHandler(recoverer, new FixedBackOff(1000L, 3L));
         errorHandler.addNotRetryableExceptions(
                 com.fasterxml.jackson.core.JsonProcessingException.class);
