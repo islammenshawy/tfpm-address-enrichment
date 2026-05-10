@@ -10,6 +10,9 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +42,7 @@ public final class JooqFieldAttributionWriter implements FieldAttributionWriter 
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void writeAttributions(long resultId, List<StructuringResult> trace,
                                   StructuredAddress merged, String countryHint) {
         try {

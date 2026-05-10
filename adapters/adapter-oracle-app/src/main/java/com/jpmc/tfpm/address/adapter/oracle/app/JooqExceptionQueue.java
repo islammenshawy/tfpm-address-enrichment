@@ -6,6 +6,9 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -29,6 +32,7 @@ public final class JooqExceptionQueue implements ExceptionQueue {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public List<ExceptionItem> claim(int batchSize, String claimedBy) {
         return dsl.transactionResult(config -> {
             var ctx = config.dsl();
@@ -78,6 +82,7 @@ public final class JooqExceptionQueue implements ExceptionQueue {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public boolean resolve(long exceptionId, String resolvedBy, String resolutionJson, int expectedVersion) {
         var updated = dsl.update(table("EXCEPTION_QUEUE"))
                 .set(field("STATUS"), "RESOLVED")
