@@ -13,6 +13,7 @@ import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
 /**
@@ -75,7 +76,7 @@ public class AddressEnrichmentKafkaListener {
     private String extractCorrelationId(ConsumerRecord<String, String> record) {
         var header = record.headers().lastHeader("X-Correlation-Id");
         if (header != null) {
-            return new String(header.value());
+            return new String(header.value(), StandardCharsets.UTF_8);
         }
         return record.key() != null ? record.key() : UUID.randomUUID().toString();
     }

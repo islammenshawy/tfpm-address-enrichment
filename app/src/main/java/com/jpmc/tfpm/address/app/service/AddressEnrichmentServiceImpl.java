@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The single service entry point all three inbound channels converge on.
@@ -36,6 +37,8 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final ComplianceRouter complianceRouter;
     private final double reviewThreshold;
     private final MeterRegistry meterRegistry;
+    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     public AddressEnrichmentServiceImpl(
             IdempotencyStore idempotencyStore,
@@ -61,14 +64,12 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var claim = idempotencyStore.tryClaim(request);
 
         if (!claim.isClaimed()) {
-            Counter.builder("address.enrichment.idempotency.duplicate")
-                    .tag("channel", request.sourceChannel().name())
-                    .register(meterRegistry).increment();
+            counter("address.enrichment.idempotency.duplicate",
+                    "channel", request.sourceChannel().name()).increment();
             var result = handleDuplicate(claim, correlationId);
-            sample.stop(Timer.builder("address.enrichment.latency.total")
-                    .tag("channel", request.sourceChannel().name())
-                    .tag("outcome", result.outcome().name())
-                    .register(meterRegistry));
+            sample.stop(timer("address.enrichment.latency.total",
+                    "channel", request.sourceChannel().name(),
+                    "outcome", result.outcome().name()));
             return result;
         }
 
@@ -83,15 +84,13 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
                     handleCascadeFailure(request, claim);
         };
 
-        Counter.builder("address.enrichment.processed")
-                .tag("channel", request.sourceChannel().name())
-                .tag("outcome", result.outcome().name())
-                .register(meterRegistry).increment();
+        counter("address.enrichment.processed",
+                "channel", request.sourceChannel().name(),
+                "outcome", result.outcome().name()).increment();
 
-        sample.stop(Timer.builder("address.enrichment.latency.total")
-                .tag("channel", request.sourceChannel().name())
-                .tag("outcome", result.outcome().name())
-                .register(meterRegistry));
+        sample.stop(timer("address.enrichment.latency.total",
+                "channel", request.sourceChannel().name(),
+                "outcome", result.outcome().name()));
 
         return result;
     }
@@ -108,7 +107,6 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             }
         }
 
-        // Cached result not yet visible — return a duplicate marker
         return new EnrichmentResult(
                 correlationId,
                 EnrichmentResult.Outcome.PERSISTED_DUPLICATE,
@@ -136,19 +134,17 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         if (!address.meetsSr2026Minimum()) {
             outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
             resultPersistence.writeToExceptionQueue(resultRowId, "MISSING_REQUIRED");
-            Counter.builder("address.enrichment.exceptions")
-                    .tag("reason", "MISSING_REQUIRED")
-                    .tag("country", request.address().countryHint())
-                    .register(meterRegistry).increment();
+            counter("address.enrichment.exceptions",
+                    "reason", "MISSING_REQUIRED",
+                    "country", request.address().countryHint()).increment();
             LOG.info("SR2026 mandatory fields missing [corrId={}]", correlationId);
         } else if (confidence < reviewThreshold) {
             outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
             resultPersistence.writeToExceptionQueue(resultRowId, "LOW_CONFIDENCE");
-            Counter.builder("address.enrichment.exceptions")
-                    .tag("reason", "LOW_CONFIDENCE")
-                    .tag("country", request.address().countryHint())
-                    .register(meterRegistry).increment();
-            LOG.info("Confidence {:.2f} below threshold {:.2f} [corrId={}]",
+            counter("address.enrichment.exceptions",
+                    "reason", "LOW_CONFIDENCE",
+                    "country", request.address().countryHint()).increment();
+            LOG.info("Confidence {} below threshold {} [corrId={}]",
                     confidence, reviewThreshold, correlationId);
         } else {
             outcome = EnrichmentResult.Outcome.SUCCESS;
@@ -157,7 +153,6 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var enrichmentResult = new EnrichmentResult(
                 correlationId, outcome, address, confidence, resultRowId, Instant.now());
 
-        // Compliance routing (fire-and-forget in shadow mode)
         evaluateCompliance(enrichmentResult, request);
 
         return enrichmentResult;
@@ -170,17 +165,15 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var correlationId = request.correlationId();
         LOG.warn("Cascade produced no usable fields [corrId={}]", correlationId);
 
-        // Persist empty result for audit trail
         var emptyResult = new CascadeResult(
                 StructuredAddress.empty(), java.util.List.of(), 0.0);
         long resultRowId = resultPersistence.persistResult(request, emptyResult);
         idempotencyStore.recordResult(claim.idempotencyKey(), resultRowId);
         resultPersistence.writeToExceptionQueue(resultRowId, "UNSTRUCTURABLE");
 
-        Counter.builder("address.enrichment.exceptions")
-                .tag("reason", "UNSTRUCTURABLE")
-                .tag("country", request.address().countryHint())
-                .register(meterRegistry).increment();
+        counter("address.enrichment.exceptions",
+                "reason", "UNSTRUCTURABLE",
+                "country", request.address().countryHint()).increment();
 
         return new EnrichmentResult(
                 correlationId,
@@ -207,5 +200,17 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         } catch (Exception e) {
             LOG.error("Compliance evaluation failed [corrId={}]", request.correlationId(), e);
         }
+    }
+
+    private Counter counter(String name, String... tags) {
+        var key = name + "|" + String.join("|", tags);
+        return counterCache.computeIfAbsent(key, k ->
+                Counter.builder(name).tags(tags).register(meterRegistry));
+    }
+
+    private Timer timer(String name, String... tags) {
+        var key = name + "|" + String.join("|", tags);
+        return timerCache.computeIfAbsent(key, k ->
+                Timer.builder(name).tags(tags).register(meterRegistry));
     }
 }

@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Map;
@@ -28,6 +29,9 @@ import java.util.concurrent.TimeUnit;
 public final class LibpostalAddressStructurer implements AddressStructurer {
 
     private static final Logger LOG = LoggerFactory.getLogger(LibpostalAddressStructurer.class);
+    private static final Set<AddressField> SUPPORTED_FIELDS = Collections.unmodifiableSet(EnumSet.of(
+            AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
+            AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM, AddressField.BLDG_NB));
 
     private final ManagedChannel channel;
     private final long timeoutMs;
@@ -44,13 +48,7 @@ public final class LibpostalAddressStructurer implements AddressStructurer {
 
     @Override
     public Set<AddressField> supportedFields() {
-        return EnumSet.of(
-                AddressField.CTRY,
-                AddressField.TWN_NM,
-                AddressField.PST_CD,
-                AddressField.CTRY_SUB_DVSN,
-                AddressField.STRT_NM,
-                AddressField.BLDG_NB);
+        return SUPPORTED_FIELDS;
     }
 
     @Override

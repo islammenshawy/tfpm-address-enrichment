@@ -3,12 +3,13 @@ package com.jpmc.tfpm.address.app.cascade;
 import com.jpmc.tfpm.address.domain.AddressStructurer;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
+import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AddressStructurer.StructuringResult;
+import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
 import com.jpmc.tfpm.address.domain.CountryRouter;
 import com.jpmc.tfpm.address.domain.EnrichmentError;
 import com.jpmc.tfpm.address.domain.RawAddress;
 import com.jpmc.tfpm.address.domain.Result;
-import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
 import io.micrometer.core.instrument.Counter;
@@ -17,10 +18,13 @@ import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 /**
  * Runs the structurer cascade: invokes each structurer in order, checks
@@ -35,8 +39,12 @@ public final class CascadeOrchestrator {
     private final FieldMerger fieldMerger;
     private final CountryRouter countryRouter;
     private final double earlyExitThreshold;
+    private final long cascadeTimeoutMs;
     private final Set<AddressField> requiredFields;
     private final MeterRegistry meterRegistry;
+    private final Map<String, ConfidenceCalibrator> calibrators;
+    private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
 
     public CascadeOrchestrator(
             List<AddressStructurer> structurers,
@@ -44,12 +52,24 @@ public final class CascadeOrchestrator {
             CountryRouter countryRouter,
             double earlyExitThreshold,
             MeterRegistry meterRegistry) {
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 500L, meterRegistry);
+    }
+
+    public CascadeOrchestrator(
+            List<AddressStructurer> structurers,
+            FieldMerger fieldMerger,
+            CountryRouter countryRouter,
+            double earlyExitThreshold,
+            long cascadeTimeoutMs,
+            MeterRegistry meterRegistry) {
         this.structurers = List.copyOf(structurers);
         this.fieldMerger = fieldMerger;
         this.countryRouter = countryRouter;
         this.earlyExitThreshold = earlyExitThreshold;
+        this.cascadeTimeoutMs = cascadeTimeoutMs;
         this.requiredFields = Set.of(AddressField.CTRY, AddressField.TWN_NM);
         this.meterRegistry = meterRegistry;
+        this.calibrators = fieldMerger.calibratorMap();
     }
 
     /**
@@ -69,16 +89,19 @@ public final class CascadeOrchestrator {
         }
 
         var trace = new ArrayList<StructuringResult>();
-        String previousStructurer = null;
+        var deadline = Instant.now().plusMillis(cascadeTimeoutMs);
 
         for (var structurer : applicableStructurers) {
+            if (Instant.now().isAfter(deadline)) {
+                LOG.debug("Cascade budget exhausted after {}ms [corrId={}]",
+                        cascadeTimeoutMs, correlationId);
+                break;
+            }
+
             try {
                 var sample = Timer.start(meterRegistry);
                 var result = structurer.structure(raw);
-                sample.stop(Timer.builder("address.enrichment.latency")
-                        .tag("structurer", structurer.name())
-                        .tag("country", raw.countryHint())
-                        .register(meterRegistry));
+                sample.stop(latencyTimer(structurer.name(), raw.countryHint()));
 
                 trace.add(result);
                 LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
@@ -90,16 +113,9 @@ public final class CascadeOrchestrator {
                             structurer.name(), correlationId);
                     break;
                 }
-                previousStructurer = structurer.name();
             } catch (Exception e) {
                 LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
                         structurer.name(), correlationId, e.getMessage());
-                if (previousStructurer != null) {
-                    Counter.builder("address.enrichment.cascade.fallback")
-                            .tag("from", previousStructurer)
-                            .tag("to", structurer.name())
-                            .register(meterRegistry).increment();
-                }
             }
         }
 
@@ -119,21 +135,41 @@ public final class CascadeOrchestrator {
     private List<AddressStructurer> filterByCountry(String countryHint) {
         var allowed = countryRouter.structurersFor(countryHint);
         if (allowed.isEmpty()) {
-            return structurers; // empty list from router means "use full cascade"
+            return structurers;
         }
+        var allowedSet = Set.copyOf(allowed);
         return structurers.stream()
-                .filter(s -> allowed.contains(s.name()))
+                .filter(s -> allowedSet.contains(s.name()))
                 .toList();
     }
 
+    /**
+     * OPT-01: Check only required fields incrementally instead of calling
+     * the full fieldMerger.merge() which iterates all 8 AddressFields.
+     */
     private boolean shouldEarlyExit(List<StructuringResult> trace, String countryHint) {
-        var merged = fieldMerger.merge(trace, countryHint);
         for (var field : requiredFields) {
-            var fv = merged.get(field);
-            if (fv.isEmpty() || fv.get().confidence() < earlyExitThreshold) {
-                return false;
+            double best = -1.0;
+            for (var result : trace) {
+                var fv = result.fields().get(field);
+                if (fv == null || fv.value().isEmpty()) continue;
+                var calibrator = calibrators.get(result.structurerName());
+                double cal = calibrator != null
+                        ? calibrator.calibrate(fv.confidence(), field, countryHint)
+                        : Math.max(0.0, Math.min(1.0, fv.confidence()));
+                best = Math.max(best, cal);
             }
+            if (best < earlyExitThreshold) return false;
         }
         return true;
+    }
+
+    private Timer latencyTimer(String structurer, String country) {
+        var key = structurer + "|" + country;
+        return timerCache.computeIfAbsent(key, k ->
+                Timer.builder("address.enrichment.latency")
+                        .tag("structurer", structurer)
+                        .tag("country", country)
+                        .register(meterRegistry));
     }
 }

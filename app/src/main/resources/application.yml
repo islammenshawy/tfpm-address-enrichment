@@ -47,7 +47,7 @@ spring:
         connection-timeout: 5000
         idle-timeout: 600000
         max-lifetime: 1800000
-        auto-commit: false
+        auto-commit: true
         connection-init-sql: ALTER SESSION SET ISOLATION_LEVEL = READ COMMITTED
 
   # ============================================================
@@ -115,6 +115,7 @@ enrichment:
     # threshold on all required fields.
     order: [libpostal, swift-crf, llm]
     early-exit-threshold: 0.92
+    timeout-ms: 500
     required-fields: [CTRY, TWN_NM]
   # Confidence threshold below which a result goes to EXCEPTION_QUEUE
   # for human review. Calibrated, not raw.

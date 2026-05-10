@@ -13,7 +13,7 @@ class PromptTemplateLoaderTest {
     @Test
     void loads_template_and_renders() {
         var loader = new PromptTemplateLoader(
-                new ClassPathResource("prompts/address-structuring.json"), null);
+                new ClassPathResource("prompts/address-structuring.json"), new com.fasterxml.jackson.databind.ObjectMapper());
 
         var rendered = loader.render(new RawAddress("123 Main St, NYC", "US", "en"));
 
@@ -26,7 +26,7 @@ class PromptTemplateLoaderTest {
     @Test
     void country_supplement_appended_to_system_prompt() {
         var loader = new PromptTemplateLoader(
-                new ClassPathResource("prompts/address-structuring.json"), null);
+                new ClassPathResource("prompts/address-structuring.json"), new com.fasterxml.jackson.databind.ObjectMapper());
         loader.registerCountrySupplement("AE", "Emirates have specific formats.");
 
         var rendered = loader.render(new RawAddress("addr", "AE", "ar"));
@@ -38,7 +38,7 @@ class PromptTemplateLoaderTest {
     @Test
     void unknown_country_has_no_supplement() {
         var loader = new PromptTemplateLoader(
-                new ClassPathResource("prompts/address-structuring.json"), null);
+                new ClassPathResource("prompts/address-structuring.json"), new com.fasterxml.jackson.databind.ObjectMapper());
 
         var rendered = loader.render(new RawAddress("addr", "ZZ", "en"));
 

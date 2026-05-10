@@ -72,6 +72,14 @@ public final class FieldMerger {
         return builder.build();
     }
 
+    /**
+     * Exposes the calibrator map for use by the cascade early-exit check
+     * (avoids redundant full merge).
+     */
+    Map<String, ConfidenceCalibrator> calibratorMap() {
+        return calibrators;
+    }
+
     private double calibrate(String structurerName, double raw, AddressField field, String countryHint) {
         var calibrator = calibrators.get(structurerName);
         if (calibrator == null) {

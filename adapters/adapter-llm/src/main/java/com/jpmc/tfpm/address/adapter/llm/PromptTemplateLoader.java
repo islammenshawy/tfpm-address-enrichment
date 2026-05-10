@@ -31,11 +31,11 @@ public final class PromptTemplateLoader {
     private final double temperature;
     private final Map<String, String> countrySupplements;
 
-    public PromptTemplateLoader(Resource templateResource, Resource countryPromptsDir) {
+    public PromptTemplateLoader(Resource templateResource, ObjectMapper objectMapper) {
         Objects.requireNonNull(templateResource, "templateResource");
+        Objects.requireNonNull(objectMapper, "objectMapper");
         try {
-            var mapper = new ObjectMapper();
-            var root = mapper.readTree(templateResource.getInputStream());
+            var root = objectMapper.readTree(templateResource.getInputStream());
             this.systemPrompt = root.path("systemPrompt").asText("");
             this.userMessageTemplate = root.path("userMessageTemplate").asText(
                     "Parse this address: {{rawAddress}}");

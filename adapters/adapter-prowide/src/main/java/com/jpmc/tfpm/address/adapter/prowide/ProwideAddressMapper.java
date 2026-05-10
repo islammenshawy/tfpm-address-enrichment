@@ -28,7 +28,8 @@ public final class ProwideAddressMapper {
         address.get(AddressField.STRT_NM).ifPresent(fv -> pstlAdr.setStrtNm(fv.value()));
         address.get(AddressField.BLDG_NB).ifPresent(fv -> pstlAdr.setBldgNb(fv.value()));
         address.get(AddressField.BLDG_NM).ifPresent(fv -> pstlAdr.setBldgNm(fv.value()));
-        address.get(AddressField.ADR_LINE).ifPresent(fv -> pstlAdr.getAdrLine().add(fv.value()));
+        address.get(AddressField.ADR_LINE).ifPresent(fv ->
+                pstlAdr.getAdrLine().add(fv.value()));
 
         return pstlAdr;
     }

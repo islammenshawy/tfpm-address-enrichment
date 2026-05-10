@@ -18,7 +18,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.io.Resource;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -40,8 +43,16 @@ public class LlmGatewayConfig {
 
     @Bean
     public WebClient llmWebClient(LlmProperties props) {
+        var provider = ConnectionProvider.builder("llm-pool")
+                .maxConnections(30)
+                .pendingAcquireMaxCount(50)
+                .maxIdleTime(Duration.ofSeconds(30))
+                .maxLifeTime(Duration.ofMinutes(5))
+                .build();
+        var httpClient = HttpClient.create(provider);
         return WebClient.builder()
                 .baseUrl(props.endpoint())
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .build();
     }
 
@@ -70,11 +81,11 @@ public class LlmGatewayConfig {
     }
 
     @Bean
-    public PromptTemplateLoader llmPromptTemplateLoader(LlmProperties props) {
+    public PromptTemplateLoader llmPromptTemplateLoader(LlmProperties props, ObjectMapper objectMapper) {
         var resourceLoader = new DefaultResourceLoader();
         var templateResource = resourceLoader.getResource(props.prompt().templateResource());
 
-        var loader = new PromptTemplateLoader(templateResource, null);
+        var loader = new PromptTemplateLoader(templateResource, objectMapper);
 
         // Load country supplements from classpath
         var countryCodes = new String[]{"AE", "CN", "SG", "HK", "GB", "US", "DE", "CH"};

@@ -7,6 +7,8 @@ import com.jpmc.tfpm.address.domain.ExceptionQueue;
 import com.jpmc.tfpm.address.domain.RawAddress;
 import com.jpmc.tfpm.address.domain.ResultPersistence;
 
+import com.jpmc.tfpm.address.domain.ThreadSafe;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -19,6 +21,7 @@ import java.util.UUID;
 /**
  * REST endpoint for address enrichment. Thin adapter — all logic in the service.
  */
+@ThreadSafe
 @RestController
 @RequestMapping("/api/v1")
 public class AddressEnrichmentController {

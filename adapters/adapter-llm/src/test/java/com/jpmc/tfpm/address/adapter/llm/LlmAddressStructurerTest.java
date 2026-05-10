@@ -39,7 +39,7 @@ class LlmAddressStructurerTest {
                 "test", "test-model", false, 0, 0, Duration.ofSeconds(2)));
 
         var promptLoader = new PromptTemplateLoader(
-                new ClassPathResource("prompts/address-structuring.json"), null);
+                new ClassPathResource("prompts/address-structuring.json"), objectMapper);
 
         structurer = new LlmAddressStructurer(
                 mockClient,

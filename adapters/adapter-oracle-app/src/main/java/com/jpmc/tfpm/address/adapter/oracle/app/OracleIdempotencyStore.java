@@ -27,6 +27,14 @@ public final class OracleIdempotencyStore implements IdempotencyStore {
     private static final Logger LOG = LoggerFactory.getLogger(OracleIdempotencyStore.class);
     private static final int MAX_RESULT_POLL_ATTEMPTS = 3;
     private static final long POLL_INTERVAL_MS = 50;
+    private static final MessageDigest SHA256_PROTOTYPE;
+    static {
+        try {
+            SHA256_PROTOTYPE = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
 
     private final DSLContext dsl;
 
@@ -98,11 +106,11 @@ public final class OracleIdempotencyStore implements IdempotencyStore {
     static String computeKey(EnrichmentRequest request) {
         var canonical = request.address().canonical() + "|" + request.sourceChannel().name();
         try {
-            var digest = MessageDigest.getInstance("SHA-256");
+            var digest = (MessageDigest) SHA256_PROTOTYPE.clone();
             var hash = digest.digest(canonical.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException("SHA-256 not available", e);
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("SHA-256 clone failed", e);
         }
     }
 

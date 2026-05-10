@@ -1,6 +1,7 @@
 package com.jpmc.tfpm.address.domain;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 /**
  * The raw, unstructured address as it appears in a source system.
@@ -19,6 +20,8 @@ import java.util.Objects;
  *                     string means "unknown". Helps with transliteration.
  */
 public record RawAddress(String raw, String countryHint, String locale) {
+
+    private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     public RawAddress {
         Objects.requireNonNull(raw, "raw");
         Objects.requireNonNull(countryHint, "countryHint");
@@ -46,6 +49,6 @@ public record RawAddress(String raw, String countryHint, String locale) {
      * unicode (that's a structurer concern).
      */
     public String canonical() {
-        return raw.trim().replaceAll("\\s+", " ").toLowerCase();
+        return WHITESPACE.matcher(raw.trim()).replaceAll(" ").toLowerCase();
     }
 }

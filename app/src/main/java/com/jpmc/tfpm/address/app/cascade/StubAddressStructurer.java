@@ -9,6 +9,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
@@ -23,6 +24,11 @@ import java.util.Set;
 @ConditionalOnProperty(name = "enrichment.test.stub.enabled", havingValue = "true")
 public final class StubAddressStructurer implements AddressStructurer {
 
+    private static final Set<AddressField> SUPPORTED_FIELDS = Collections.unmodifiableSet(EnumSet.of(
+            AddressField.CTRY, AddressField.TWN_NM, AddressField.STRT_NM,
+            AddressField.PST_CD, AddressField.CTRY_SUB_DVSN,
+            AddressField.BLDG_NB, AddressField.BLDG_NM));
+
     @Override
     public String name() {
         return "stub";
@@ -30,14 +36,7 @@ public final class StubAddressStructurer implements AddressStructurer {
 
     @Override
     public Set<AddressField> supportedFields() {
-        return EnumSet.of(
-                AddressField.CTRY,
-                AddressField.TWN_NM,
-                AddressField.STRT_NM,
-                AddressField.PST_CD,
-                AddressField.CTRY_SUB_DVSN,
-                AddressField.BLDG_NB,
-                AddressField.BLDG_NM);
+        return SUPPORTED_FIELDS;
     }
 
     @Override
