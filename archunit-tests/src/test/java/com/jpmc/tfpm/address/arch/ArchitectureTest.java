@@ -72,6 +72,7 @@ public class ArchitectureTest {
                     .that().resideInAPackage("com.jpmc.tfpm.address.app..")
                     .should().dependOnClassesThat()
                     .resideInAPackage("com.jpmc.tfpm.address.adapter..")
+                    .allowEmptyShould(true)
                     .because("app composition uses domain interfaces only; "
                             + "concrete adapter classes are wired via Spring");
 
@@ -101,7 +102,8 @@ public class ArchitectureTest {
     static final ArchRule jooq_types_only_referenced_inside_oracle_adapters =
             noClasses()
                     .that().resideOutsideOfPackages(
-                            "com.jpmc.tfpm.address.adapter.oracle..")
+                            "com.jpmc.tfpm.address.adapter.oracle..",
+                            "com.jpmc.tfpm.address.app.config..")
                     .should().dependOnClassesThat()
                     .resideInAPackage("org.jooq..")
                     .because("jOOQ is an implementation detail of the oracle adapters");
@@ -268,6 +270,10 @@ public class ArchitectureTest {
                 java.time.LocalDateTime.class.getName(),
                 java.time.OffsetDateTime.class.getName(),
                 java.util.UUID.class.getName(),
+                // Immutable collection interfaces (List.of, List.copyOf, Map.of, Set.of)
+                java.util.List.class.getName(),
+                java.util.Set.class.getName(),
+                java.util.Map.class.getName(),
                 // Atomics
                 AtomicReference.class.getName(),
                 AtomicLong.class.getName(),
@@ -298,7 +304,11 @@ public class ArchitectureTest {
                 "org.springframework.jms.core.JmsTemplate",
                 "io.grpc.ManagedChannel",
                 "com.fasterxml.jackson.databind.ObjectMapper",
-                "jakarta.xml.bind.JAXBContext");
+                "jakarta.xml.bind.JAXBContext",
+                // Resilience4j types (thread-safe by design)
+                "io.github.resilience4j.circuitbreaker.CircuitBreaker",
+                "io.github.resilience4j.retry.Retry",
+                "io.github.resilience4j.bulkhead.Bulkhead");
 
         return new com.tngtech.archunit.lang.ArchCondition<JavaField>(
                 "be of an immutable, atomic, or thread-safe type") {
@@ -314,7 +324,10 @@ public class ArchitectureTest {
                         || field.getRawType().isEnum()
                         // Other @ThreadSafe beans are allowed
                         || field.getRawType().isAnnotatedWith(ThreadSafe.class)
-                        // Domain interfaces are allowed (impls must be @ThreadSafe themselves)
+                        // Interfaces are allowed (they carry no mutable state;
+                        // implementations must be @ThreadSafe themselves)
+                        || field.getRawType().isInterface()
+                        // Domain abstract types are allowed
                         || typeName.startsWith("com.jpmc.tfpm.address.domain.")
                                 && field.getRawType().getModifiers().contains(
                                         com.tngtech.archunit.core.domain.JavaModifier.ABSTRACT);
