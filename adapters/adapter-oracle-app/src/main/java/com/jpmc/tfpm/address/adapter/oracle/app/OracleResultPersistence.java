@@ -110,6 +110,7 @@ public final class OracleResultPersistence implements ResultPersistence {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void writeToExceptionQueue(long resultRowId, String reason) {
         dsl.insertInto(table("EXCEPTION_QUEUE"))
                 .columns(

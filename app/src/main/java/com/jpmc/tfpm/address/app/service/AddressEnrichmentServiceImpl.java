@@ -15,8 +15,6 @@ import com.jpmc.tfpm.address.domain.ResultPersistence;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
-import org.springframework.transaction.annotation.Transactional;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
@@ -63,7 +61,6 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     }
 
     @Override
-    @Transactional("appWriteTx")
     public EnrichmentResult enrich(EnrichmentRequest request) {
         var correlationId = request.correlationId();
         var sample = Timer.start(meterRegistry);

@@ -7,6 +7,8 @@ import org.jooq.DSLContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 /**
  * Bean registration for all adapter-oracle-app classes.
  * Accepts the {@code @Primary appWriteDsl} by type.
@@ -35,8 +37,9 @@ public class OracleAppAdapterConfig {
     }
 
     @Bean
-    public FieldAttributionWriter jooqFieldAttributionWriter(DSLContext dsl) {
-        return new JooqFieldAttributionWriter(dsl);
+    public FieldAttributionWriter jooqFieldAttributionWriter(DSLContext dsl,
+                                                              List<ConfidenceCalibrator> calibrators) {
+        return new JooqFieldAttributionWriter(dsl, calibrators);
     }
 
     @Bean
