@@ -11,6 +11,7 @@ import java.util.List;
 @ConfigurationProperties(prefix = "enrichment.llm")
 public record LlmProperties(
         boolean enabled,
+        String type,
         String endpoint,
         int timeoutMs,
         String apiKey,

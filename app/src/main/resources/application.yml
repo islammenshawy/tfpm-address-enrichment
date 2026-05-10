@@ -145,6 +145,7 @@ enrichment:
   # ----- Structurer: internal LLM gateway -----
   llm:
     enabled: ${LLM_ENABLED:false}
+    type: ${LLM_TYPE:openai-compatible}
     endpoint: ${LLM_ENDPOINT:http://localhost:8089}
     api-key: ${LLM_API_KEY:}
     timeout-ms: 2000
@@ -209,6 +210,11 @@ resilience4j:
   retry:
     instances:
       libpostal-retry:
+        max-attempts: 2
+        wait-duration: 50ms
+        retry-exceptions:
+          - io.grpc.StatusRuntimeException
+      swift-crf-retry:
         max-attempts: 2
         wait-duration: 50ms
         retry-exceptions:

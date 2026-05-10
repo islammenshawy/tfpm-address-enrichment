@@ -24,5 +24,6 @@
     <include file="changelog/008-validation-feedback-and-samples.xml" relativeToChangelogFile="true"/>
     <include file="changelog/009-grants-accuracy.xml"         relativeToChangelogFile="true"/>
     <include file="changelog/010-compliance-routing.xml"      relativeToChangelogFile="true"/>
+    <include file="changelog/011-partition-exception-queue.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>

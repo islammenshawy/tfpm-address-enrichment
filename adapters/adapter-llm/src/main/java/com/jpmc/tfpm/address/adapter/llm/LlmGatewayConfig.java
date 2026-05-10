@@ -1,6 +1,7 @@
 package com.jpmc.tfpm.address.adapter.llm;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jpmc.tfpm.address.adapter.llm.client.JpmcInternalGatewayLlmClient;
 import com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient;
 import com.jpmc.tfpm.address.domain.AddressStructurer;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
@@ -8,8 +9,9 @@ import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
 import com.jpmc.tfpm.address.domain.LlmModelClient;
 import com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata;
 
-import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.retry.Retry;
+import io.github.resilience4j.retry.RetryRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -61,23 +63,33 @@ public class LlmGatewayConfig {
             WebClient llmWebClient,
             ObjectMapper objectMapper,
             CircuitBreakerRegistry circuitBreakerRegistry,
+            RetryRegistry retryRegistry,
             LlmProperties props) {
         var cb = circuitBreakerRegistry.circuitBreaker("llm-cb");
+        var apiKey = props.apiKey() != null ? props.apiKey() : "";
+        var type = props.type() != null ? props.type() : "openai-compatible";
+
+        if (apiKey.isEmpty() && props.enabled()) {
+            LOG.warn("LLM is enabled but API key is empty — authentication will fail");
+        }
+
         var metadata = new LlmModelMetadata(
-                "openai-compatible",
-                "default",
-                false,
-                0, 0,
+                type, "default", false, 0, 0,
                 Duration.ofMillis(props.timeoutMs()));
 
+        if ("jpmc-internal-gateway".equals(type)) {
+            LOG.info("Creating JPMC Internal Gateway LLM client");
+            var retry = retryRegistry.retry("llm-retry");
+            return new JpmcInternalGatewayLlmClient(
+                    "llm", metadata, llmWebClient, objectMapper,
+                    () -> new JpmcInternalGatewayLlmClient.CachedToken(apiKey, java.time.Instant.MAX),
+                    cb, retry, Duration.ofSeconds(15));
+        }
+
+        LOG.info("Creating OpenAI-compatible LLM client (type={})", type);
         return new OpenAiCompatibleLlmClient(
-                "llm",
-                metadata,
-                llmWebClient,
-                objectMapper,
-                props.apiKey() != null ? props.apiKey() : "",
-                cb,
-                2);
+                "llm", metadata, llmWebClient, objectMapper,
+                apiKey, cb, 2);
     }
 
     @Bean

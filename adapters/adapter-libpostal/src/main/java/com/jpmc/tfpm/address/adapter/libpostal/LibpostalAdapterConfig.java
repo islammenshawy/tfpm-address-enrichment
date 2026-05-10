@@ -34,7 +34,11 @@ public class LibpostalAdapterConfig {
     }
 
     @Bean
-    public ConfidenceCalibrator libpostalConfidenceCalibrator() {
+    public ConfidenceCalibrator libpostalConfidenceCalibrator(
+            @Value("${enrichment.libpostal.calibration-csv:}") String csvResource) {
+        if (csvResource != null && !csvResource.isBlank()) {
+            return new CsvCalibrationLoader("libpostal", csvResource);
+        }
         return new LibpostalConfidenceCalibrator();
     }
 }

@@ -43,4 +43,9 @@ public class OracleAppAdapterConfig {
     public ComplianceRoutingWriter jooqComplianceRoutingWriter(DSLContext dsl) {
         return new JooqComplianceRoutingWriter(dsl);
     }
+
+    @Bean
+    public AccuracySampler jooqAccuracySampler(DSLContext dsl) {
+        return new JooqAccuracySampler(dsl);
+    }
 }

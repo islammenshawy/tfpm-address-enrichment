@@ -12,6 +12,9 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jooq.DSLContext;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,6 +43,7 @@ public final class OracleResultPersistence implements ResultPersistence {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public long persistResult(EnrichmentRequest request, CascadeResult cascadeResult) {
         var address = cascadeResult.structuredAddress();
         var fieldsJson = serializeFields(address);

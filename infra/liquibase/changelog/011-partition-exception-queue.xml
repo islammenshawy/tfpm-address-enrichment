@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="011-1-partition-exception-queue" author="tfpm">
+        <comment>
+            Partition EXCEPTION_QUEUE by CREATED_AT with 30-day intervals to align
+            with all other tables. Enables partition-based purging and improves
+            query performance as data grows. Rebuilds indexes as LOCAL.
+        </comment>
+        <sql endDelimiter=";" splitStatements="true">
+            -- Rename existing table
+            ALTER TABLE TFPM_ADDR_ENRICH.EXCEPTION_QUEUE RENAME TO EXCEPTION_QUEUE_OLD;
+
+            -- Create partitioned replacement
+            CREATE TABLE TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (
+                EXCEPTION_ID    NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID       NUMBER(19)         NOT NULL,
+                REASON          VARCHAR2(64 CHAR)  NOT NULL,
+                STATUS          VARCHAR2(16 CHAR) DEFAULT 'OPEN' NOT NULL
+                                CONSTRAINT CK_EXC_STATUS_P
+                                CHECK (STATUS IN ('OPEN','CLAIMED','RESOLVED','REJECTED')),
+                CLAIMED_BY      VARCHAR2(64 CHAR),
+                CLAIMED_AT      TIMESTAMP(6),
+                RESOLVED_BY     VARCHAR2(64 CHAR),
+                RESOLVED_AT     TIMESTAMP(6),
+                RESOLUTION_JSON CLOB CONSTRAINT CK_RESOLN_JSON_P CHECK (RESOLUTION_JSON IS JSON),
+                CREATED_AT      TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                VERSION         NUMBER(10) DEFAULT 0 NOT NULL,
+                CONSTRAINT PK_EXCEPTION_P PRIMARY KEY (EXCEPTION_ID, CREATED_AT),
+                CONSTRAINT FK_EXC_RESULT_P
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_EXC_REASON_P
+                    CHECK (REASON IN ('LOW_CONFIDENCE','MISSING_REQUIRED','UNSTRUCTURABLE','MANUAL_REVIEW'))
+            )
+            PARTITION BY RANGE (CREATED_AT)
+            INTERVAL (NUMTODSINTERVAL(30, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+
+            -- Rebuild indexes as LOCAL
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_EXC_OPEN_P
+                ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (STATUS, CREATED_AT) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_EXC_RESULT_P
+                ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (RESULT_ID) LOCAL;
+
+            -- Migrate existing data
+            INSERT INTO TFPM_ADDR_ENRICH.EXCEPTION_QUEUE
+                (RESULT_ID, REASON, STATUS, CLAIMED_BY, CLAIMED_AT,
+                 RESOLVED_BY, RESOLVED_AT, RESOLUTION_JSON, CREATED_AT, VERSION)
+            SELECT RESULT_ID, REASON, STATUS, CLAIMED_BY, CLAIMED_AT,
+                   RESOLVED_BY, RESOLVED_AT, RESOLUTION_JSON, CREATED_AT, VERSION
+            FROM TFPM_ADDR_ENRICH.EXCEPTION_QUEUE_OLD;
+
+            -- Drop old table
+            DROP TABLE TFPM_ADDR_ENRICH.EXCEPTION_QUEUE_OLD PURGE;
+        </sql>
+        <rollback>
+            <sql>
+                -- Rollback not feasible for partition migration; requires backup restore
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
