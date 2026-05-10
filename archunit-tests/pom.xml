@@ -21,7 +21,7 @@
         <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-oracle-app</artifactId></dependency>
         <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-http</artifactId></dependency>
         <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-kafka</artifactId></dependency>
-        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-mq</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-rabbitmq</artifactId></dependency>
         <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>app</artifactId></dependency>
         <dependency><groupId>com.tngtech.archunit</groupId><artifactId>archunit-junit5</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>

@@ -4,7 +4,7 @@ import java.util.Objects;
 
 /**
  * Channel-agnostic enrichment request. The same type is produced by all
- * three inbound channels (HTTP, Kafka, IBM MQ) after normalising their
+ * three inbound channels (HTTP, Kafka, RabbitMQ) after normalising their
  * channel-specific message formats.
  *
  * <p>This is the only type the {@link AddressEnrichmentService} accepts on
@@ -36,6 +36,6 @@ public record EnrichmentRequest(
     public enum SourceChannel {
         HTTP,
         KAFKA,
-        MQ
+        RABBITMQ
     }
 }

@@ -77,13 +77,13 @@ public class ArchitectureTest {
                             + "concrete adapter classes are wired via Spring");
 
     @ArchTest
-    static final ArchRule inbound_http_does_not_depend_on_kafka_or_mq =
+    static final ArchRule inbound_http_does_not_depend_on_kafka_or_rabbitmq =
             noClasses()
                     .that().resideInAPackage("com.jpmc.tfpm.address.inbound.http..")
                     .should().dependOnClassesThat()
                     .resideInAnyPackage(
                             "com.jpmc.tfpm.address.inbound.kafka..",
-                            "com.jpmc.tfpm.address.inbound.mq..")
+                            "com.jpmc.tfpm.address.inbound.rabbitmq..")
                     .because("inbound channels are independent of each other");
 
     @ArchTest

@@ -79,27 +79,15 @@ spring:
       missing-topics-fatal: false
 
   # ============================================================
-  # IBM MQ via Spring JMS. NO XA — we rely on the idempotency table
-  # plus single-resource Oracle commit + JMS auto-ack for
-  # exactly-once semantics. XA at JPMC scale costs more than it saves.
+  # RabbitMQ via Spring AMQP. Idempotency table provides
+  # exactly-once semantics. Manual ack after Oracle commit.
   # ============================================================
-  jms:
-    listener:
-      acknowledge-mode: client
-      concurrency: 10
-      max-concurrency: 25
-
-# ============================================================
-# IBM MQ connection (resolved by the @JmsListener container factory
-# in the inbound-mq module).
-# ============================================================
-ibm:
-  mq:
-    queue-manager: ${MQ_QMGR:QM1}
-    channel: ${MQ_CHANNEL:DEV.APP.SVRCONN}
-    conn-name: ${MQ_HOST:localhost}(${MQ_PORT:1414})
-    user: ${MQ_USER:app}
-    password: ${MQ_PASSWORD:passw0rd}
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+    virtual-host: ${RABBITMQ_VHOST:/}
 
 # ============================================================
 # The cascade configuration. Adding a new structurer means:
@@ -167,19 +155,20 @@ enrichment:
     prompt:
       template-resource: classpath:prompts/address-structuring.json
 
-  # ----- Inbound channel-specific config -----
+  # ----- Inbound/outbound channel config (on/off per channel) -----
+  # HTTP is always enabled. Kafka and RabbitMQ are configurable.
   http:
     enabled: true
   kafka:
-    enabled: true
+    enabled: ${KAFKA_ENABLED:true}
     input-topic: ${KAFKA_INPUT_TOPIC:tfpm.address.enrichment.input}
     output-topic: ${KAFKA_OUTPUT_TOPIC:tfpm.address.enrichment.output}
     dlt-topic: ${KAFKA_DLT_TOPIC:tfpm.address.enrichment.input.dlt}
-  mq:
-    enabled: true
-    input-queue: ${MQ_INPUT_QUEUE:DEV.QUEUE.1}
-    output-queue: ${MQ_OUTPUT_QUEUE:DEV.QUEUE.2}
-    dlq: ${MQ_DLQ:DEV.DEAD.LETTER.QUEUE}
+  rabbitmq:
+    enabled: ${RABBITMQ_ENABLED:false}
+    input-queue: ${RABBITMQ_INPUT_QUEUE:tfpm.address.enrichment.input}
+    output-queue: ${RABBITMQ_OUTPUT_QUEUE:tfpm.address.enrichment.output}
+    dlq: ${RABBITMQ_DLQ:tfpm.address.enrichment.input.dlq}
 
 # ============================================================
 # Resilience4j circuit breakers and bulkheads. Names map to the

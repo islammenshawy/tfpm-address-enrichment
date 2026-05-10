@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
  * shared across many concurrent threads.
  *
  * <p>The service runs as N replicas. Within each replica, multiple input
- * channels (HTTP, Kafka, IBM MQ) deliver work concurrently to dozens of
+ * channels (HTTP, Kafka, RabbitMQ) deliver work concurrently to dozens of
  * worker threads. Every singleton on the request path must satisfy:
  *
  * <ol>

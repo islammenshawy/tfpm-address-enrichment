@@ -27,7 +27,7 @@
         <module>adapters/adapter-oracle-app</module>
         <module>inbound/inbound-http</module>
         <module>inbound/inbound-kafka</module>
-        <module>inbound/inbound-mq</module>
+        <module>inbound/inbound-rabbitmq</module>
         <module>app</module>
         <module>archunit-tests</module>
         <module>integration-tests</module>
@@ -67,7 +67,6 @@
         <protoc-gen-grpc-java.version>${grpc.version}</protoc-gen-grpc-java.version>
 
         <!-- Messaging -->
-        <ibm-mq.version>9.4.1.0</ibm-mq.version>
 
         <!-- Caching (for calibrator tables only) -->
         <caffeine.version>3.1.8</caffeine.version>
@@ -158,7 +157,7 @@
             </dependency>
             <dependency>
                 <groupId>com.jpmc.tfpm.address</groupId>
-                <artifactId>inbound-mq</artifactId>
+                <artifactId>inbound-rabbitmq</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -235,12 +234,7 @@
                 <version>${protobuf.version}</version>
             </dependency>
 
-            <!-- IBM MQ -->
-            <dependency>
-                <groupId>com.ibm.mq</groupId>
-                <artifactId>com.ibm.mq.allclient</artifactId>
-                <version>${ibm-mq.version}</version>
-            </dependency>
+            <!-- RabbitMQ (via Spring AMQP) -->
 
             <!-- Caching -->
             <dependency>

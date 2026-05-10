@@ -47,7 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
  * observe a successful outcome.
  *
  * <p>Runs as part of {@code mvn -P it verify}. Skipped in fast-loop unit
- * runs because it spins up real Oracle, Kafka, and IBM MQ containers.
+ * runs because it spins up real Oracle, Kafka, and RabbitMQ containers.
  *
  * <h2>Why this test matters more than any unit test</h2>
  *
@@ -86,15 +86,12 @@ class MultiContainerIdempotencyTest {
             new KafkaContainer(DockerImageName.parse("confluentinc/cp-kafka:7.7.0"));
 
     @Container
-    static final GenericContainer<?> MQ =
-            new GenericContainer<>(DockerImageName.parse("icr.io/ibm-messaging/mq:9.4.1.0-r2"))
-                    .withEnv("LICENSE", "accept")
-                    .withEnv("MQ_QMGR_NAME", "QM1")
-                    .withEnv("MQ_APP_PASSWORD", "passw0rd")
-                    .withExposedPorts(1414, 9443);
+    static final GenericContainer<?> RABBITMQ =
+            new GenericContainer<>(DockerImageName.parse("rabbitmq:3.13-management-alpine"))
+                    .withExposedPorts(5672, 15672);
 
     // Three independent Spring contexts simulating three replicas.
-    // Each gets its own JVM-local state but shares the Oracle/Kafka/MQ
+    // Each gets its own JVM-local state but shares the Oracle/Kafka/RabbitMQ
     // backends.
     private static ConfigurableApplicationContext replica1;
     private static ConfigurableApplicationContext replica2;
@@ -134,7 +131,7 @@ class MultiContainerIdempotencyTest {
         // Build three logically-identical requests, one per channel
         var httpReq = req(correlationId, EnrichmentRequest.SourceChannel.HTTP, raw);
         var kafkaReq = req(correlationId, EnrichmentRequest.SourceChannel.KAFKA, raw);
-        var mqReq = req(correlationId, EnrichmentRequest.SourceChannel.MQ, raw);
+        var rabbitReq = req(correlationId, EnrichmentRequest.SourceChannel.RABBITMQ, raw);
 
         // Hammer all three replicas in parallel
         var executor = Executors.newFixedThreadPool(3);
@@ -144,7 +141,7 @@ class MultiContainerIdempotencyTest {
             var f2 = CompletableFuture.supplyAsync(
                     () -> service(replica2).enrich(kafkaReq), executor);
             var f3 = CompletableFuture.supplyAsync(
-                    () -> service(replica3).enrich(mqReq), executor);
+                    () -> service(replica3).enrich(rabbitReq), executor);
 
             var results = List.of(f1.join(), f2.join(), f3.join());
 

@@ -4,7 +4,7 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * The single entry point all three inbound channels (HTTP, Kafka, IBM MQ)
+ * The single entry point all three inbound channels (HTTP, Kafka, RabbitMQ)
  * converge on. The implementation lives in the {@code app} module and
  * coordinates idempotency, the cascade, persistence, and exception queue
  * handling.

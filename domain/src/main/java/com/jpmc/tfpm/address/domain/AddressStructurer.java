@@ -17,7 +17,7 @@ import java.util.Set;
  *
  * <p>Every implementation MUST be annotated {@link ThreadSafe} and MUST
  * satisfy the contract that annotation specifies. The service runs as N
- * replicas with three concurrent input channels (HTTP, Kafka, IBM MQ);
+ * replicas with three concurrent input channels (HTTP, Kafka, RabbitMQ);
  * dozens of threads call {@link #structure(RawAddress)} simultaneously
  * on the same singleton bean.
  *
