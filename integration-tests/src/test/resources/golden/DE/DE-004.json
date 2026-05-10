@@ -1,0 +1,18 @@
+{
+  "fixture_id": "DE-004",
+  "country": "DE",
+  "source": "kafka",
+  "raw": "Commerzbank AG, Unter den Linden 21, 10117 Berlin",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",                "required": true },
+    "TWN_NM":        { "value": "Berlin",            "required": true },
+    "PST_CD":        { "value": "10117",             "required": true },
+    "STRT_NM":       { "value": "Unter den Linden",  "required": true },
+    "BLDG_NBR":      { "value": "21",               "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Berlin address with multi-word street name"
+}

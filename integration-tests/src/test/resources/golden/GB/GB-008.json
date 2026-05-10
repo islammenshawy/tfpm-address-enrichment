@@ -1,0 +1,17 @@
+{
+  "fixture_id": "GB-008",
+  "country": "GB",
+  "source": "legacy_oracle",
+  "raw": "Danske Bank, Donegall Square West, Belfast BT1 6JS",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY":          { "value": "GB",                      "required": true },
+    "TWN_NM":        { "value": "Belfast",                 "required": true },
+    "PST_CD":        { "value": "BT1 6JS",                "required": true },
+    "STRT_NM":       { "value": "Donegall Square West",   "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Northern Ireland address with BT postcode prefix, no building number"
+}

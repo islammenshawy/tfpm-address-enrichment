@@ -1,0 +1,23 @@
+{
+  "fixture_id": "HK-005",
+  "country": "HK",
+  "source": "legacy_oracle",
+  "raw": "Unit A, 8/F, Kwai Chung Industrial Centre, 15-33 Kwai Fung Crescent, Kwai Chung, New Territories, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                                        "required": true },
+    "TWN_NM":        { "value": "New Territories",                           "required": true },
+    "STR_NM":        { "value": "Kwai Fung Crescent",                        "required": true },
+    "BLD_NB":        { "value": "15-33",                                     "required": true },
+    "BLD_NM":        { "value": "Kwai Chung Industrial Centre",              "required": false },
+    "FLOOR":         { "value": "8",                                         "required": false },
+    "UNIT":          { "value": "A",                                         "required": false },
+    "DSTRCT":        { "value": "Kwai Chung",                                "required": false },
+    "ADR_LINE1":     { "value": "Unit A, 8/F, Kwai Chung Industrial Centre", "required": true },
+    "ADR_LINE2":     { "value": "15-33 Kwai Fung Crescent, Kwai Chung",      "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Industrial building in Kwai Chung, New Territories. Tests hyphenated building number range (15-33) and industrial building name."
+}

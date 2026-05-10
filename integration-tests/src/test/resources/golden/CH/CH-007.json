@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CH-007",
+  "country": "CH",
+  "source": "legacy_oracle",
+  "raw": "Banque Cantonale Vaudoise, Place St-François 14, 1003 Lausanne",
+  "country_hint": "CH",
+  "locale": "fr-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",                  "required": true },
+    "TWN_NM":        { "value": "Lausanne",            "required": true },
+    "PST_CD":        { "value": "1003",                "required": true },
+    "CTRY_SUB_DVSN": { "value": "VD",                 "required": false },
+    "STRT_NM":       { "value": "Place St-François",   "required": true },
+    "BLDG_NBR":      { "value": "14",                 "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Lausanne cantonal bank, canton VD (Vaud), French-speaking"
+}

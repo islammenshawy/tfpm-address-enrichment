@@ -1,0 +1,22 @@
+{
+  "fixture_id": "SG-009",
+  "country": "SG",
+  "source": "mq",
+  "raw": "1 Harbourfront Avenue, #14-06, Keppel Bay Tower, Singapore 098632",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                                      "required": true },
+    "TWN_NM":        { "value": "Singapore",                               "required": true },
+    "PST_CD":        { "value": "098632",                                  "required": true },
+    "STR_NM":        { "value": "Harbourfront Avenue",                     "required": true },
+    "BLD_NB":        { "value": "1",                                       "required": true },
+    "UNIT":          { "value": "#14-06",                                  "required": true },
+    "BLD_NM":        { "value": "Keppel Bay Tower",                        "required": false },
+    "ADR_LINE1":     { "value": "1 Harbourfront Avenue, #14-06",           "required": true },
+    "ADR_LINE2":     { "value": "Keppel Bay Tower",                        "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Corporate tower at Harbourfront via MQ source. Tests waterfront commercial district address parsing."
+}

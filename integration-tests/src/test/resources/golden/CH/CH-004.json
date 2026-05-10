@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CH-004",
+  "country": "CH",
+  "source": "kafka",
+  "raw": "Bank for International Settlements, Centralbahnplatz 2, 4002 Basel",
+  "country_hint": "CH",
+  "locale": "de-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",                 "required": true },
+    "TWN_NM":        { "value": "Basel",              "required": true },
+    "PST_CD":        { "value": "4002",               "required": true },
+    "CTRY_SUB_DVSN": { "value": "BS",                "required": false },
+    "STRT_NM":       { "value": "Centralbahnplatz",   "required": true },
+    "BLDG_NBR":      { "value": "2",                 "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Basel international institution, canton BS"
+}

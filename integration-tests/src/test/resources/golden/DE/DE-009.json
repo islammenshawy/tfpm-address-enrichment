@@ -1,0 +1,19 @@
+{
+  "fixture_id": "DE-009",
+  "country": "DE",
+  "source": "legacy_oracle",
+  "raw": "Siemens AG, Werner-von-Siemens-Straße 1, Industriegebiet Süd, 91052 Erlangen",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",                           "required": true },
+    "TWN_NM":        { "value": "Erlangen",                     "required": true },
+    "PST_CD":        { "value": "91052",                        "required": true },
+    "STRT_NM":       { "value": "Werner-von-Siemens-Straße",    "required": true },
+    "BLDG_NBR":      { "value": "1",                           "required": true },
+    "DSTRCT_NM":     { "value": "Industriegebiet Süd",          "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Industrial area (Industriegebiet) with hyphenated street name, corporate campus"
+}

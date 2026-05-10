@@ -1,0 +1,22 @@
+{
+  "fixture_id": "SG-008",
+  "country": "SG",
+  "source": "legacy_oracle",
+  "raw": "Blk 298 Tiong Bahru Road, #15-03, Central Plaza, Singapore 168730",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                                "required": true },
+    "TWN_NM":        { "value": "Singapore",                         "required": true },
+    "PST_CD":        { "value": "168730",                            "required": true },
+    "STR_NM":        { "value": "Tiong Bahru Road",                  "required": true },
+    "BLD_NB":        { "value": "298",                               "required": true },
+    "UNIT":          { "value": "#15-03",                            "required": true },
+    "BLD_NM":        { "value": "Central Plaza",                     "required": false },
+    "ADR_LINE1":     { "value": "Blk 298 Tiong Bahru Road, #15-03", "required": true },
+    "ADR_LINE2":     { "value": "Central Plaza",                     "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Mixed HDB Block prefix with commercial building name. Tests Block keyword stripping for building number."
+}

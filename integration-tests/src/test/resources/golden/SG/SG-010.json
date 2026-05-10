@@ -1,0 +1,22 @@
+{
+  "fixture_id": "SG-010",
+  "country": "SG",
+  "source": "legacy_oracle",
+  "raw": "12 Marina Boulevard, #38-01, Marina Bay Financial Centre Tower 3, Singapore 018982",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                                           "required": true },
+    "TWN_NM":        { "value": "Singapore",                                    "required": true },
+    "PST_CD":        { "value": "018982",                                       "required": true },
+    "STR_NM":        { "value": "Marina Boulevard",                             "required": true },
+    "BLD_NB":        { "value": "12",                                           "required": true },
+    "UNIT":          { "value": "#38-01",                                       "required": true },
+    "BLD_NM":        { "value": "Marina Bay Financial Centre Tower 3",          "required": false },
+    "ADR_LINE1":     { "value": "12 Marina Boulevard, #38-01",                  "required": true },
+    "ADR_LINE2":     { "value": "Marina Bay Financial Centre Tower 3",          "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Marina Bay Financial Centre high-floor office. Full 6-digit postal code starting with 0. Tests leading-zero postal code and long building name."
+}

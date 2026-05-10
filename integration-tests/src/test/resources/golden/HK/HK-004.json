@@ -1,0 +1,23 @@
+{
+  "fixture_id": "HK-004",
+  "country": "HK",
+  "source": "kafka",
+  "raw": "Room 2102, 21/F, The Center, 99 Queen's Road Central, Central, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                                  "required": true },
+    "TWN_NM":        { "value": "Hong Kong",                           "required": true },
+    "STR_NM":        { "value": "Queen's Road Central",                "required": true },
+    "BLD_NB":        { "value": "99",                                  "required": true },
+    "BLD_NM":        { "value": "The Center",                          "required": false },
+    "FLOOR":         { "value": "21",                                  "required": false },
+    "UNIT":          { "value": "2102",                                "required": false },
+    "DSTRCT":        { "value": "Central",                             "required": false },
+    "ADR_LINE1":     { "value": "Room 2102, 21/F, The Center",         "required": true },
+    "ADR_LINE2":     { "value": "99 Queen's Road Central",             "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Central district office tower. Tests Room notation and apostrophe in street name (Queen's Road)."
+}

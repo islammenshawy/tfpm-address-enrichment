@@ -1,0 +1,19 @@
+{
+  "fixture_id": "US-004",
+  "country": "US",
+  "source": "legacy_oracle",
+  "raw": "Northern Trust Company, 50 South La Salle Street, Chicago, IL 60603",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY":          { "value": "US",                    "required": true },
+    "TWN_NM":        { "value": "Chicago",               "required": true },
+    "PST_CD":        { "value": "60603",                 "required": true },
+    "CTRY_SUB_DVSN": { "value": "IL",                   "required": true },
+    "STRT_NM":       { "value": "South La Salle Street", "required": true },
+    "BLDG_NBR":      { "value": "50",                   "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Chicago financial district address with directional street prefix"
+}

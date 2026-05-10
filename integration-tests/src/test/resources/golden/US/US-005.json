@@ -1,0 +1,19 @@
+{
+  "fixture_id": "US-005",
+  "country": "US",
+  "source": "kafka",
+  "raw": "State Street Corporation, One Lincoln Street, Boston, MA 02111-2900",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY":          { "value": "US",              "required": true },
+    "TWN_NM":        { "value": "Boston",          "required": true },
+    "PST_CD":        { "value": "02111-2900",      "required": true },
+    "CTRY_SUB_DVSN": { "value": "MA",             "required": true },
+    "STRT_NM":       { "value": "Lincoln Street",  "required": true },
+    "BLDG_NBR":      { "value": "1",              "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Boston address with ZIP+4, 'One' as building number requiring word-to-digit conversion"
+}

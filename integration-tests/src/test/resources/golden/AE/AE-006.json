@@ -1,0 +1,21 @@
+{
+  "fixture_id": "AE-006",
+  "country": "AE",
+  "source": "kafka",
+  "raw": "Office 2301, Floor 23, Al Shatha Tower, Dubai Internet City, Dubai, United Arab Emirates",
+  "country_hint": "AE",
+  "locale": "en-AE",
+  "expected_fields": {
+    "CTRY":          { "value": "AE",                                  "required": true },
+    "TWN_NM":        { "value": "Dubai",                               "required": true },
+    "BLD_NM":        { "value": "Al Shatha Tower",                     "required": false },
+    "DSTRCT":        { "value": "Dubai Internet City",                 "required": false },
+    "FLOOR":         { "value": "23",                                  "required": false },
+    "UNIT":          { "value": "2301",                                "required": false },
+    "ADR_LINE1":     { "value": "Office 2301, Floor 23",               "required": true },
+    "ADR_LINE2":     { "value": "Al Shatha Tower, Dubai Internet City","required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Free zone office in Dubai Internet City. Tests tower/building name extraction and free zone district."
+}

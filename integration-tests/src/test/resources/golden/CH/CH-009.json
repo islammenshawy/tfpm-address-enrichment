@@ -1,0 +1,18 @@
+{
+  "fixture_id": "CH-009",
+  "country": "CH",
+  "source": "legacy_oracle",
+  "raw": "Credit Suisse AG, Postfach 100, 8070 Zürich",
+  "country_hint": "CH",
+  "locale": "de-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",       "required": true },
+    "TWN_NM":        { "value": "Zürich",   "required": true },
+    "PST_CD":        { "value": "8070",     "required": true },
+    "CTRY_SUB_DVSN": { "value": "ZH",      "required": false },
+    "PO_BX":         { "value": "100",      "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Postfach (PO Box) address in Zurich, no street address"
+}

@@ -1,0 +1,19 @@
+{
+  "fixture_id": "SG-004",
+  "country": "SG",
+  "source": "legacy_oracle",
+  "raw": "28 Cluny Park Road, Singapore 259636",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                   "required": true },
+    "TWN_NM":        { "value": "Singapore",            "required": true },
+    "PST_CD":        { "value": "259636",               "required": true },
+    "STR_NM":        { "value": "Cluny Park Road",      "required": true },
+    "BLD_NB":        { "value": "28",                   "required": true },
+    "ADR_LINE1":     { "value": "28 Cluny Park Road",   "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Landed residential property with simple street number. No unit or building name. Tests minimal Singapore address."
+}

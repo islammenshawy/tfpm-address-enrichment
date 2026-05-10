@@ -1,0 +1,20 @@
+{
+  "fixture_id": "US-009",
+  "country": "US",
+  "source": "legacy_oracle",
+  "raw": "Apex Trading LLC, 9400 North Central Expressway, Apt 1204, Dallas, TX 75231",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY":          { "value": "US",                        "required": true },
+    "TWN_NM":        { "value": "Dallas",                    "required": true },
+    "PST_CD":        { "value": "75231",                     "required": true },
+    "CTRY_SUB_DVSN": { "value": "TX",                       "required": true },
+    "STRT_NM":       { "value": "North Central Expressway",  "required": true },
+    "BLDG_NBR":      { "value": "9400",                     "required": true },
+    "UNIT_NBR":      { "value": "1204",                      "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Apartment address in Dallas TX with directional street and unit number"
+}

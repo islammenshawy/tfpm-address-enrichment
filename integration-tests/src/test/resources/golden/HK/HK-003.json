@@ -1,0 +1,21 @@
+{
+  "fixture_id": "HK-003",
+  "country": "HK",
+  "source": "legacy_oracle",
+  "raw": "Flat B, 23/F, Block 7, Mei Foo Sun Chuen, Lai Chi Kok, New Territories, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                                  "required": true },
+    "TWN_NM":        { "value": "New Territories",                     "required": true },
+    "BLD_NM":        { "value": "Mei Foo Sun Chuen Block 7",           "required": false },
+    "FLOOR":         { "value": "23",                                  "required": false },
+    "UNIT":          { "value": "B",                                   "required": false },
+    "DSTRCT":        { "value": "Lai Chi Kok",                         "required": false },
+    "ADR_LINE1":     { "value": "Flat B, 23/F, Block 7",               "required": true },
+    "ADR_LINE2":     { "value": "Mei Foo Sun Chuen, Lai Chi Kok",      "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "New Territories residential flat in housing estate. Tests Block/Flat notation and estate name extraction."
+}

@@ -1,0 +1,21 @@
+{
+  "fixture_id": "HK-010",
+  "country": "HK",
+  "source": "mq",
+  "raw": "Revenue Tower, 5 Gloucester Road, Wan Chai, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                                 "required": true },
+    "TWN_NM":        { "value": "Hong Kong",                          "required": true },
+    "STR_NM":        { "value": "Gloucester Road",                    "required": true },
+    "BLD_NB":        { "value": "5",                                  "required": true },
+    "BLD_NM":        { "value": "Revenue Tower",                      "required": false },
+    "DSTRCT":        { "value": "Wan Chai",                           "required": false },
+    "ADR_LINE1":     { "value": "Revenue Tower",                      "required": true },
+    "ADR_LINE2":     { "value": "5 Gloucester Road, Wan Chai",        "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Government building (Inland Revenue Department) with no floor or unit. Tests building-only address without floor/unit details."
+}

@@ -1,0 +1,20 @@
+{
+  "fixture_id": "SG-007",
+  "country": "SG",
+  "source": "kafka",
+  "raw": "80 Robinson Road, #17-02, Singapore 068898",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                          "required": true },
+    "TWN_NM":        { "value": "Singapore",                   "required": true },
+    "PST_CD":        { "value": "068898",                      "required": true },
+    "STR_NM":        { "value": "Robinson Road",               "required": true },
+    "BLD_NB":        { "value": "80",                          "required": true },
+    "UNIT":          { "value": "#17-02",                      "required": true },
+    "ADR_LINE1":     { "value": "80 Robinson Road, #17-02",    "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "CBD office address with no building name. Tests unit format extraction without building name present."
+}

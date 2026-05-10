@@ -1,0 +1,18 @@
+{
+  "fixture_id": "GB-005",
+  "country": "GB",
+  "source": "legacy_oracle",
+  "raw": "HSBC UK, 120 Edmund Street, Birmingham B3 2QY",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY":          { "value": "GB",              "required": true },
+    "TWN_NM":        { "value": "Birmingham",      "required": true },
+    "PST_CD":        { "value": "B3 2QY",          "required": true },
+    "STRT_NM":       { "value": "Edmund Street",   "required": true },
+    "BLDG_NBR":      { "value": "120",             "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Birmingham city centre commercial address"
+}

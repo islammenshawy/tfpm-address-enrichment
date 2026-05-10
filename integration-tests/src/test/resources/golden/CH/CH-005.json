@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CH-005",
+  "country": "CH",
+  "source": "legacy_oracle",
+  "raw": "Banca della Svizzera Italiana, Via Magatti 2, 6900 Lugano",
+  "country_hint": "CH",
+  "locale": "it-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",           "required": true },
+    "TWN_NM":        { "value": "Lugano",       "required": true },
+    "PST_CD":        { "value": "6900",         "required": true },
+    "CTRY_SUB_DVSN": { "value": "TI",          "required": false },
+    "STRT_NM":       { "value": "Via Magatti",  "required": true },
+    "BLDG_NBR":      { "value": "2",           "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Lugano Italian-speaking address, canton TI (Ticino)"
+}

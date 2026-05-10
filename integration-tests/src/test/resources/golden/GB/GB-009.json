@@ -1,0 +1,18 @@
+{
+  "fixture_id": "GB-009",
+  "country": "GB",
+  "source": "kafka",
+  "raw": "Principality Building Society, Principality House, Queen Street, Cardiff CF10 1UA",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY":          { "value": "GB",                    "required": true },
+    "TWN_NM":        { "value": "Cardiff",               "required": true },
+    "PST_CD":        { "value": "CF10 1UA",              "required": true },
+    "STRT_NM":       { "value": "Queen Street",          "required": true },
+    "BLDG_NM":       { "value": "Principality House",    "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Welsh town (Cardiff) with named building, no building number"
+}

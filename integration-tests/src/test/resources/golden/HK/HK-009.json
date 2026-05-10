@@ -1,0 +1,23 @@
+{
+  "fixture_id": "HK-009",
+  "country": "HK",
+  "source": "legacy_oracle",
+  "raw": "Flat 12A, 38/F, Tower 5, The Long Beach, 8 Hoi Fai Road, Tai Kok Tsui, Kowloon, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                                    "required": true },
+    "TWN_NM":        { "value": "Kowloon",                               "required": true },
+    "STR_NM":        { "value": "Hoi Fai Road",                          "required": true },
+    "BLD_NB":        { "value": "8",                                     "required": true },
+    "BLD_NM":        { "value": "The Long Beach Tower 5",                "required": false },
+    "FLOOR":         { "value": "38",                                    "required": false },
+    "UNIT":          { "value": "12A",                                   "required": false },
+    "DSTRCT":        { "value": "Tai Kok Tsui",                          "required": false },
+    "ADR_LINE1":     { "value": "Flat 12A, 38/F, Tower 5, The Long Beach","required": true },
+    "ADR_LINE2":     { "value": "8 Hoi Fai Road, Tai Kok Tsui",          "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Residential flat in tower complex with alphanumeric unit (12A). Tests Flat notation and multi-tower estate naming."
+}

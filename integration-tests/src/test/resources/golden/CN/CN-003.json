@@ -1,0 +1,24 @@
+{
+  "fixture_id": "CN-003",
+  "country": "CN",
+  "source": "legacy_oracle",
+  "raw": "北京市朝阳区建国门外大街1号, China World Trade Center, Tower B, Floor 18, 100004",
+  "country_hint": "CN",
+  "locale": "zh-CN",
+  "expected_fields": {
+    "CTRY":          { "value": "CN",                                "required": true },
+    "TWN_NM":        { "value": "Beijing",                           "required": true },
+    "PST_CD":        { "value": "100004",                            "required": true },
+    "DSTRCT":        { "value": "Chaoyang",                          "required": false },
+    "STR_NM":        { "value": "Jianguomenwai Dajie",               "required": true },
+    "BLD_NB":        { "value": "1",                                 "required": true },
+    "BLD_NM":        { "value": "China World Trade Center Tower B",  "required": false },
+    "FLOOR":         { "value": "18",                                "required": false },
+    "PROVINCE":      { "value": "Beijing",                           "required": false },
+    "ADR_LINE1":     { "value": "China World Trade Center, Tower B, Floor 18", "required": true },
+    "ADR_LINE2":     { "value": "1 Jianguomenwai Dajie, Chaoyang",  "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Beijing CBD office with mixed Chinese characters and English. Province-level city (municipality). Tests Chinese character street extraction and 6-digit postal code."
+}

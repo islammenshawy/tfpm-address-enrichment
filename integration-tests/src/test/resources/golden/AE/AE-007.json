@@ -1,0 +1,19 @@
+{
+  "fixture_id": "AE-007",
+  "country": "AE",
+  "source": "legacy_oracle",
+  "raw": "LOB 17, Jebel Ali Free Zone (JAFZA), Dubai, UAE",
+  "country_hint": "AE",
+  "locale": "en-AE",
+  "expected_fields": {
+    "CTRY":          { "value": "AE",                                "required": true },
+    "TWN_NM":        { "value": "Dubai",                             "required": true },
+    "DSTRCT":        { "value": "Jebel Ali Free Zone",               "required": false },
+    "BLD_NB":        { "value": "17",                                "required": true },
+    "ADR_LINE1":     { "value": "LOB 17",                            "required": true },
+    "ADR_LINE2":     { "value": "Jebel Ali Free Zone (JAFZA)",       "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "JAFZA free zone address with LOB (Light Industrial Building) notation. Tests free zone abbreviation handling."
+}

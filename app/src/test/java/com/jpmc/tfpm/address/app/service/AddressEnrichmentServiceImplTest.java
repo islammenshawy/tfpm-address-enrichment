@@ -72,6 +72,7 @@ class AddressEnrichmentServiceImplTest {
                 orchestrator,
                 resultPersistence,
                 ComplianceRouter.alwaysBypass(),
+                event -> {},
                 0.70,
                 meterRegistry);
     }

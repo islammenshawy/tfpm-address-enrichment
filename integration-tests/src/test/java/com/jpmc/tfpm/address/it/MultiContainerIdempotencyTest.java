@@ -330,12 +330,12 @@ class MultiContainerIdempotencyTest {
     private static void applyLiquibaseMigrations() {
         try {
             var conn = ORACLE.createConnection("");
-            try (var liquibase = new liquibase.Liquibase(
+            try (var lb = new liquibase.Liquibase(
                     "infra/liquibase/changelog-master.xml",
                     new liquibase.resource.ClassLoaderResourceAccessor(),
                     liquibase.database.DatabaseFactory.getInstance().findCorrectDatabaseImplementation(
                             new liquibase.database.jvm.JdbcConnection(conn)))) {
-                liquibase.update("");
+                lb.update("");
             }
         } catch (Exception e) {
             throw new IllegalStateException("Liquibase migrations failed", e);

@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CH-008",
+  "country": "CH",
+  "source": "mq",
+  "raw": "UBS AG, Bahnhofstrasse 45, 8001 Zürich",
+  "country_hint": "CH",
+  "locale": "de-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",              "required": true },
+    "TWN_NM":        { "value": "Zürich",          "required": true },
+    "PST_CD":        { "value": "8001",            "required": true },
+    "CTRY_SUB_DVSN": { "value": "ZH",             "required": false },
+    "STRT_NM":       { "value": "Bahnhofstrasse",  "required": true },
+    "BLDG_NBR":      { "value": "45",             "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Zurich main banking street, canton ZH, German-speaking"
+}

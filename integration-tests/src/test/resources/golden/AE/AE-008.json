@@ -1,0 +1,20 @@
+{
+  "fixture_id": "AE-008",
+  "country": "AE",
+  "source": "mq",
+  "raw": "Maktab 503, Bina 9, Shaari Al Ittihad, Abu Dhabi, Al Imarat Al Arabiyah Al Muttahidah",
+  "country_hint": "AE",
+  "locale": "ar-AE",
+  "expected_fields": {
+    "CTRY":          { "value": "AE",                                            "required": true },
+    "TWN_NM":        { "value": "Abu Dhabi",                                     "required": true },
+    "STR_NM":        { "value": "Al Ittihad",                                    "required": true },
+    "BLD_NB":        { "value": "9",                                             "required": true },
+    "UNIT":          { "value": "503",                                           "required": false },
+    "ADR_LINE1":     { "value": "Maktab 503, Bina 9",                            "required": true },
+    "ADR_LINE2":     { "value": "Shaari Al Ittihad",                             "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Arabic transliterated address in Abu Dhabi. 'Maktab'=Office, 'Bina'=Building, 'Shaari'=Street. Tests transliterated keyword parsing."
+}

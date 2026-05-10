@@ -1,0 +1,20 @@
+{
+  "fixture_id": "US-003",
+  "country": "US",
+  "source": "legacy_oracle",
+  "raw": "Wells Fargo Securities, 333 Market Street, Floor 28, San Francisco, CA 94105",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY":          { "value": "US",              "required": true },
+    "TWN_NM":        { "value": "San Francisco",   "required": true },
+    "PST_CD":        { "value": "94105",           "required": true },
+    "CTRY_SUB_DVSN": { "value": "CA",             "required": true },
+    "STRT_NM":       { "value": "Market Street",   "required": true },
+    "BLDG_NBR":      { "value": "333",            "required": true },
+    "FLR":           { "value": "28",              "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "California address with floor notation, financial services office"
+}

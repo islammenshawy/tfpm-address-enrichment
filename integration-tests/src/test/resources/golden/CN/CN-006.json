@@ -1,0 +1,23 @@
+{
+  "fixture_id": "CN-006",
+  "country": "CN",
+  "source": "legacy_oracle",
+  "raw": "Building 5, No. 88, Keyuan Road, Zhangjiang Hi-Tech Park, Pudong New Area, Shanghai, 201203, China",
+  "country_hint": "CN",
+  "locale": "en-CN",
+  "expected_fields": {
+    "CTRY":          { "value": "CN",                                      "required": true },
+    "TWN_NM":        { "value": "Shanghai",                                "required": true },
+    "PST_CD":        { "value": "201203",                                  "required": true },
+    "PROVINCE":      { "value": "Shanghai",                                "required": false },
+    "DSTRCT":        { "value": "Pudong New Area",                         "required": false },
+    "STR_NM":        { "value": "Keyuan Road",                             "required": true },
+    "BLD_NB":        { "value": "88",                                      "required": true },
+    "BLD_NM":        { "value": "Building 5",                              "required": false },
+    "ADR_LINE1":     { "value": "Building 5, No. 88, Keyuan Road",         "required": true },
+    "ADR_LINE2":     { "value": "Zhangjiang Hi-Tech Park, Pudong New Area","required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Shanghai industrial/tech park address with No. prefix for building number. Tests hi-tech park naming and province-level municipality."
+}

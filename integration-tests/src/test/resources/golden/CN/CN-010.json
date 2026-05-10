@@ -1,0 +1,24 @@
+{
+  "fixture_id": "CN-010",
+  "country": "CN",
+  "source": "legacy_oracle",
+  "raw": "Room 801, Tower A, Wanda Plaza, No. 93 Jianshe Dadao, Jianghan Qu, Wuhan, Hubei 430022, China",
+  "country_hint": "CN",
+  "locale": "en-CN",
+  "expected_fields": {
+    "CTRY":          { "value": "CN",                                       "required": true },
+    "TWN_NM":        { "value": "Wuhan",                                    "required": true },
+    "PST_CD":        { "value": "430022",                                   "required": true },
+    "PROVINCE":      { "value": "Hubei",                                    "required": false },
+    "DSTRCT":        { "value": "Jianghan",                                 "required": false },
+    "STR_NM":        { "value": "Jianshe Dadao",                            "required": true },
+    "BLD_NB":        { "value": "93",                                       "required": true },
+    "BLD_NM":        { "value": "Wanda Plaza Tower A",                      "required": false },
+    "UNIT":          { "value": "801",                                      "required": false },
+    "ADR_LINE1":     { "value": "Room 801, Tower A, Wanda Plaza",           "required": true },
+    "ADR_LINE2":     { "value": "No. 93 Jianshe Dadao, Jianghan Qu",       "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Wuhan address with full province (Hubei) and Qu suffix. 'Dadao'=Boulevard. Tests non-tier-1 city with standard province-city-district hierarchy."
+}

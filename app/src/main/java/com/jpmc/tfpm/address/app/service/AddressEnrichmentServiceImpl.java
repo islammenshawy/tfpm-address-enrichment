@@ -3,6 +3,8 @@ package com.jpmc.tfpm.address.app.service;
 import com.jpmc.tfpm.address.app.cascade.CascadeOrchestrator;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
+import com.jpmc.tfpm.address.domain.AuditLog;
+import com.jpmc.tfpm.address.domain.AuditLog.AuditEvent;
 import com.jpmc.tfpm.address.domain.ComplianceDecision;
 import com.jpmc.tfpm.address.domain.ComplianceRouter;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
@@ -35,6 +37,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final CascadeOrchestrator cascadeOrchestrator;
     private final ResultPersistence resultPersistence;
     private final ComplianceRouter complianceRouter;
+    private final AuditLog auditLog;
     private final double reviewThreshold;
     private final MeterRegistry meterRegistry;
     private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
@@ -45,12 +48,14 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             CascadeOrchestrator cascadeOrchestrator,
             ResultPersistence resultPersistence,
             ComplianceRouter complianceRouter,
+            AuditLog auditLog,
             double reviewThreshold,
             MeterRegistry meterRegistry) {
         this.idempotencyStore = idempotencyStore;
         this.cascadeOrchestrator = cascadeOrchestrator;
         this.resultPersistence = resultPersistence;
         this.complianceRouter = complianceRouter;
+        this.auditLog = auditLog;
         this.reviewThreshold = reviewThreshold;
         this.meterRegistry = meterRegistry;
     }
@@ -91,6 +96,13 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         sample.stop(timer("address.enrichment.latency.total",
                 "channel", request.sourceChannel().name(),
                 "outcome", result.outcome().name()));
+
+        auditLog.record(new AuditEvent(
+                "ENRICHMENT_COMPLETED",
+                "system",
+                "ENRICHMENT_RESULT",
+                String.valueOf(result.resultRowId()),
+                "{\"outcome\":\"" + result.outcome() + "\",\"correlationId\":\"" + correlationId + "\"}"));
 
         return result;
     }

@@ -1,0 +1,19 @@
+{
+  "fixture_id": "GB-003",
+  "country": "GB",
+  "source": "legacy_oracle",
+  "raw": "Royal Bank of Scotland, 36 St Andrew Square, Edinburgh EH2 2YB",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY":          { "value": "GB",                "required": true },
+    "TWN_NM":        { "value": "Edinburgh",         "required": true },
+    "PST_CD":        { "value": "EH2 2YB",           "required": true },
+    "STRT_NM":       { "value": "St Andrew Square",  "required": true },
+    "BLDG_NBR":      { "value": "36",                "required": true },
+    "BLDG_NM":       { "value": "Royal Bank of Scotland", "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Edinburgh (Scotland) corporate banking address with named building and square"
+}

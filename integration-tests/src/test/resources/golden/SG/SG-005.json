@@ -1,0 +1,22 @@
+{
+  "fixture_id": "SG-005",
+  "country": "SG",
+  "source": "kafka",
+  "raw": "10 Toh Guan Road, #07-01, TT International Tradepark, Singapore 608838",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                              "required": true },
+    "TWN_NM":        { "value": "Singapore",                       "required": true },
+    "PST_CD":        { "value": "608838",                          "required": true },
+    "STR_NM":        { "value": "Toh Guan Road",                   "required": true },
+    "BLD_NB":        { "value": "10",                              "required": true },
+    "UNIT":          { "value": "#07-01",                          "required": true },
+    "BLD_NM":        { "value": "TT International Tradepark",      "required": false },
+    "ADR_LINE1":     { "value": "10 Toh Guan Road, #07-01",        "required": true },
+    "ADR_LINE2":     { "value": "TT International Tradepark",      "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Industrial park address with building name and unit format. Tests commercial/industrial address in western Singapore."
+}

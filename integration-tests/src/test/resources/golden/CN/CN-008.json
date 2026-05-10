@@ -1,0 +1,22 @@
+{
+  "fixture_id": "CN-008",
+  "country": "CN",
+  "source": "kafka",
+  "raw": "No. 27 Zhongguancun Dajie, Haidian Qu, Beijing 100080, China",
+  "country_hint": "CN",
+  "locale": "en-CN",
+  "expected_fields": {
+    "CTRY":          { "value": "CN",                                        "required": true },
+    "TWN_NM":        { "value": "Beijing",                                   "required": true },
+    "PST_CD":        { "value": "100080",                                    "required": true },
+    "PROVINCE":      { "value": "Beijing",                                   "required": false },
+    "DSTRCT":        { "value": "Haidian",                                   "required": false },
+    "STR_NM":        { "value": "Zhongguancun Dajie",                        "required": true },
+    "BLD_NB":        { "value": "27",                                        "required": true },
+    "ADR_LINE1":     { "value": "No. 27 Zhongguancun Dajie",                 "required": true },
+    "ADR_LINE2":     { "value": "Haidian Qu",                                "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Beijing Haidian tech corridor, romanised Mandarin. 'Dajie'=Avenue, 'Qu'=District. Tests Pinyin compound street name with No. prefix."
+}

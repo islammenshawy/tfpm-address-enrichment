@@ -1,0 +1,23 @@
+{
+  "fixture_id": "HK-002",
+  "country": "HK",
+  "source": "legacy_oracle",
+  "raw": "Unit 1205, 12/F, Miramar Tower, 132 Nathan Road, Tsim Sha Tsui, Kowloon, Hong Kong",
+  "country_hint": "HK",
+  "locale": "en-HK",
+  "expected_fields": {
+    "CTRY":          { "value": "HK",                           "required": true },
+    "TWN_NM":        { "value": "Kowloon",                      "required": true },
+    "STR_NM":        { "value": "Nathan Road",                  "required": true },
+    "BLD_NB":        { "value": "132",                          "required": true },
+    "BLD_NM":        { "value": "Miramar Tower",                "required": false },
+    "FLOOR":         { "value": "12",                           "required": false },
+    "UNIT":          { "value": "1205",                         "required": false },
+    "DSTRCT":        { "value": "Tsim Sha Tsui",                "required": false },
+    "ADR_LINE1":     { "value": "Unit 1205, 12/F, Miramar Tower","required": true },
+    "ADR_LINE2":     { "value": "132 Nathan Road, Tsim Sha Tsui","required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Kowloon office tower on Nathan Road, Tsim Sha Tsui. Tests HK floor notation (12/F) and Kowloon area recognition. HK has no postal codes."
+}

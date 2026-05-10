@@ -1,0 +1,22 @@
+{
+  "fixture_id": "SG-006",
+  "country": "SG",
+  "source": "legacy_oracle",
+  "raw": "5 Changi Business Park Central 1, #03-12, Changi City Point, Singapore 486038",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                                       "required": true },
+    "TWN_NM":        { "value": "Singapore",                                "required": true },
+    "PST_CD":        { "value": "486038",                                   "required": true },
+    "STR_NM":        { "value": "Changi Business Park Central 1",           "required": true },
+    "BLD_NB":        { "value": "5",                                        "required": true },
+    "UNIT":          { "value": "#03-12",                                   "required": true },
+    "BLD_NM":        { "value": "Changi City Point",                        "required": false },
+    "ADR_LINE1":     { "value": "5 Changi Business Park Central 1, #03-12", "required": true },
+    "ADR_LINE2":     { "value": "Changi City Point",                        "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Changi Business Park corporate address. Tests long street name with numbered suffix and building name extraction."
+}

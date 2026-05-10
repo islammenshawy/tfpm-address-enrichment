@@ -1,0 +1,18 @@
+{
+  "fixture_id": "US-006",
+  "country": "US",
+  "source": "legacy_oracle",
+  "raw": "PO Box 4587, Midland, TX 79704",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY":          { "value": "US",       "required": true },
+    "TWN_NM":        { "value": "Midland",  "required": true },
+    "PST_CD":        { "value": "79704",    "required": true },
+    "CTRY_SUB_DVSN": { "value": "TX",      "required": true },
+    "PO_BX":         { "value": "4587",     "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Rural PO Box address in Texas with no street address"
+}

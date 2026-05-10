@@ -1,0 +1,18 @@
+{
+  "fixture_id": "DE-005",
+  "country": "DE",
+  "source": "legacy_oracle",
+  "raw": "Berenberg Bank, Neuer Jungfernstieg 20, 20354 Hamburg",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",                     "required": true },
+    "TWN_NM":        { "value": "Hamburg",                "required": true },
+    "PST_CD":        { "value": "20354",                  "required": true },
+    "STRT_NM":       { "value": "Neuer Jungfernstieg",    "required": true },
+    "BLDG_NBR":      { "value": "20",                    "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Hamburg private bank address, compound street name"
+}

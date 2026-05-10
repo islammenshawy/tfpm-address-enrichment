@@ -1,0 +1,19 @@
+{
+  "fixture_id": "GB-006",
+  "country": "GB",
+  "source": "legacy_oracle",
+  "raw": "Deutsche Bank AG London, Winchester House, 1 Great Winchester Street, London EC2N 2DB",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY":          { "value": "GB",                        "required": true },
+    "TWN_NM":        { "value": "London",                    "required": true },
+    "PST_CD":        { "value": "EC2N 2DB",                  "required": true },
+    "STRT_NM":       { "value": "Great Winchester Street",   "required": true },
+    "BLDG_NBR":      { "value": "1",                         "required": true },
+    "BLDG_NM":       { "value": "Winchester House",          "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "City of London EC postcode, named building with number, financial district"
+}

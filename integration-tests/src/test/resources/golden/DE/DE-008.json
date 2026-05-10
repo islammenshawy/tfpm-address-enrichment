@@ -1,0 +1,19 @@
+{
+  "fixture_id": "DE-008",
+  "country": "DE",
+  "source": "mq",
+  "raw": "c/o Kanzlei Weber und Partner, Friedrichstraße 95, 10117 Berlin",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",                                  "required": true },
+    "TWN_NM":        { "value": "Berlin",                              "required": true },
+    "PST_CD":        { "value": "10117",                               "required": true },
+    "STRT_NM":       { "value": "Friedrichstraße",                     "required": true },
+    "BLDG_NBR":      { "value": "95",                                 "required": true },
+    "CARE_OF":       { "value": "Kanzlei Weber und Partner",           "required": false }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "c/o (care of) notation in Berlin, tests care-of field extraction"
+}

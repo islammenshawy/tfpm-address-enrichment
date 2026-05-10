@@ -1,0 +1,18 @@
+{
+  "fixture_id": "DE-006",
+  "country": "DE",
+  "source": "kafka",
+  "raw": "HSBC Trinkaus und Burkhardt, Königsallee 21/23, 40212 Düsseldorf",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",            "required": true },
+    "TWN_NM":        { "value": "Düsseldorf",    "required": true },
+    "PST_CD":        { "value": "40212",         "required": true },
+    "STRT_NM":       { "value": "Königsallee",   "required": true },
+    "BLDG_NBR":      { "value": "21/23",         "required": true }
+  },
+  "validator": "golden-set-expansion@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Düsseldorf address with umlaut in city and compound building number 21/23"
+}
