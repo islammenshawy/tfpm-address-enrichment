@@ -6,12 +6,26 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",                              "required": true },
-    "TWN_NM":        { "value": "Sharjah",                         "required": true },
-    "DSTRCT":        { "value": "Industrial Area 13",               "required": false },
-    "BLD_NB":        { "value": "17",                               "required": true },
-    "ADR_LINE1":     { "value": "Unit 4, Warehouse 17",             "required": true },
-    "ADR_LINE2":     { "value": "Industrial Area 13",               "required": false }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Sharjah",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Industrial Area 13",
+      "required": false
+    },
+    "BLDG_NB": {
+      "value": "17",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "Unit 4, Warehouse 17",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

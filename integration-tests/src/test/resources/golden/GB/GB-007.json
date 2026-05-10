@@ -6,12 +6,30 @@
   "country_hint": "GB",
   "locale": "en-GB",
   "expected_fields": {
-    "CTRY":          { "value": "GB",                     "required": true },
-    "TWN_NM":        { "value": "Ware",                   "required": true },
-    "PST_CD":        { "value": "SG11 2DY",               "required": true },
-    "STRT_NM":       { "value": "Church Lane",            "required": true },
-    "BLDG_NM":       { "value": "The Old Barn",           "required": false },
-    "DSTRCT_NM":     { "value": "Little Hadham",          "required": false }
+    "CTRY": {
+      "value": "GB",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Ware",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "SG11 2DY",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Church Lane",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "The Old Barn",
+      "required": false
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Little Hadham",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

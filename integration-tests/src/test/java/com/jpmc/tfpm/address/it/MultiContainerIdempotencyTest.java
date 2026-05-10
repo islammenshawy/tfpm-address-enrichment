@@ -77,8 +77,8 @@ class MultiContainerIdempotencyTest {
     @Container
     static final OracleContainer ORACLE =
             new OracleContainer(DockerImageName.parse("gvenzl/oracle-free:23-slim-faststart"))
-                    .withUsername("system")
-                    .withPassword("oracle")
+                    .withUsername("testuser")
+                    .withPassword("testpass")
                     .withReuse(true);
 
     @Container

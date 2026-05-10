@@ -6,13 +6,34 @@
   "country_hint": "CN",
   "locale": "en-CN",
   "expected_fields": {
-    "CTRY":          { "value": "CN",                       "required": true  },
-    "CTRY_SUB_DVSN": { "value": "Shanghai",                 "required": true  },
-    "TWN_NM":        { "value": "Shanghai",                 "required": true  },
-    "STRT_NM":       { "value": "Nanjing West Road",        "required": true  },
-    "BLDG_NB":       { "value": "1515",                     "required": false },
-    "BLDG_NM":       { "value": "Jing An Kerry Centre",     "required": false },
-    "PST_CD":        { "value": "200040",                   "required": false }
+    "CTRY": {
+      "value": "CN",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Shanghai",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Shanghai",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Nanjing West Road",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1515",
+      "required": false
+    },
+    "BLDG_NM": {
+      "value": "Jing An Kerry Centre",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "200040",
+      "required": false
+    }
   },
   "validator": "TBD@jpmorgan.com",
   "validated_at": "TBD",

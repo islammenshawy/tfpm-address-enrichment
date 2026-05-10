@@ -6,13 +6,34 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",                   "required": true  },
-    "CTRY_SUB_DVSN": { "value": "Dubai",                "required": true  },
-    "TWN_NM":        { "value": "Dubai",                "required": true  },
-    "STRT_NM":       { "value": "Sheikh Zayed Road",    "required": true  },
-    "BLDG_NM":       { "value": "Emirates Towers",      "required": false },
-    "BLDG_NB":       { "value": "1204",                 "required": false },
-    "PST_CD":        { "value": "",                     "required": false }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Dubai",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dubai",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Sheikh Zayed Road",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Emirates Towers",
+      "required": false
+    },
+    "BLDG_NB": {
+      "value": "1204",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "",
+      "required": false
+    }
   },
   "validator": "TBD@jpmorgan.com",
   "validated_at": "TBD",

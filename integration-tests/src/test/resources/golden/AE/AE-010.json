@@ -6,15 +6,26 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",                                    "required": true },
-    "TWN_NM":        { "value": "Abu Dhabi",                             "required": true },
-    "STR_NM":        { "value": "Corniche Road",                         "required": true },
-    "BLD_NM":        { "value": "Etihad Towers Tower 3",                 "required": false },
-    "FLOOR":         { "value": "18",                                    "required": false },
-    "UNIT":          { "value": "1802",                                  "required": false },
-    "ORG_NM":        { "value": "Gulf International Trading LLC",        "required": false },
-    "ADR_LINE1":     { "value": "Office 1802, Level 18, Etihad Towers",  "required": true },
-    "ADR_LINE2":     { "value": "Tower 3, Corniche Road",                "required": false }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Abu Dhabi",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Corniche Road",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Etihad Towers Tower 3",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "Office 1802, Level 18, Etihad Towers",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

@@ -6,16 +6,34 @@
   "country_hint": "HK",
   "locale": "en-HK",
   "expected_fields": {
-    "CTRY":          { "value": "HK",                                  "required": true },
-    "TWN_NM":        { "value": "Hong Kong",                           "required": true },
-    "STR_NM":        { "value": "Queen's Road Central",                "required": true },
-    "BLD_NB":        { "value": "99",                                  "required": true },
-    "BLD_NM":        { "value": "The Center",                          "required": false },
-    "FLOOR":         { "value": "21",                                  "required": false },
-    "UNIT":          { "value": "2102",                                "required": false },
-    "DSTRCT":        { "value": "Central",                             "required": false },
-    "ADR_LINE1":     { "value": "Room 2102, 21/F, The Center",         "required": true },
-    "ADR_LINE2":     { "value": "99 Queen's Road Central",             "required": false }
+    "CTRY": {
+      "value": "HK",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Hong Kong",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Queen's Road Central",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "99",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "The Center",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "Room 2102, 21/F, The Center",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Central",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

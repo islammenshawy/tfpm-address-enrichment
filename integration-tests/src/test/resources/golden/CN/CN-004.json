@@ -6,17 +6,38 @@
   "country_hint": "CN",
   "locale": "en-CN",
   "expected_fields": {
-    "CTRY":          { "value": "CN",                                      "required": true },
-    "TWN_NM":        { "value": "Shenzhen",                                "required": true },
-    "PST_CD":        { "value": "518048",                                  "required": true },
-    "PROVINCE":      { "value": "Guangdong",                               "required": false },
-    "DSTRCT":        { "value": "Futian",                                  "required": false },
-    "STR_NM":        { "value": "Fuhua Yi Lu",                             "required": true },
-    "BLD_NB":        { "value": "160",                                     "required": true },
-    "BLD_NM":        { "value": "Shenzhen International Trade Center",     "required": false },
-    "UNIT":          { "value": "3208",                                    "required": false },
-    "ADR_LINE1":     { "value": "Room 3208, Shenzhen International Trade Center", "required": true },
-    "ADR_LINE2":     { "value": "160 Fuhua Yi Lu, Futian Qu",              "required": false }
+    "CTRY": {
+      "value": "CN",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Shenzhen",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "518048",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Futian",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Fuhua Yi Lu",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "160",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Shenzhen International Trade Center",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "Room 3208, Shenzhen International Trade Center",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

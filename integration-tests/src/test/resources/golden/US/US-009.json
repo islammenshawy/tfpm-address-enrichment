@@ -6,13 +6,34 @@
   "country_hint": "US",
   "locale": "en-US",
   "expected_fields": {
-    "CTRY":          { "value": "US",                        "required": true },
-    "TWN_NM":        { "value": "Dallas",                    "required": true },
-    "PST_CD":        { "value": "75231",                     "required": true },
-    "CTRY_SUB_DVSN": { "value": "TX",                       "required": true },
-    "STRT_NM":       { "value": "North Central Expressway",  "required": true },
-    "BLDG_NBR":      { "value": "9400",                     "required": true },
-    "UNIT_NBR":      { "value": "1204",                      "required": false }
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dallas",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "75231",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "TX",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "North Central Expressway",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "9400",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "1204",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

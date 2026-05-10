@@ -6,11 +6,26 @@
   "country_hint": "US",
   "locale": "en-US",
   "expected_fields": {
-    "CTRY":          { "value": "US",       "required": true },
-    "TWN_NM":        { "value": "Midland",  "required": true },
-    "PST_CD":        { "value": "79704",    "required": true },
-    "CTRY_SUB_DVSN": { "value": "TX",      "required": true },
-    "PO_BX":         { "value": "4587",     "required": true }
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Midland",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "79704",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "TX",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "4587",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

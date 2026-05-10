@@ -6,14 +6,26 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",                                  "required": true },
-    "TWN_NM":        { "value": "Dubai",                               "required": true },
-    "BLD_NM":        { "value": "Al Shatha Tower",                     "required": false },
-    "DSTRCT":        { "value": "Dubai Internet City",                 "required": false },
-    "FLOOR":         { "value": "23",                                  "required": false },
-    "UNIT":          { "value": "2301",                                "required": false },
-    "ADR_LINE1":     { "value": "Office 2301, Floor 23",               "required": true },
-    "ADR_LINE2":     { "value": "Al Shatha Tower, Dubai Internet City","required": false }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dubai",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Al Shatha Tower",
+      "required": false
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Dubai Internet City",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "Office 2301, Floor 23",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

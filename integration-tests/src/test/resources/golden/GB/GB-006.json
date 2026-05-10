@@ -6,12 +6,30 @@
   "country_hint": "GB",
   "locale": "en-GB",
   "expected_fields": {
-    "CTRY":          { "value": "GB",                        "required": true },
-    "TWN_NM":        { "value": "London",                    "required": true },
-    "PST_CD":        { "value": "EC2N 2DB",                  "required": true },
-    "STRT_NM":       { "value": "Great Winchester Street",   "required": true },
-    "BLDG_NBR":      { "value": "1",                         "required": true },
-    "BLDG_NM":       { "value": "Winchester House",          "required": false }
+    "CTRY": {
+      "value": "GB",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "London",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "EC2N 2DB",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Great Winchester Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Winchester House",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

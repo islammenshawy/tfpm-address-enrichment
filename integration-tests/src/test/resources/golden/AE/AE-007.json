@@ -6,12 +6,26 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",                                "required": true },
-    "TWN_NM":        { "value": "Dubai",                             "required": true },
-    "DSTRCT":        { "value": "Jebel Ali Free Zone",               "required": false },
-    "BLD_NB":        { "value": "17",                                "required": true },
-    "ADR_LINE1":     { "value": "LOB 17",                            "required": true },
-    "ADR_LINE2":     { "value": "Jebel Ali Free Zone (JAFZA)",       "required": false }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dubai",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Jebel Ali Free Zone",
+      "required": false
+    },
+    "BLDG_NB": {
+      "value": "17",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "LOB 17",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

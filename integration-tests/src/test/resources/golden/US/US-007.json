@@ -6,13 +6,34 @@
   "country_hint": "US",
   "locale": "en-US",
   "expected_fields": {
-    "CTRY":          { "value": "US",           "required": true },
-    "TWN_NM":        { "value": "New York",     "required": true },
-    "PST_CD":        { "value": "10036",        "required": true },
-    "CTRY_SUB_DVSN": { "value": "NY",          "required": true },
-    "STRT_NM":       { "value": "Broadway",     "required": true },
-    "BLDG_NBR":      { "value": "1585",        "required": true },
-    "STE_NBR":       { "value": "200",          "required": false }
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "New York",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "10036",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "NY",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Broadway",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1585",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "200",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

@@ -6,17 +6,38 @@
   "country_hint": "CN",
   "locale": "zh-CN",
   "expected_fields": {
-    "CTRY":          { "value": "CN",                                "required": true },
-    "TWN_NM":        { "value": "Beijing",                           "required": true },
-    "PST_CD":        { "value": "100004",                            "required": true },
-    "DSTRCT":        { "value": "Chaoyang",                          "required": false },
-    "STR_NM":        { "value": "Jianguomenwai Dajie",               "required": true },
-    "BLD_NB":        { "value": "1",                                 "required": true },
-    "BLD_NM":        { "value": "China World Trade Center Tower B",  "required": false },
-    "FLOOR":         { "value": "18",                                "required": false },
-    "PROVINCE":      { "value": "Beijing",                           "required": false },
-    "ADR_LINE1":     { "value": "China World Trade Center, Tower B, Floor 18", "required": true },
-    "ADR_LINE2":     { "value": "1 Jianguomenwai Dajie, Chaoyang",  "required": false }
+    "CTRY": {
+      "value": "CN",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Beijing",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "100004",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Beijing",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Jianguomenwai Dajie",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "China World Trade Center Tower B",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "China World Trade Center, Tower B, Floor 18",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

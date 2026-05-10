@@ -6,14 +6,30 @@
   "country_hint": "SG",
   "locale": "en-SG",
   "expected_fields": {
-    "CTRY":          { "value": "SG",                              "required": true },
-    "TWN_NM":        { "value": "Singapore",                       "required": true },
-    "PST_CD":        { "value": "641682",                          "required": true },
-    "STR_NM":        { "value": "Jurong West Street 64",           "required": true },
-    "BLD_NB":        { "value": "682A",                            "required": true },
-    "UNIT":          { "value": "#04-128",                         "required": true },
-    "ADR_LINE1":     { "value": "Blk 682A Jurong West Street 64",  "required": true },
-    "ADR_LINE2":     { "value": "#04-128",                         "required": false }
+    "CTRY": {
+      "value": "SG",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Singapore",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "641682",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Jurong West Street 64",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "682A",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "Blk 682A Jurong West Street 64",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

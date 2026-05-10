@@ -6,12 +6,30 @@
   "country_hint": "CH",
   "locale": "de-CH",
   "expected_fields": {
-    "CTRY":          { "value": "CH",                 "required": true },
-    "TWN_NM":        { "value": "Basel",              "required": true },
-    "PST_CD":        { "value": "4002",               "required": true },
-    "CTRY_SUB_DVSN": { "value": "BS",                "required": false },
-    "STRT_NM":       { "value": "Centralbahnplatz",   "required": true },
-    "BLDG_NBR":      { "value": "2",                 "required": true }
+    "CTRY": {
+      "value": "CH",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Basel",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "4002",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "BS",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Centralbahnplatz",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "2",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

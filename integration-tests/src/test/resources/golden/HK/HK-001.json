@@ -6,13 +6,34 @@
   "country_hint": "HK",
   "locale": "en-HK",
   "expected_fields": {
-    "CTRY":          { "value": "HK",                              "required": true  },
-    "CTRY_SUB_DVSN": { "value": "Central",                         "required": false },
-    "TWN_NM":        { "value": "Hong Kong",                       "required": true  },
-    "STRT_NM":       { "value": "Finance Street",                  "required": true  },
-    "BLDG_NB":       { "value": "8",                               "required": false },
-    "BLDG_NM":       { "value": "Two International Finance Centre","required": false },
-    "PST_CD":        { "value": "",                                "required": false }
+    "CTRY": {
+      "value": "HK",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Central",
+      "required": false
+    },
+    "TWN_NM": {
+      "value": "Hong Kong",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Finance Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "8",
+      "required": false
+    },
+    "BLDG_NM": {
+      "value": "Two International Finance Centre",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "",
+      "required": false
+    }
   },
   "validator": "TBD@jpmorgan.com",
   "validated_at": "TBD",

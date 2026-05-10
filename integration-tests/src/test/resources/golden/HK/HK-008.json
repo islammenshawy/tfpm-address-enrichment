@@ -6,15 +6,30 @@
   "country_hint": "HK",
   "locale": "en-HK",
   "expected_fields": {
-    "CTRY":          { "value": "HK",                                            "required": true },
-    "TWN_NM":        { "value": "Kowloon",                                       "required": true },
-    "STR_NM":        { "value": "Sai Yeung Choi Street South",                   "required": true },
-    "BLD_NB":        { "value": "168",                                           "required": true },
-    "FLOOR":         { "value": "16",                                            "required": false },
-    "UNIT":          { "value": "1603",                                          "required": false },
-    "DSTRCT":        { "value": "Mong Kok",                                      "required": false },
-    "ADR_LINE1":     { "value": "Unit 1603, 16/F",                               "required": true },
-    "ADR_LINE2":     { "value": "168 Sai Yeung Choi Street South, Mong Kok",     "required": false }
+    "CTRY": {
+      "value": "HK",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Kowloon",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Sai Yeung Choi Street South",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "168",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "Unit 1603, 16/F",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Mong Kok",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

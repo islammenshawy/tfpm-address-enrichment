@@ -6,12 +6,30 @@
   "country_hint": "US",
   "locale": "en-US",
   "expected_fields": {
-    "CTRY":          { "value": "US",                    "required": true },
-    "TWN_NM":        { "value": "Chicago",               "required": true },
-    "PST_CD":        { "value": "60603",                 "required": true },
-    "CTRY_SUB_DVSN": { "value": "IL",                   "required": true },
-    "STRT_NM":       { "value": "South La Salle Street", "required": true },
-    "BLDG_NBR":      { "value": "50",                   "required": true }
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Chicago",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "60603",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "IL",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "South La Salle Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "50",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

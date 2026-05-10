@@ -6,16 +6,34 @@
   "country_hint": "HK",
   "locale": "en-HK",
   "expected_fields": {
-    "CTRY":          { "value": "HK",                                   "required": true },
-    "TWN_NM":        { "value": "Hong Kong",                            "required": true },
-    "STR_NM":        { "value": "Matheson Street",                      "required": true },
-    "BLD_NB":        { "value": "1",                                    "required": true },
-    "BLD_NM":        { "value": "Times Square Tower 1",                 "required": false },
-    "FLOOR":         { "value": "35",                                   "required": false },
-    "UNIT":          { "value": "3501",                                 "required": false },
-    "DSTRCT":        { "value": "Causeway Bay",                         "required": false },
-    "ADR_LINE1":     { "value": "Suite 3501, 35/F, Times Square Tower 1","required": true },
-    "ADR_LINE2":     { "value": "1 Matheson Street, Causeway Bay",       "required": false }
+    "CTRY": {
+      "value": "HK",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Hong Kong",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Matheson Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1",
+      "required": true
+    },
+    "BLDG_NM": {
+      "value": "Times Square Tower 1",
+      "required": false
+    },
+    "ADR_LINE": {
+      "value": "Suite 3501, 35/F, Times Square Tower 1",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Causeway Bay",
+      "required": false
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

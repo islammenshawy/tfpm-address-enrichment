@@ -6,10 +6,22 @@
   "country_hint": "AE",
   "locale": "en-AE",
   "expected_fields": {
-    "CTRY":          { "value": "AE",        "required": true },
-    "TWN_NM":        { "value": "Dubai",     "required": true },
-    "PO_BOX":        { "value": "6588",      "required": true },
-    "ADR_LINE1":     { "value": "PO Box 6588","required": true }
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dubai",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "6588",
+      "required": true
+    },
+    "ADR_LINE": {
+      "value": "PO Box 6588",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

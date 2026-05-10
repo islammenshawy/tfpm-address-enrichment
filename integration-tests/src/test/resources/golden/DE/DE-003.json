@@ -6,11 +6,26 @@
   "country_hint": "DE",
   "locale": "de-DE",
   "expected_fields": {
-    "CTRY":          { "value": "DE",                     "required": true },
-    "TWN_NM":        { "value": "Frankfurt am Main",      "required": true },
-    "PST_CD":        { "value": "60325",                  "required": true },
-    "STRT_NM":       { "value": "Taunusanlage",           "required": true },
-    "BLDG_NBR":      { "value": "12",                    "required": true }
+    "CTRY": {
+      "value": "DE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Frankfurt am Main",
+      "required": true
+    },
+    "PST_CD": {
+      "value": "60325",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Taunusanlage",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "12",
+      "required": true
+    }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

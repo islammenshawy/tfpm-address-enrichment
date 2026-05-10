@@ -6,13 +6,34 @@
   "country_hint": "US",
   "locale": "en-US",
   "expected_fields": {
-    "CTRY":          { "value": "US",                  "required": true  },
-    "CTRY_SUB_DVSN": { "value": "NY",                  "required": true  },
-    "TWN_NM":        { "value": "New York",            "required": true  },
-    "STRT_NM":       { "value": "Madison Avenue",      "required": true  },
-    "BLDG_NB":       { "value": "383",                 "required": false },
-    "BLDG_NM":       { "value": "Suite 4500",          "required": false },
-    "PST_CD":        { "value": "10179",               "required": true  }
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "NY",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "New York",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Madison Avenue",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "383",
+      "required": false
+    },
+    "BLDG_NM": {
+      "value": "Suite 4500",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "10179",
+      "required": true
+    }
   },
   "validator": "TBD@jpmorgan.com",
   "validated_at": "TBD",
