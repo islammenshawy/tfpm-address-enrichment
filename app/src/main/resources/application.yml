@@ -117,9 +117,24 @@ enrichment:
     early-exit-threshold: 0.92
     timeout-ms: 500
     required-fields: [CTRY, TWN_NM]
+    routing:
+      CN: [llm]
   # Confidence threshold below which a result goes to EXCEPTION_QUEUE
   # for human review. Calibrated, not raw.
   review-threshold: 0.70
+
+  # ----- Compliance routing (four-axis decision) -----
+  compliance:
+    enabled: ${COMPLIANCE_ENABLED:true}
+    field-confidence-floor:
+      CTRY: 0.95
+      TWN_NM: 0.80
+      CTRY_SUB_DVSN: 0.75
+    overall-confidence-floor: 0.85
+    high-risk-countries-resource: classpath:compliance/high-risk-countries.csv
+    pattern-triggers-resource: classpath:compliance/sanctions-patterns.csv
+    fail-safe-action: CONSERVATIVE
+    shadow-mode: ${COMPLIANCE_SHADOW:true}
 
   # ----- Structurer: libpostal -----
   libpostal:

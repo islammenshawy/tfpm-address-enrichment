@@ -1,0 +1,11 @@
+# Sanctions watch patterns — regex patterns matched against raw address text
+# Triggers ComplianceReason.SANCTIONS_PATTERN_MATCH
+# Format: one regex per line (case-insensitive)
+# WARNING: Keep patterns broad enough to catch variants, narrow enough to avoid false positives
+CENTRAL\s+BANK\s+OF\s+IRAN
+BANK\s+MELLI
+BANK\s+SADERAT
+KOREAN\s+WORKERS.?\s*PARTY
+ATOMIC\s+ENERGY\s+ORGANIZATION
+IRGC
+ISLAMIC\s+REVOLUTIONARY\s+GUARD

@@ -1,0 +1,16 @@
+# OFAC/FATF high-risk countries — triggers compliance routing
+# Source: OFAC SDN, FATF grey/black list (as of 2026-05)
+# Format: one ISO 3166-1 alpha-2 code per line
+IR
+KP
+SY
+CU
+RU
+BY
+VE
+MM
+SD
+SO
+YE
+LY
+AF
