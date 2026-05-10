@@ -1,8 +1,9 @@
 # docker-compose for local development.
 #
 # Brings up everything needed to run the app end-to-end on a developer
-# laptop: Oracle Free, Kafka in KRaft mode, IBM MQ, and stub gRPC sidecars
+# laptop: Oracle Free, Kafka in KRaft mode, RabbitMQ, and stub gRPC sidecars
 # for libpostal and (future) swift-crf.
+# Kafka and RabbitMQ are both included; enable/disable in application.yml.
 #
 # Usage:
 #   docker compose -f infra/docker/docker-compose.yml up -d
@@ -71,22 +72,26 @@ services:
       retries: 10
 
   # ============================================================
-  # IBM MQ — same image as production. Web console on 9443 for
-  # poking around queues during development.
+  # RabbitMQ — message broker for async enrichment channel.
+  # Management console on 15672 (guest/guest).
+  # Configure on/off via RABBITMQ_ENABLED env var.
   # ============================================================
-  mq:
-    image: icr.io/ibm-messaging/mq:9.4.1.0-r2
-    container_name: tfpm-mq
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: tfpm-rabbitmq
     environment:
-      LICENSE: accept
-      MQ_QMGR_NAME: QM1
-      MQ_APP_PASSWORD: passw0rd
-      MQ_ADMIN_PASSWORD: passw0rd
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     ports:
-      - "1414:1414"   # MQI
-      - "9443:9443"   # web console (https://localhost:9443/ibmmq/console)
+      - "5672:5672"     # AMQP
+      - "15672:15672"   # management console (http://localhost:15672)
     volumes:
-      - mq-data:/mnt/mqm
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   # ============================================================
   # libpostal sidecar — NOT INCLUDED by default. Requires real
@@ -141,6 +146,40 @@ services:
       timeout: 5s
       retries: 5
 
+  # ============================================================
+  # The application itself. Build with 'make build' first, then
+  # 'make up' to start everything including the app.
+  # In local dev, you can also run via 'make app' (outside Docker).
+  # ============================================================
+  app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: tfpm-app
+    ports:
+      - "8080:8080"
+    environment:
+      ORACLE_APP_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      ORACLE_LEGACY_URL: jdbc:oracle:thin:@//oracle:1521/FREEPDB1
+      KAFKA_BOOTSTRAP: kafka:9092
+      KAFKA_ENABLED: "true"
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_ENABLED: "false"
+      LLM_ENABLED: "false"
+      LLM_ENDPOINT: http://llm-gateway-stub:8080
+      LIBPOSTAL_ENDPOINT: libpostal-sidecar:50051
+      LIBPOSTAL_ENABLED: "false"
+      SPRING_PROFILES_ACTIVE: local
+    depends_on:
+      oracle:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    profiles:
+      - app
+
 volumes:
   oracle-data:
-  mq-data:
+  rabbitmq-data:

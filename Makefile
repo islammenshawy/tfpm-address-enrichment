@@ -12,7 +12,7 @@ ORACLE_URL := jdbc:oracle:thin:@//localhost:1521/FREEPDB1
 ORACLE_USER := system
 ORACLE_PASS := oracle
 
-.PHONY: help up wait down reset logs oracle-shell kafka-topics mq-console wiremock-reload \
+.PHONY: help up wait down reset logs oracle-shell kafka-topics rabbitmq-console wiremock-reload \
         migrate migrate-rollback build verify it accuracy app app-debug ports clean
 
 help:
@@ -20,7 +20,7 @@ help:
 	@echo "TFPM Address Enrichment — local dev"
 	@echo ""
 	@echo "Environment:"
-	@echo "  make up               Start docker-compose stack (Oracle, Kafka, MQ, WireMock)"
+	@echo "  make up               Start docker-compose stack (Oracle, Kafka, RabbitMQ, WireMock)"
 	@echo "  make wait             Block until all services are healthy"
 	@echo "  make down             Stop containers (keep volumes)"
 	@echo "  make reset            Stop containers AND remove volumes (clean slate)"
@@ -34,7 +34,7 @@ help:
 	@echo ""
 	@echo "Services:"
 	@echo "  make kafka-topics     List Kafka topics"
-	@echo "  make mq-console       Print MQ web console URL"
+	@echo "  make rabbitmq-console  Print RabbitMQ management URL"
 	@echo "  make wiremock-reload  Reload WireMock LLM stub mappings"
 	@echo ""
 	@echo "Build & test:"
@@ -44,8 +44,9 @@ help:
 	@echo "  make accuracy         mvn -P accuracy verify (accuracy harness)"
 	@echo ""
 	@echo "Run:"
-	@echo "  make app              Start the app with local profile"
+	@echo "  make app              Start the app locally (outside Docker)"
 	@echo "  make app-debug        Start the app with remote debug on 5005"
+	@echo "  make docker-app       Build and run the app as a Docker container"
 	@echo ""
 
 # ============================================================
@@ -106,9 +107,9 @@ oracle-shell:
 kafka-topics:
 	$(COMPOSE) exec kafka kafka-topics --bootstrap-server localhost:9092 --list
 
-mq-console:
-	@echo "MQ web console:  https://localhost:9443/ibmmq/console"
-	@echo "Login:           admin / passw0rd"
+rabbitmq-console:
+	@echo "RabbitMQ management:  http://localhost:15672"
+	@echo "Login:                guest / guest"
 
 wiremock-reload:
 	curl -fsS -X POST http://localhost:8089/__admin/mappings/reset
@@ -143,6 +144,10 @@ app-debug:
 		-Dspring-boot.run.arguments="--spring.profiles.active=local" \
 		-Dspring-boot.run.jvmArguments="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
 	@echo "Remote debug listening on :5005"
+
+docker-app: build
+	$(COMPOSE) --profile app up -d --build app
+	@echo "App running at http://localhost:8080"
 
 clean:
 	mvn clean
