@@ -207,6 +207,13 @@ resilience4j:
         wait-duration: 50ms
         retry-exceptions:
           - io.grpc.StatusRuntimeException
+      llm-retry:
+        max-attempts: 2
+        wait-duration: 100ms
+        retry-exceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - org.springframework.web.reactive.function.client.WebClientRequestException
+          - java.util.concurrent.TimeoutException
 
 # ============================================================
 # Tomcat — bounded request handling. 503 + Retry-After on overflow

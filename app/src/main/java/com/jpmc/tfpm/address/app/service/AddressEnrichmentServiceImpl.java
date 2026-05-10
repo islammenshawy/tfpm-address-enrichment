@@ -13,6 +13,9 @@ import com.jpmc.tfpm.address.domain.ResultPersistence;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,41 +35,65 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final ResultPersistence resultPersistence;
     private final ComplianceRouter complianceRouter;
     private final double reviewThreshold;
+    private final MeterRegistry meterRegistry;
 
     public AddressEnrichmentServiceImpl(
             IdempotencyStore idempotencyStore,
             CascadeOrchestrator cascadeOrchestrator,
             ResultPersistence resultPersistence,
             ComplianceRouter complianceRouter,
-            double reviewThreshold) {
+            double reviewThreshold,
+            MeterRegistry meterRegistry) {
         this.idempotencyStore = idempotencyStore;
         this.cascadeOrchestrator = cascadeOrchestrator;
         this.resultPersistence = resultPersistence;
         this.complianceRouter = complianceRouter;
         this.reviewThreshold = reviewThreshold;
+        this.meterRegistry = meterRegistry;
     }
 
     @Override
     public EnrichmentResult enrich(EnrichmentRequest request) {
         var correlationId = request.correlationId();
+        var sample = Timer.start(meterRegistry);
 
         // Step 1: Idempotency claim
         var claim = idempotencyStore.tryClaim(request);
 
         if (!claim.isClaimed()) {
-            return handleDuplicate(claim, correlationId);
+            Counter.builder("address.enrichment.idempotency.duplicate")
+                    .tag("channel", request.sourceChannel().name())
+                    .register(meterRegistry).increment();
+            var result = handleDuplicate(claim, correlationId);
+            sample.stop(Timer.builder("address.enrichment.latency.total")
+                    .tag("channel", request.sourceChannel().name())
+                    .tag("outcome", result.outcome().name())
+                    .register(meterRegistry));
+            return result;
         }
 
         // Step 2: Run cascade
         var cascadeResult = cascadeOrchestrator.orchestrate(
                 request.address(), correlationId);
 
-        return switch (cascadeResult) {
-            case Result.Success<CascadeResult>(var result) ->
-                    handleCascadeSuccess(request, claim, result);
+        var result = switch (cascadeResult) {
+            case Result.Success<CascadeResult>(var cr) ->
+                    handleCascadeSuccess(request, claim, cr);
             case Result.Failure<CascadeResult> f ->
                     handleCascadeFailure(request, claim);
         };
+
+        Counter.builder("address.enrichment.processed")
+                .tag("channel", request.sourceChannel().name())
+                .tag("outcome", result.outcome().name())
+                .register(meterRegistry).increment();
+
+        sample.stop(Timer.builder("address.enrichment.latency.total")
+                .tag("channel", request.sourceChannel().name())
+                .tag("outcome", result.outcome().name())
+                .register(meterRegistry));
+
+        return result;
     }
 
     private EnrichmentResult handleDuplicate(ClaimResult claim, String correlationId) {
@@ -109,10 +136,18 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         if (!address.meetsSr2026Minimum()) {
             outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
             resultPersistence.writeToExceptionQueue(resultRowId, "MISSING_REQUIRED");
+            Counter.builder("address.enrichment.exceptions")
+                    .tag("reason", "MISSING_REQUIRED")
+                    .tag("country", request.address().countryHint())
+                    .register(meterRegistry).increment();
             LOG.info("SR2026 mandatory fields missing [corrId={}]", correlationId);
         } else if (confidence < reviewThreshold) {
             outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
             resultPersistence.writeToExceptionQueue(resultRowId, "LOW_CONFIDENCE");
+            Counter.builder("address.enrichment.exceptions")
+                    .tag("reason", "LOW_CONFIDENCE")
+                    .tag("country", request.address().countryHint())
+                    .register(meterRegistry).increment();
             LOG.info("Confidence {:.2f} below threshold {:.2f} [corrId={}]",
                     confidence, reviewThreshold, correlationId);
         } else {
@@ -141,6 +176,11 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         long resultRowId = resultPersistence.persistResult(request, emptyResult);
         idempotencyStore.recordResult(claim.idempotencyKey(), resultRowId);
         resultPersistence.writeToExceptionQueue(resultRowId, "UNSTRUCTURABLE");
+
+        Counter.builder("address.enrichment.exceptions")
+                .tag("reason", "UNSTRUCTURABLE")
+                .tag("country", request.address().countryHint())
+                .register(meterRegistry).increment();
 
         return new EnrichmentResult(
                 correlationId,

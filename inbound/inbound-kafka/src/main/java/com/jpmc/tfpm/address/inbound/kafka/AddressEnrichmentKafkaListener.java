@@ -4,11 +4,11 @@ import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
 import com.jpmc.tfpm.address.domain.RawAddress;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
@@ -38,10 +38,11 @@ public class AddressEnrichmentKafkaListener {
             autoStartup = "${enrichment.kafka.enabled:false}")
     public void onMessage(ConsumerRecord<String, String> record, Acknowledgment ack) {
         var correlationId = extractCorrelationId(record);
-        LOG.debug("Received Kafka message [corrId={}, partition={}, offset={}]",
-                correlationId, record.partition(), record.offset());
-
+        MDC.put("traceId", correlationId);
         try {
+            LOG.debug("Received Kafka message [corrId={}, partition={}, offset={}]",
+                    correlationId, record.partition(), record.offset());
+
             var json = objectMapper.readTree(record.value());
             var rawAddress = json.path("rawAddress").asText("");
             var countryHint = json.path("countryHint").asText("");
@@ -66,6 +67,8 @@ public class AddressEnrichmentKafkaListener {
         } catch (Exception e) {
             LOG.error("Failed to process Kafka message [corrId={}]", correlationId, e);
             // Don't ack — message will be redelivered by Kafka
+        } finally {
+            MDC.remove("traceId");
         }
     }
 

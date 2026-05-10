@@ -9,6 +9,7 @@ import jakarta.jms.Message;
 import jakarta.jms.TextMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.jms.annotation.JmsListener;
 import org.springframework.stereotype.Component;
 
@@ -34,9 +35,10 @@ public class AddressEnrichmentMqListener {
             containerFactory = "jmsListenerContainerFactory")
     public void onMessage(Message message) throws JMSException {
         var correlationId = extractCorrelationId(message);
-        LOG.debug("Received MQ message [corrId={}]", correlationId);
-
+        MDC.put("traceId", correlationId);
         try {
+            LOG.debug("Received MQ message [corrId={}]", correlationId);
+
             if (!(message instanceof TextMessage textMessage)) {
                 LOG.warn("Non-text JMS message received, skipping [corrId={}]", correlationId);
                 message.acknowledge();
@@ -50,8 +52,6 @@ public class AddressEnrichmentMqListener {
                 return;
             }
 
-            // Simple text format: raw address as the message body
-            // Production would use a JSON/XML format matching the MQ contract
             var request = new EnrichmentRequest(
                     correlationId,
                     EnrichmentRequest.SourceChannel.MQ,
@@ -65,6 +65,8 @@ public class AddressEnrichmentMqListener {
         } catch (Exception e) {
             LOG.error("Failed to process MQ message [corrId={}]", correlationId, e);
             // Don't ack — message will be redelivered by MQ
+        } finally {
+            MDC.remove("traceId");
         }
     }
 

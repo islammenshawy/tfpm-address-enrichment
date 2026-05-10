@@ -18,12 +18,15 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @DisplayName("AddressEnrichmentServiceImpl")
 class AddressEnrichmentServiceImplTest {
 
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
     private IdempotencyStore idempotencyStore;
     private ResultPersistence resultPersistence;
     private AddressEnrichmentServiceImpl service;
@@ -41,7 +44,7 @@ class AddressEnrichmentServiceImplTest {
         };
         var calibrators = List.<ConfidenceCalibrator>of(new IdentityConfidenceCalibrator("stub"));
         var merger = new FieldMerger(calibrators);
-        return new CascadeOrchestrator(List.of(stub), merger, CountryRouter.noOp(), 0.92);
+        return new CascadeOrchestrator(List.of(stub), merger, CountryRouter.noOp(), 0.92, meterRegistry);
     }
 
     private CascadeOrchestrator makeFailingOrchestrator() {
@@ -54,7 +57,7 @@ class AddressEnrichmentServiceImplTest {
         };
         var calibrators = List.<ConfidenceCalibrator>of(new IdentityConfidenceCalibrator("failing"));
         var merger = new FieldMerger(calibrators);
-        return new CascadeOrchestrator(List.of(failing), merger, CountryRouter.noOp(), 0.92);
+        return new CascadeOrchestrator(List.of(failing), merger, CountryRouter.noOp(), 0.92, meterRegistry);
     }
 
     @BeforeEach
@@ -69,7 +72,8 @@ class AddressEnrichmentServiceImplTest {
                 orchestrator,
                 resultPersistence,
                 ComplianceRouter.alwaysBypass(),
-                0.70);
+                0.70,
+                meterRegistry);
     }
 
     @Test

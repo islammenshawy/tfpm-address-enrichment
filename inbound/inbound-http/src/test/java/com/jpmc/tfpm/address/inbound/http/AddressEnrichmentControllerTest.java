@@ -3,6 +3,8 @@ package com.jpmc.tfpm.address.inbound.http;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService.EnrichmentResult;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
+import com.jpmc.tfpm.address.domain.ExceptionQueue;
+import com.jpmc.tfpm.address.domain.ResultPersistence;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -26,11 +28,16 @@ class AddressEnrichmentControllerTest {
 
     private MockMvc mockMvc;
     private AddressEnrichmentService service;
+    private ResultPersistence resultPersistence;
+    private ExceptionQueue exceptionQueue;
 
     @BeforeEach
     void setUp() {
         service = mock(AddressEnrichmentService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new AddressEnrichmentController(service))
+        resultPersistence = mock(ResultPersistence.class);
+        exceptionQueue = mock(ExceptionQueue.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(
+                        new AddressEnrichmentController(service, resultPersistence, exceptionQueue))
                 .build();
     }
 

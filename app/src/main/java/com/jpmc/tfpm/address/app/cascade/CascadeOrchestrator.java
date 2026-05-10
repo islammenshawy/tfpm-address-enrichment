@@ -11,12 +11,16 @@ import com.jpmc.tfpm.address.domain.Result;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
+import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Runs the structurer cascade: invokes each structurer in order, checks
@@ -32,17 +36,20 @@ public final class CascadeOrchestrator {
     private final CountryRouter countryRouter;
     private final double earlyExitThreshold;
     private final Set<AddressField> requiredFields;
+    private final MeterRegistry meterRegistry;
 
     public CascadeOrchestrator(
             List<AddressStructurer> structurers,
             FieldMerger fieldMerger,
             CountryRouter countryRouter,
-            double earlyExitThreshold) {
+            double earlyExitThreshold,
+            MeterRegistry meterRegistry) {
         this.structurers = List.copyOf(structurers);
         this.fieldMerger = fieldMerger;
         this.countryRouter = countryRouter;
         this.earlyExitThreshold = earlyExitThreshold;
         this.requiredFields = Set.of(AddressField.CTRY, AddressField.TWN_NM);
+        this.meterRegistry = meterRegistry;
     }
 
     /**
@@ -62,10 +69,17 @@ public final class CascadeOrchestrator {
         }
 
         var trace = new ArrayList<StructuringResult>();
+        String previousStructurer = null;
 
         for (var structurer : applicableStructurers) {
             try {
+                var sample = Timer.start(meterRegistry);
                 var result = structurer.structure(raw);
+                sample.stop(Timer.builder("address.enrichment.latency")
+                        .tag("structurer", structurer.name())
+                        .tag("country", raw.countryHint())
+                        .register(meterRegistry));
+
                 trace.add(result);
                 LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
                         structurer.name(), result.fields().size(),
@@ -76,10 +90,16 @@ public final class CascadeOrchestrator {
                             structurer.name(), correlationId);
                     break;
                 }
+                previousStructurer = structurer.name();
             } catch (Exception e) {
                 LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
                         structurer.name(), correlationId, e.getMessage());
-                // Continue to next structurer — cascade is resilient
+                if (previousStructurer != null) {
+                    Counter.builder("address.enrichment.cascade.fallback")
+                            .tag("from", previousStructurer)
+                            .tag("to", structurer.name())
+                            .register(meterRegistry).increment();
+                }
             }
         }
 

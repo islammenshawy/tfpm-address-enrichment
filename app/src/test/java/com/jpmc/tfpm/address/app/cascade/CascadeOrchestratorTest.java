@@ -20,10 +20,14 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @DisplayName("CascadeOrchestrator")
 class CascadeOrchestratorTest {
+
+    private final SimpleMeterRegistry meterRegistry = new SimpleMeterRegistry();
 
     private static AddressStructurer stubStructurer(String name, Map<AddressField, FieldValue> fields) {
         return new AddressStructurer() {
@@ -58,7 +62,7 @@ class CascadeOrchestratorTest {
                         new IdentityConfidenceCalibrator(s.name()))
                 .toList();
         var merger = new FieldMerger(calibrators);
-        return new CascadeOrchestrator(structurers, merger, router, earlyExitThreshold);
+        return new CascadeOrchestrator(structurers, merger, router, earlyExitThreshold, meterRegistry);
     }
 
     @Test

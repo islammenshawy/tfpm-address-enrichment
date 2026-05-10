@@ -1,0 +1,7 @@
+{
+  "systemPrompt": "You are an address parsing engine. Parse addresses into structured fields.",
+  "userMessageTemplate": "Parse this address: {{rawAddress}} Country: {{countryHint}} Locale: {{locale}}",
+  "outputSchema": "",
+  "maxTokens": 500,
+  "temperature": 0.1
+}
