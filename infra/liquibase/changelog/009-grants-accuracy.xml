@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Grants for the three accuracy-measurement tables. Mirrors the
+        DML-only pattern from changelog 006: the schema owner
+        (TFPM_ADDR_ENRICH) creates and owns; the runtime app user
+        (TFPM_ADDR_ENRICH_APP) gets only the operations it needs.
+
+        FIELD_ATTRIBUTIONS: app inserts (during cascade), nobody updates.
+        VALIDATION_FEEDBACK: app inserts (when maker UI calls back).
+        ACCURACY_SAMPLES: app inserts (sampling job) and updates (verdict
+            submission from reviewer UI).
+    -->
+
+    <changeSet id="009-1-grant-field-attributions" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT
+                ON TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS
+                TO TFPM_ADDR_ENRICH_APP;
+            -- deliberately no UPDATE/DELETE: attributions are immutable history
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="009-2-grant-validation-feedback" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT
+                ON TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK
+                TO TFPM_ADDR_ENRICH_APP;
+            -- append-only by construction
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="009-3-grant-accuracy-samples" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT, UPDATE
+                ON TFPM_ADDR_ENRICH.ACCURACY_SAMPLES
+                TO TFPM_ADDR_ENRICH_APP;
+            -- UPDATE allowed for verdict submission (status PENDING -> REVIEWED)
+            -- with optimistic-lock check on VERSION column
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.ACCURACY_SAMPLES FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

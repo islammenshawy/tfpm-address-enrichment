@@ -1,0 +1,12 @@
+# Per-country, per-field calibration table for libpostal raw confidences.
+# Format: country,field,raw_low,raw_high,calibrated_low,calibrated_high
+# Piecewise linear; missing rows fall back to identity (raw passed through).
+#
+# Day 1: identity calibrators (this file empty except headers).
+# Day 8-9: populated from accuracy harness output.
+#
+# Example after Day 9 tuning:
+#   US,STRT_NM,-2.0,0.0,0.7,0.99   <- libpostal strong on US street names
+#   AE,STRT_NM,-2.0,0.0,0.5,0.85   <- libpostal weaker on UAE streets
+#   AE,CTRY_SUB_DVSN,-2.0,0.0,0.3,0.7  <- weaker on emirates as state
+country,field,raw_low,raw_high,calibrated_low,calibrated_high

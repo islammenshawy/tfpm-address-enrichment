@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="004-1-create-exception-queue" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (
+                EXCEPTION_ID    NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID       NUMBER(19)         NOT NULL,
+                REASON          VARCHAR2(64 CHAR)  NOT NULL,
+                STATUS          VARCHAR2(16 CHAR) DEFAULT 'OPEN' NOT NULL
+                                CONSTRAINT CK_EXC_STATUS
+                                CHECK (STATUS IN ('OPEN','CLAIMED','RESOLVED','REJECTED')),
+                CLAIMED_BY      VARCHAR2(64 CHAR),
+                CLAIMED_AT      TIMESTAMP(6),
+                RESOLVED_BY     VARCHAR2(64 CHAR),
+                RESOLVED_AT     TIMESTAMP(6),
+                RESOLUTION_JSON CLOB CONSTRAINT CK_RESOLN_JSON CHECK (RESOLUTION_JSON IS JSON),
+                CREATED_AT      TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                VERSION         NUMBER(10) DEFAULT 0 NOT NULL,
+                CONSTRAINT PK_EXCEPTION PRIMARY KEY (EXCEPTION_ID),
+                CONSTRAINT FK_EXC_RESULT
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_EXC_REASON
+                    CHECK (REASON IN ('LOW_CONFIDENCE','MISSING_REQUIRED','UNSTRUCTURABLE','MANUAL_REVIEW'))
+            );
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.EXCEPTION_QUEUE PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="004-2-create-exception-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            -- Skip-locked claim pattern reads from this index:
+            --   SELECT * FROM EXCEPTION_QUEUE
+            --   WHERE STATUS = 'OPEN' ORDER BY CREATED_AT
+            --   FETCH FIRST :n ROWS ONLY FOR UPDATE SKIP LOCKED;
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_EXC_OPEN
+                ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (STATUS, CREATED_AT);
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_EXC_RESULT
+                ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE (RESULT_ID);
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_EXC_RESULT;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_EXC_OPEN;
+            </sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

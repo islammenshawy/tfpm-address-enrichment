@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Per-field attribution. One row per (result, field, structurer).
+        Denormalised so per-country reporting can use simple SQL without
+        JSON parsing — JSON queries on Oracle are 5-50x slower than
+        column-indexed queries at the volumes we expect (millions/day).
+
+        See docs/ACCURACY_MEASUREMENT.md section 3b for the rationale.
+    -->
+
+    <changeSet id="007-1-create-field-attributions" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS (
+                ATTRIBUTION_ID         NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID              NUMBER(19)         NOT NULL,
+                FIELD_NAME             VARCHAR2(20 CHAR)  NOT NULL,
+                STRUCTURER_NAME        VARCHAR2(40 CHAR)  NOT NULL,
+                STRUCTURER_VERSION     VARCHAR2(80 CHAR)  NOT NULL,
+                RAW_CONFIDENCE         NUMBER(10,6),
+                CALIBRATED_CONFIDENCE  NUMBER(3,2)        NOT NULL,
+                WAS_SELECTED           CHAR(1) DEFAULT 'N' NOT NULL,
+                FIELD_VALUE            VARCHAR2(512 CHAR),
+                LATENCY_MS             NUMBER(8),
+                COUNTRY_HINT           CHAR(2),
+                CREATED_AT             TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                CONSTRAINT PK_ATTR PRIMARY KEY (ATTRIBUTION_ID, CREATED_AT),
+                CONSTRAINT FK_ATTR_RESULT
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_ATTR_FIELD CHECK (FIELD_NAME IN
+                    ('CTRY','TWN_NM','PST_CD','CTRY_SUB_DVSN','STRT_NM','BLDG_NB','BLDG_NM','ADR_LINE')),
+                CONSTRAINT CK_ATTR_SELECTED CHECK (WAS_SELECTED IN ('Y','N')),
+                CONSTRAINT CK_ATTR_CONF     CHECK (CALIBRATED_CONFIDENCE BETWEEN 0 AND 1)
+            )
+            PARTITION BY RANGE (CREATED_AT)
+            INTERVAL (NUMTODSINTERVAL(7, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="007-2-create-attribution-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            -- Per-country, per-field reporting (the most common query)
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_ATTR_COUNTRY_FIELD
+                ON TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS
+                (COUNTRY_HINT, FIELD_NAME, CREATED_AT) LOCAL;
+
+            -- Structurer-contribution analysis ("who's winning what")
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_ATTR_SELECTED
+                ON TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS
+                (WAS_SELECTED, COUNTRY_HINT, FIELD_NAME, STRUCTURER_NAME) LOCAL;
+
+            -- Lookup by RESULT_ID (drill-down from STRUCTURING_RESULTS row)
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_ATTR_RESULT
+                ON TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS (RESULT_ID) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_ATTR_RESULT;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_ATTR_SELECTED;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_ATTR_COUNTRY_FIELD;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="007-3-comment-field-attributions" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS IS
+                'Per-field attribution. One row per (result,field,structurer). Denormalised for SQL reporting. See docs/ACCURACY_MEASUREMENT.md.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS.WAS_SELECTED IS
+                'Y if the FieldMerger picked this contribution for the final result; N otherwise.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS.RAW_CONFIDENCE IS
+                'Raw confidence as reported by the structurer, BEFORE calibration. Useful for calibrator retuning.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.FIELD_ATTRIBUTIONS.STRUCTURER_VERSION IS
+                'Version string e.g. libpostal-1.0.0, llm-gpt-4o-2024-08-06. Required for regression analysis after model swaps.';
+        </sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

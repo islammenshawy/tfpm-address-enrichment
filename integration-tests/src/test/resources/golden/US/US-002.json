@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-002",
+  "country": "US",
+  "source": "kafka_payment_event",
+  "raw": "1600 Pennsylvania Avenue NW, Washington, DC 20500",
+  "country_hint": "US",
+  "locale": "en-US",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Washington",
+    "CTRY_SUB_DVSN": "DC",
+    "STRT_NM": "Pennsylvania Avenue NW",
+    "BLDG_NB": "1600",
+    "PST_CD": "20500"
+  },
+  "notes": "Standard US address with state abbreviation and ZIP code."
+}

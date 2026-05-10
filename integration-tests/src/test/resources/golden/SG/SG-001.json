@@ -1,0 +1,19 @@
+{
+  "fixture_id": "SG-001",
+  "country": "SG",
+  "source": "kafka",
+  "raw": "10 Anson Road #12-34 International Plaza Singapore 079903",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY":          { "value": "SG",                   "required": true  },
+    "TWN_NM":        { "value": "Singapore",            "required": true  },
+    "STRT_NM":       { "value": "Anson Road",           "required": true  },
+    "BLDG_NB":       { "value": "10",                   "required": false },
+    "BLDG_NM":       { "value": "International Plaza",  "required": false },
+    "PST_CD":        { "value": "079903",               "required": true  }
+  },
+  "validator": "TBD@jpmorgan.com",
+  "validated_at": "TBD",
+  "notes": "Standard SG commercial. The #12-34 unit notation stays in raw for AdrLine fallback."
+}

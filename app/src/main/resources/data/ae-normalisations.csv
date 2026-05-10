@@ -1,0 +1,27 @@
+# UAE-specific pre-processor normalisations.
+# Run inside LibpostalAddressStructurer BEFORE calling libpostal.
+# Format: pattern,replacement
+# Pattern is regex (Java syntax); replacement may use $1, $2 etc.
+#
+# Top pain points in TPS UAE data — extend from accuracy harness misses.
+pattern,replacement
+"\\bSZR\\b","Sheikh Zayed Road"
+"\\bSheikh Zayed Rd\\b","Sheikh Zayed Road"
+"\\bMaktum Rd\\b","Al Maktoum Road"
+"\\bMaktoum Rd\\b","Al Maktoum Road"
+"\\bKhalifa St\\b","Khalifa Bin Zayed Road"
+"\\bP\\.?O\\.? Box ([0-9]+)","PO Box $1"
+"\\bUAE\\b","United Arab Emirates"
+"\\bU\\.A\\.E\\.?\\b","United Arab Emirates"
+"\\bDubai\\.?,? UAE\\b","Dubai, United Arab Emirates"
+"\\bAbu Dhabi\\.?,? UAE\\b","Abu Dhabi, United Arab Emirates"
+"\\bAd Dawhah\\b","Doha"
+"\\bDXB\\b","Dubai"
+"\\bAUH\\b","Abu Dhabi"
+"\\bShj\\b","Sharjah"
+"\\bRAK\\b","Ras Al Khaimah"
+"\\bDIFC\\b","Dubai International Financial Centre"
+"\\bDMCC\\b","Dubai Multi Commodities Centre"
+"\\bJAFZA\\b","Jebel Ali Free Zone"
+"\\bDAFZA\\b","Dubai Airport Free Zone"
+"\\bADGM\\b","Abu Dhabi Global Market"

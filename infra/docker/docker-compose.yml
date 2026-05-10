@@ -1,0 +1,146 @@
+# docker-compose for local development.
+#
+# Brings up everything needed to run the app end-to-end on a developer
+# laptop: Oracle Free, Kafka in KRaft mode, IBM MQ, and stub gRPC sidecars
+# for libpostal and (future) swift-crf.
+#
+# Usage:
+#   docker compose -f infra/docker/docker-compose.yml up -d
+#   mvn -pl infra/liquibase liquibase:update -Pdev
+#   mvn -pl app spring-boot:run
+#
+# Tear down:
+#   docker compose -f infra/docker/docker-compose.yml down -v
+
+name: tfpm-address-enrichment
+
+services:
+
+  # ============================================================
+  # Oracle Free — drop-in for the production Oracle instance.
+  # 23ai includes the JSON datatype and IS JSON constraint our
+  # schema relies on.
+  # ============================================================
+  oracle:
+    image: gvenzl/oracle-free:23-slim-faststart
+    container_name: tfpm-oracle
+    environment:
+      ORACLE_PASSWORD: oracle
+      APP_USER: TFPM_ADDR_ENRICH
+      APP_USER_PASSWORD: oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+    healthcheck:
+      test: ["CMD", "healthcheck.sh"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+  # ============================================================
+  # Kafka in KRaft mode (no ZooKeeper). Single broker is fine for
+  # local dev; the production deployment uses the JPMC Kafka cluster.
+  # ============================================================
+  kafka:
+    image: confluentinc/cp-kafka:7.7.0
+    container_name: tfpm-kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+      CLUSTER_ID: tfpm-local-cluster
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # ============================================================
+  # IBM MQ — same image as production. Web console on 9443 for
+  # poking around queues during development.
+  # ============================================================
+  mq:
+    image: icr.io/ibm-messaging/mq:9.4.1.0-r2
+    container_name: tfpm-mq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_APP_PASSWORD: passw0rd
+      MQ_ADMIN_PASSWORD: passw0rd
+    ports:
+      - "1414:1414"   # MQI
+      - "9443:9443"   # web console (https://localhost:9443/ibmmq/console)
+    volumes:
+      - mq-data:/mnt/mqm
+
+  # ============================================================
+  # libpostal sidecar — NOT INCLUDED by default. Requires real
+  # libpostal binary + a gRPC server speaking proto/structurer.proto.
+  # See docs/DOCKER_DEV_GUIDE.md "Adding sidecars locally".
+  # When you implement it, uncomment and provide the Dockerfile in
+  # infra/docker/sidecars/libpostal/.
+  # ============================================================
+  # libpostal-sidecar:
+  #   build:
+  #     context: ./sidecars/libpostal
+  #   container_name: tfpm-libpostal
+  #   ports:
+  #     - "50051:50051"
+  #   profiles:
+  #     - sidecars
+
+  # ============================================================
+  # SWIFT CRF sidecar — NOT INCLUDED. Activated only when the
+  # SWIFT model has been downloaded from Swift Download Centre and
+  # IS&C-cleared. See SwiftCrfAddressStructurer.java Javadoc for
+  # the full activation checklist.
+  # ============================================================
+  # swift-crf-sidecar:
+  #   build:
+  #     context: ./sidecars/swift-crf
+  #   container_name: tfpm-swift-crf
+  #   ports:
+  #     - "50052:50051"
+  #   profiles:
+  #     - sidecars
+  #     - swift-crf
+
+  # ============================================================
+  # WireMock standing in for the JPMC internal LLM gateway.
+  # The real gateway is HTTPS-only with an internal cert; for
+  # local dev we use WireMock with canned responses from
+  # infra/docker/wiremock/mappings/.
+  # Started by default so the dev environment is usable out of the box.
+  # ============================================================
+  llm-gateway-stub:
+    image: wiremock/wiremock:3.9.2
+    container_name: tfpm-llm-gateway
+    command: ["--global-response-templating", "--verbose"]
+    ports:
+      - "8089:8080"
+    volumes:
+      - ./wiremock:/home/wiremock
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/__admin/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  oracle-data:
+  mq-data:

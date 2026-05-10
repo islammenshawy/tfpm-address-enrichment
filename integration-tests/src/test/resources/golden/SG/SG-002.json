@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-002",
+  "country": "SG",
+  "source": "kafka_payment_event",
+  "raw": "Block 123, Lorong 4 Toa Payoh, #05-678, Singapore 310123",
+  "country_hint": "SG",
+  "locale": "en-SG",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "STRT_NM": "Lorong 4 Toa Payoh",
+    "BLDG_NB": "123",
+    "PST_CD": "310123"
+  },
+  "notes": "HDB-style Singapore address with block, lorong, unit notation, and 6-digit postal code."
+}

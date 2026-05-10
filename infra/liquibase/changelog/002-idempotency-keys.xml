@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-1-create-idempotency-keys" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS (
+                IDEM_KEY        VARCHAR2(64 CHAR)  NOT NULL,
+                SOURCE_CHANNEL  VARCHAR2(16 CHAR)  NOT NULL,
+                SOURCE_REF      VARCHAR2(256 CHAR),
+                PROCESSED_AT    TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                RESULT_REF      NUMBER(19),
+                CONSTRAINT PK_IDEM PRIMARY KEY (IDEM_KEY),
+                CONSTRAINT CK_IDEM_CHANNEL CHECK (SOURCE_CHANNEL IN ('HTTP','KAFKA','MQ'))
+            )
+            PARTITION BY RANGE (PROCESSED_AT)
+            INTERVAL (NUMTODSINTERVAL(1, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="002-2-comment-idempotency-keys" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS IS
+                'Race-free deduplication. INSERT-first, catch ORA-00001 to detect duplicates.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS.IDEM_KEY IS
+                'SHA-256 hex of canonicalized raw address concatenated with source channel.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS.RESULT_REF IS
+                'FK to STRUCTURING_RESULTS.RESULT_ID. NULL means cascade in progress.';
+        </sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

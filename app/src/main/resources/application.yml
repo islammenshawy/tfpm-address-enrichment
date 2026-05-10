@@ -1,0 +1,260 @@
+# Spring Boot configuration for the TFPM Address Enrichment Service.
+#
+# Environment-specific overrides come from:
+#   - application-local.yml (local dev, gitignored if it has secrets)
+#   - application-uat.yml   (UAT env, ConfigMap)
+#   - application-prod.yml  (Prod env, ConfigMap + Secret refs)
+#
+# Never bake credentials into this file. Secrets resolve via Vault in real
+# environments and via env vars locally.
+
+spring:
+  application:
+    name: tfpm-address-enrichment
+
+  # ============================================================
+  # Two HikariCP pools — read/write separation enforced at the DB
+  # level. legacy-read uses TFPM_LEGACY_RO (SELECT only). app-write
+  # uses TFPM_ADDR_ENRICH_APP (DML on TFPM_ADDR_ENRICH only).
+  # Pool sizes assume 3-4 replicas; coordinate with DBA on max
+  # session limit before increasing.
+  # ============================================================
+  datasource:
+    legacy-read:
+      jdbc-url: ${ORACLE_LEGACY_URL:jdbc:oracle:thin:@//localhost:1521/FREEPDB1}
+      username: ${ORACLE_LEGACY_USER:TFPM_LEGACY_RO}
+      password: ${ORACLE_LEGACY_PASSWORD:oracle}
+      driver-class-name: oracle.jdbc.OracleDriver
+      hikari:
+        pool-name: legacy-read-pool
+        maximum-pool-size: 30
+        minimum-idle: 5
+        connection-timeout: 5000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        read-only: true
+        auto-commit: true
+        connection-init-sql: ALTER SESSION SET ISOLATION_LEVEL = READ COMMITTED
+    app-write:
+      jdbc-url: ${ORACLE_APP_URL:jdbc:oracle:thin:@//localhost:1521/FREEPDB1}
+      username: ${ORACLE_APP_USER:TFPM_ADDR_ENRICH_APP}
+      password: ${ORACLE_APP_PASSWORD:oracle}
+      driver-class-name: oracle.jdbc.OracleDriver
+      hikari:
+        pool-name: app-write-pool
+        maximum-pool-size: 50
+        minimum-idle: 10
+        connection-timeout: 5000
+        idle-timeout: 600000
+        max-lifetime: 1800000
+        auto-commit: false
+        connection-init-sql: ALTER SESSION SET ISOLATION_LEVEL = READ COMMITTED
+
+  # ============================================================
+  # Kafka consumer/producer config. Cooperative-sticky assignor at
+  # the factory level (not the listener annotation) so all consumers
+  # in this app use it consistently.
+  # ============================================================
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:29092}
+    consumer:
+      group-id: tfpm-address-enrichment
+      enable-auto-commit: false
+      auto-offset-reset: earliest
+      max-poll-records: 100
+      properties:
+        max.poll.interval.ms: 300000
+        session.timeout.ms: 45000
+        partition.assignment.strategy: org.apache.kafka.clients.consumer.CooperativeStickyAssignor
+        isolation.level: read_committed
+    producer:
+      acks: all
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        delivery.timeout.ms: 120000
+    listener:
+      ack-mode: manual
+      concurrency: 3
+      missing-topics-fatal: false
+
+  # ============================================================
+  # IBM MQ via Spring JMS. NO XA — we rely on the idempotency table
+  # plus single-resource Oracle commit + JMS auto-ack for
+  # exactly-once semantics. XA at JPMC scale costs more than it saves.
+  # ============================================================
+  jms:
+    listener:
+      acknowledge-mode: client
+      concurrency: 10
+      max-concurrency: 25
+
+# ============================================================
+# IBM MQ connection (resolved by the @JmsListener container factory
+# in the inbound-mq module).
+# ============================================================
+ibm:
+  mq:
+    queue-manager: ${MQ_QMGR:QM1}
+    channel: ${MQ_CHANNEL:DEV.APP.SVRCONN}
+    conn-name: ${MQ_HOST:localhost}(${MQ_PORT:1414})
+    user: ${MQ_USER:app}
+    password: ${MQ_PASSWORD:passw0rd}
+
+# ============================================================
+# The cascade configuration. Adding a new structurer means:
+#   1. Drop a new adapter module
+#   2. Add a config block here
+#   3. Insert its name into enrichment.cascade.order
+# No code changes anywhere else.
+# ============================================================
+enrichment:
+  cascade:
+    # Order in which structurers are invoked. Each subsequent structurer
+    # only runs if the cumulative result has not yet hit the early-exit
+    # threshold on all required fields.
+    order: [libpostal, swift-crf, llm]
+    early-exit-threshold: 0.92
+    required-fields: [CTRY, TWN_NM]
+  # Confidence threshold below which a result goes to EXCEPTION_QUEUE
+  # for human review. Calibrated, not raw.
+  review-threshold: 0.70
+
+  # ----- Structurer: libpostal -----
+  libpostal:
+    enabled: ${LIBPOSTAL_ENABLED:true}
+    endpoint: ${LIBPOSTAL_ENDPOINT:localhost:50051}
+    timeout-ms: 500
+    bulkhead:
+      max-concurrent-calls: 50
+      max-wait-duration-ms: 100
+
+  # ----- Structurer: SWIFT CRF (stub today; real impl when downloaded) -----
+  swift-crf:
+    enabled: ${SWIFT_CRF_ENABLED:false}
+    endpoint: ${SWIFT_CRF_ENDPOINT:localhost:50052}
+    timeout-ms: 500
+    bulkhead:
+      max-concurrent-calls: 30
+      max-wait-duration-ms: 100
+
+  # ----- Structurer: internal LLM gateway -----
+  llm:
+    enabled: ${LLM_ENABLED:false}
+    endpoint: ${LLM_ENDPOINT:http://localhost:8089}
+    timeout-ms: 2000
+    fields-allowed: [CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM]
+    bulkhead:
+      max-concurrent-calls: 20
+      max-wait-duration-ms: 200
+    prompt:
+      template-resource: classpath:prompts/address-structuring.json
+
+  # ----- Inbound channel-specific config -----
+  http:
+    enabled: true
+  kafka:
+    enabled: true
+    input-topic: ${KAFKA_INPUT_TOPIC:tfpm.address.enrichment.input}
+    output-topic: ${KAFKA_OUTPUT_TOPIC:tfpm.address.enrichment.output}
+    dlt-topic: ${KAFKA_DLT_TOPIC:tfpm.address.enrichment.input.dlt}
+  mq:
+    enabled: true
+    input-queue: ${MQ_INPUT_QUEUE:DEV.QUEUE.1}
+    output-queue: ${MQ_OUTPUT_QUEUE:DEV.QUEUE.2}
+    dlq: ${MQ_DLQ:DEV.DEAD.LETTER.QUEUE}
+
+# ============================================================
+# Resilience4j circuit breakers and bulkheads. Names map to the
+# instance names used in the structurer adapters.
+# ============================================================
+resilience4j:
+  circuitbreaker:
+    instances:
+      libpostal-cb:
+        failure-rate-threshold: 50
+        slow-call-rate-threshold: 50
+        slow-call-duration-threshold: 1s
+        sliding-window-size: 100
+        minimum-number-of-calls: 20
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 5
+      swift-crf-cb:
+        failure-rate-threshold: 50
+        sliding-window-size: 100
+        minimum-number-of-calls: 20
+        wait-duration-in-open-state: 30s
+      llm-cb:
+        failure-rate-threshold: 50
+        sliding-window-size: 50
+        minimum-number-of-calls: 10
+        wait-duration-in-open-state: 60s
+  bulkhead:
+    instances:
+      libpostal-bh:
+        max-concurrent-calls: 50
+        max-wait-duration: 100ms
+      swift-crf-bh:
+        max-concurrent-calls: 30
+        max-wait-duration: 100ms
+      llm-bh:
+        max-concurrent-calls: 20
+        max-wait-duration: 200ms
+  retry:
+    instances:
+      libpostal-retry:
+        max-attempts: 2
+        wait-duration: 50ms
+        retry-exceptions:
+          - io.grpc.StatusRuntimeException
+
+# ============================================================
+# Tomcat — bounded request handling. 503 + Retry-After on overflow
+# instead of unbounded queue growth.
+# ============================================================
+server:
+  port: ${SERVER_PORT:8080}
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 25
+    accept-count: 100
+    max-connections: 500
+  shutdown: graceful
+
+# ============================================================
+# Liquibase — applied at startup if enabled. In production we run
+# migrations as a separate ops job, so this is false there.
+# ============================================================
+liquibase:
+  enabled: ${LIQUIBASE_ENABLED:false}
+  change-log: classpath:/infra/liquibase/changelog-master.xml
+
+# ============================================================
+# Observability. Prometheus scrape on /actuator/prometheus,
+# health on /actuator/health, structured JSON logs via Logback.
+# ============================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus,metrics
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+      environment: ${ENV:local}
+
+logging:
+  level:
+    root: INFO
+    com.jpmc.tfpm.address: INFO
+    org.springframework.kafka: WARN
+    org.hibernate: WARN
+    org.jooq: WARN
+  pattern:
+    console: '{"timestamp":"%d{yyyy-MM-dd HH:mm:ss.SSS}","level":"%level","logger":"%logger{40}","thread":"%thread","traceId":"%X{traceId:-}","spanId":"%X{spanId:-}","message":"%msg"}%n'

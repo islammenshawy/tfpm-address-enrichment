@@ -1,0 +1,18 @@
+{
+  "fixture_id": "AE-003",
+  "country": "AE",
+  "source": "legacy_oracle",
+  "raw": "Unit 2301, Level 23, Gate Village Building 4, DIFC, Dubai, UAE",
+  "country_hint": "AE",
+  "locale": "en-AE",
+  "expected_fields": {
+    "CTRY": "AE",
+    "CTRY_SUB_DVSN": "Dubai",
+    "TWN_NM": "Dubai",
+    "BLDG_NM": "Gate Village Building 4",
+    "BLDG_NB": "2301",
+    "STRT_NM": "",
+    "PST_CD": ""
+  },
+  "notes": "DIFC free zone address; free zone name is a signal for CTRY_SUB_DVSN=Dubai. Unit number in BLDG_NB."
+}

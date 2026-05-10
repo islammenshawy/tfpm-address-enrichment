@@ -1,0 +1,17 @@
+{
+  "fixture_id": "CN-002",
+  "country": "CN",
+  "source": "legacy_oracle",
+  "raw": "No. 88 Century Avenue, Pudong New District, Shanghai 200120, China",
+  "country_hint": "CN",
+  "locale": "en-CN",
+  "expected_fields": {
+    "CTRY": "CN",
+    "CTRY_SUB_DVSN": "Shanghai",
+    "TWN_NM": "Shanghai",
+    "STRT_NM": "Century Avenue",
+    "BLDG_NB": "88",
+    "PST_CD": "200120"
+  },
+  "notes": "Romanised Shanghai address. Direct-controlled municipality: Shanghai is both province and city."
+}

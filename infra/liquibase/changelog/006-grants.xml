@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        DML-only grants from TFPM_ADDR_ENRICH (schema owner) to
+        TFPM_ADDR_ENRICH_APP (the runtime app user).
+
+        Note the absence of:
+          - CREATE ANY *
+          - DROP ANY *
+          - ALTER ANY *
+          - any DDL on these tables
+          - any grant on the legacy schema
+
+        Even if the app code has a bug that tries to issue DDL or write to
+        legacy, it fails at the database level. This is the second line of
+        defence; the first is the ArchUnit invariants in archunit-tests.
+
+        TFPM_LEGACY_RO is created and granted SELECT on legacy tables in
+        the legacy-side migration repo, not here.
+    -->
+
+    <changeSet id="006-1-grant-dml-on-idempotency-keys" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT, UPDATE
+                ON TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS
+                TO TFPM_ADDR_ENRICH_APP;
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="006-2-grant-dml-on-structuring-results" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT
+                ON TFPM_ADDR_ENRICH.STRUCTURING_RESULTS
+                TO TFPM_ADDR_ENRICH_APP;
+            -- deliberately no UPDATE or DELETE; results are immutable once written
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.STRUCTURING_RESULTS FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="006-3-grant-dml-on-exception-queue" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT, UPDATE
+                ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE
+                TO TFPM_ADDR_ENRICH_APP;
+            -- no DELETE; resolved exceptions stay for audit. Purge via
+            -- partitioned drop in a separate ops job.
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.EXCEPTION_QUEUE FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="006-4-grant-dml-on-audit-log" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            GRANT SELECT, INSERT
+                ON TFPM_ADDR_ENRICH.AUDIT_LOG
+                TO TFPM_ADDR_ENRICH_APP;
+            -- append-only by construction
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.AUDIT_LOG FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

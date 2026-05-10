@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Compliance routing audit. One row per cascade result, recording
+        what the ComplianceRouter decided and (when routed) what the
+        compliance flow's verdict was.
+
+        BYPASS rows matter as much as ROUTE rows — they're the audit
+        trail that proves we considered compliance for every payment,
+        not just the ones that triggered it.
+
+        See docs/COMPLIANCE_INTEGRATION.md sections 5 and 9.
+    -->
+
+    <changeSet id="010-1-create-compliance-routing" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING (
+                ROUTING_ID                  NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID                   NUMBER(19)         NOT NULL,
+                COUNTRY_HINT                CHAR(2),
+                DECISION                    VARCHAR2(20)       NOT NULL,
+                PRIMARY_REASON              VARCHAR2(40),
+                ALL_REASONS_JSON            CLOB CONSTRAINT CK_REASONS_JSON CHECK (ALL_REASONS_JSON IS JSON),
+                URGENCY                     VARCHAR2(16),
+                ROUTED_AT                   TIMESTAMP(6),
+                ROUTED_TO                   VARCHAR2(64),
+                COMPLIANCE_REQUEST_ID       VARCHAR2(64),
+                COMPLIANCE_VERDICT          VARCHAR2(20),
+                COMPLIANCE_VERDICT_DETAIL   CLOB CONSTRAINT CK_VERDICT_JSON CHECK (COMPLIANCE_VERDICT_DETAIL IS JSON),
+                COMPLIANCE_RESPONDED_AT     TIMESTAMP(6),
+                STATUS                      VARCHAR2(16) DEFAULT 'PENDING' NOT NULL,
+                CREATED_AT                  TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                VERSION                     NUMBER(10) DEFAULT 0 NOT NULL,
+                CONSTRAINT PK_COMP_ROUTING PRIMARY KEY (ROUTING_ID, CREATED_AT),
+                CONSTRAINT FK_COMP_RESULT
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_COMP_DECISION CHECK (DECISION IN ('BYPASS','ROUTE','BLOCK')),
+                CONSTRAINT CK_COMP_URGENCY  CHECK (URGENCY IS NULL OR URGENCY IN ('STANDARD','EXPEDITED','BLOCKING')),
+                CONSTRAINT CK_COMP_STATUS   CHECK (STATUS IN ('PENDING','DISPATCHED','RESOLVED','FAILED')),
+                CONSTRAINT CK_COMP_VERDICT  CHECK (COMPLIANCE_VERDICT IS NULL
+                                                   OR COMPLIANCE_VERDICT IN ('PASS','REJECT','NEEDS_REVIEW','TIMEOUT'))
+            )
+            PARTITION BY RANGE (CREATED_AT)
+            INTERVAL (NUMTODSINTERVAL(7, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="010-2-create-compliance-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            -- Most-common reporting query: per-country, per-decision, last N days
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_COMP_COUNTRY_DECISION
+                ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING
+                (COUNTRY_HINT, DECISION, CREATED_AT) LOCAL;
+
+            -- Find pending dispatches (compliance system was unreachable)
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_COMP_PENDING
+                ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING
+                (STATUS, CREATED_AT) LOCAL;
+
+            -- Drill-down by result id and by compliance request id
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_COMP_RESULT
+                ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING (RESULT_ID) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_COMP_REQUEST
+                ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING (COMPLIANCE_REQUEST_ID) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_COMP_REQUEST;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_COMP_RESULT;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_COMP_PENDING;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_COMP_COUNTRY_DECISION;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="010-3-grants" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            -- Insert: cascade writes routing decisions
+            -- Update: dispatcher writes COMPLIANCE_VERDICT when compliance responds
+            -- No DELETE — routing audit is permanent
+            GRANT SELECT, INSERT, UPDATE
+                ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING
+                TO TFPM_ADDR_ENRICH_APP;
+        </sql>
+        <rollback>
+            <sql>REVOKE ALL ON TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING FROM TFPM_ADDR_ENRICH_APP;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="010-4-comments" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING IS
+                'Audit trail for compliance routing decisions. One row per cascade result, including BYPASS decisions. See docs/COMPLIANCE_INTEGRATION.md.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING.DECISION IS
+                'BYPASS = passed straight through. ROUTE = sent to compliance for review. BLOCK = hard-blocked, no compliance review needed.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.COMPLIANCE_ROUTING.STATUS IS
+                'PENDING = decision made, not yet dispatched (only for ROUTE). DISPATCHED = sent to compliance, awaiting verdict. RESOLVED = compliance verdict received. FAILED = dispatch failed permanently.';
+        </sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

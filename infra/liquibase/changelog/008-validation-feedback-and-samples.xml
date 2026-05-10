@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Two tables for production accuracy measurement:
+
+        VALIDATION_FEEDBACK — captures every operator override from the
+            maker/checker UI. The cheapest production accuracy proxy.
+
+        ACCURACY_SAMPLES — captures stratified daily samples of production
+            results, queued for human review. The closest you get to
+            real production accuracy numbers.
+
+        See docs/ACCURACY_MEASUREMENT.md sections 4a and 4b.
+    -->
+
+    <changeSet id="008-1-create-validation-feedback" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK (
+                FEEDBACK_ID         NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID           NUMBER(19)         NOT NULL,
+                FIELD_NAME          VARCHAR2(20 CHAR)  NOT NULL,
+                ORIGINAL_VALUE      VARCHAR2(512 CHAR),
+                CORRECTED_VALUE     VARCHAR2(512 CHAR) NOT NULL,
+                CORRECTED_BY        VARCHAR2(64 CHAR)  NOT NULL,
+                CORRECTED_AT        TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                CORRECTION_REASON   VARCHAR2(64 CHAR),
+                COUNTRY_HINT        CHAR(2),
+                VERSION             NUMBER(10) DEFAULT 0 NOT NULL,
+                CONSTRAINT PK_FEEDBACK PRIMARY KEY (FEEDBACK_ID, CORRECTED_AT),
+                CONSTRAINT FK_FEEDBACK_RESULT
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_FB_FIELD CHECK (FIELD_NAME IN
+                    ('CTRY','TWN_NM','PST_CD','CTRY_SUB_DVSN','STRT_NM','BLDG_NB','BLDG_NM','ADR_LINE'))
+            )
+            PARTITION BY RANGE (CORRECTED_AT)
+            INTERVAL (NUMTODSINTERVAL(30, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-2-create-feedback-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_FEEDBACK_COUNTRY_FIELD
+                ON TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK
+                (COUNTRY_HINT, FIELD_NAME, CORRECTED_AT) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_FEEDBACK_RESULT
+                ON TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK (RESULT_ID) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_FEEDBACK_RESULT;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_FEEDBACK_COUNTRY_FIELD;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-3-create-accuracy-samples" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.ACCURACY_SAMPLES (
+                SAMPLE_ID           NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                RESULT_ID           NUMBER(19)         NOT NULL,
+                COUNTRY_HINT        CHAR(2)            NOT NULL,
+                CONFIDENCE_BUCKET   VARCHAR2(8 CHAR)   NOT NULL,
+                SAMPLED_AT          TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                STATUS              VARCHAR2(16 CHAR) DEFAULT 'PENDING' NOT NULL,
+                REVIEWER            VARCHAR2(64 CHAR),
+                REVIEWED_AT         TIMESTAMP(6),
+                PER_FIELD_VERDICT   CLOB CONSTRAINT CK_VERDICT_JSON CHECK (PER_FIELD_VERDICT IS JSON),
+                NOTES               VARCHAR2(2000 CHAR),
+                VERSION             NUMBER(10) DEFAULT 0 NOT NULL,
+                CONSTRAINT PK_SAMPLE PRIMARY KEY (SAMPLE_ID, SAMPLED_AT),
+                CONSTRAINT FK_SAMPLE_RESULT
+                    FOREIGN KEY (RESULT_ID)
+                    REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID),
+                CONSTRAINT CK_SAMPLE_STATUS CHECK (STATUS IN ('PENDING','IN_REVIEW','REVIEWED','DISCARDED')),
+                CONSTRAINT CK_SAMPLE_BUCKET CHECK (CONFIDENCE_BUCKET IN ('HIGH','MID','LOW'))
+            )
+            PARTITION BY RANGE (SAMPLED_AT)
+            INTERVAL (NUMTODSINTERVAL(30, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.ACCURACY_SAMPLES PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-4-create-sample-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            -- Reviewer queue: pending samples ordered by date
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_PENDING
+                ON TFPM_ADDR_ENRICH.ACCURACY_SAMPLES (STATUS, COUNTRY_HINT, SAMPLED_AT) LOCAL;
+
+            -- Reporting: reviewed samples per country over time
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_REVIEWED
+                ON TFPM_ADDR_ENRICH.ACCURACY_SAMPLES (COUNTRY_HINT, REVIEWED_AT, STATUS) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_RESULT
+                ON TFPM_ADDR_ENRICH.ACCURACY_SAMPLES (RESULT_ID) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_RESULT;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_REVIEWED;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_SAMPLE_PENDING;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="008-5-comments" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.VALIDATION_FEEDBACK IS
+                'Operator overrides from maker/checker UI. Cheapest production accuracy proxy.';
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.ACCURACY_SAMPLES IS
+                'Stratified daily samples queued for human review. Source of real per-country production accuracy estimates.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.ACCURACY_SAMPLES.CONFIDENCE_BUCKET IS
+                'HIGH (>=0.9), MID (0.7-0.9), LOW (<0.7). Sampled in 4:4:2 ratio per country per day.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.ACCURACY_SAMPLES.PER_FIELD_VERDICT IS
+                'JSON: { "FIELD_NAME": { "verdict": "correct|wrong|partial", "should_be": "..." } }';
+        </sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

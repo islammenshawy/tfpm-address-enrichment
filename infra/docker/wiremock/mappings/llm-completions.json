@@ -1,0 +1,36 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/v1/chat/completions",
+    "headers": {
+      "Authorization": { "matches": "Bearer .+" }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "jsonBody": {
+      "id": "chatcmpl-stub-local-dev-0001",
+      "object": "chat.completion",
+      "created": 1759000000,
+      "model": "stub-model-local",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "{\"CTRY\":{\"value\":\"AE\",\"confidence\":0.95},\"CTRY_SUB_DVSN\":{\"value\":\"Dubai\",\"confidence\":0.90},\"TWN_NM\":{\"value\":\"Dubai\",\"confidence\":0.90},\"STRT_NM\":{\"value\":\"Sheikh Zayed Road\",\"confidence\":0.85},\"BLDG_NM\":{\"value\":\"Emirates Towers\",\"confidence\":0.80},\"BLDG_NB\":{\"value\":\"1204\",\"confidence\":0.75}}"
+          },
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 245,
+        "completion_tokens": 142,
+        "total_tokens": 387
+      }
+    }
+  }
+}

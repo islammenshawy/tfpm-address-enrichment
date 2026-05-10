@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jpmc.tfpm.address</groupId>
+        <artifactId>tfpm-address-enrichment</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>app</artifactId>
+    <name>TFPM Address — App (composition root)</name>
+    <dependencies>
+        <!-- Domain -->
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>domain</artifactId></dependency>
+        <!-- All adapters -->
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-libpostal</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-swift-crf</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-llm</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-prowide</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-oracle-legacy</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>adapter-oracle-app</artifactId></dependency>
+        <!-- All inbound -->
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-http</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-kafka</artifactId></dependency>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>inbound-mq</artifactId></dependency>
+        <!-- Infrastructure -->
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-actuator</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-web</artifactId></dependency>
+        <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-registry-prometheus</artifactId></dependency>
+        <dependency><groupId>io.opentelemetry.instrumentation</groupId><artifactId>opentelemetry-spring-boot-starter</artifactId><version>${opentelemetry-instrumentation.version}</version></dependency>
+        <dependency><groupId>org.liquibase</groupId><artifactId>liquibase-core</artifactId></dependency>
+        <dependency><groupId>net.logstash.logback</groupId><artifactId>logstash-logback-encoder</artifactId><version>8.0</version></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>com.jpmc.tfpm.address.app.Application</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals><goal>repackage</goal></goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

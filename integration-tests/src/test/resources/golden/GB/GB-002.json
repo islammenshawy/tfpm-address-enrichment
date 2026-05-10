@@ -1,0 +1,17 @@
+{
+  "fixture_id": "GB-002",
+  "country": "GB",
+  "source": "ibm_mq",
+  "raw": "Flat 4B, Mansion House, 28 Queen Victoria Street, London EC4N 4SL",
+  "country_hint": "GB",
+  "locale": "en-GB",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "STRT_NM": "Queen Victoria Street",
+    "BLDG_NB": "28",
+    "BLDG_NM": "Mansion House",
+    "PST_CD": "EC4N 4SL"
+  },
+  "notes": "UK address with flat number, building name, street number, and full postcode."
+}

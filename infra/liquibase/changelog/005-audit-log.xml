@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="005-1-create-audit-log" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.AUDIT_LOG (
+                AUDIT_ID     NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                EVENT_TIME   TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                EVENT_TYPE   VARCHAR2(32 CHAR)  NOT NULL,
+                ACTOR        VARCHAR2(64 CHAR)  NOT NULL,
+                ENTITY_TYPE  VARCHAR2(32 CHAR)  NOT NULL,
+                ENTITY_ID    VARCHAR2(64 CHAR)  NOT NULL,
+                DETAILS_JSON CLOB CONSTRAINT CK_AUDIT_JSON CHECK (DETAILS_JSON IS JSON),
+                CONSTRAINT PK_AUDIT PRIMARY KEY (AUDIT_ID)
+            )
+            PARTITION BY RANGE (EVENT_TIME)
+            INTERVAL (NUMTODSINTERVAL(30, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.AUDIT_LOG PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="005-2-create-audit-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_AUDIT_ENTITY
+                ON TFPM_ADDR_ENRICH.AUDIT_LOG (ENTITY_TYPE, ENTITY_ID, EVENT_TIME) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_AUDIT_ACTOR
+                ON TFPM_ADDR_ENRICH.AUDIT_LOG (ACTOR, EVENT_TIME) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_AUDIT_ACTOR;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_AUDIT_ENTITY;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="005-3-comment-audit" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            COMMENT ON TABLE TFPM_ADDR_ENRICH.AUDIT_LOG IS
+                'Append-only audit trail. Inserted by app code only, never by triggers.';
+            COMMENT ON COLUMN TFPM_ADDR_ENRICH.AUDIT_LOG.ACTOR IS
+                'User principal for human actions, or "system" for automated events.';
+        </sql>
+        <rollback/>
+    </changeSet>
+
+</databaseChangeLog>

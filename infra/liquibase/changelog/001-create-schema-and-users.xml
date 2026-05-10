@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Schema-owner user TFPM_ADDR_ENRICH owns the tables.
+        App user TFPM_ADDR_ENRICH_APP gets DML on those tables only (see 006).
+        Legacy read-only user TFPM_LEGACY_RO is created in legacy-side scripts;
+        not managed here.
+
+        Production-environment passwords come from Vault and are NOT in DDL.
+        These DDL passwords are placeholders for local dev only.
+    -->
+
+    <changeSet id="001-1-create-schema-owner" author="tfpm" runOnChange="false">
+        <preConditions onFail="MARK_RAN">
+            <not><tableExists schemaName="TFPM_ADDR_ENRICH" tableName="DUMMY"/></not>
+        </preConditions>
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE USER TFPM_ADDR_ENRICH IDENTIFIED BY "ChangeMeInProd!"
+                DEFAULT TABLESPACE USERS
+                QUOTA UNLIMITED ON USERS;
+            GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE,
+                  CREATE PROCEDURE, CREATE TRIGGER
+                TO TFPM_ADDR_ENRICH;
+        </sql>
+        <rollback>
+            <sql>DROP USER TFPM_ADDR_ENRICH CASCADE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="001-2-create-app-user" author="tfpm" runOnChange="false">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE USER TFPM_ADDR_ENRICH_APP IDENTIFIED BY "ChangeMeInProd!"
+                DEFAULT TABLESPACE USERS
+                QUOTA 0 ON USERS;
+            GRANT CREATE SESSION TO TFPM_ADDR_ENRICH_APP;
+            -- explicitly NO CREATE TABLE / CREATE PROCEDURE / etc.
+            -- DML grants are applied in changelog 006 after tables exist.
+        </sql>
+        <rollback>
+            <sql>DROP USER TFPM_ADDR_ENRICH_APP CASCADE;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

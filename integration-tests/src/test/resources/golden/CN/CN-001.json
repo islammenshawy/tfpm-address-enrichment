@@ -1,0 +1,20 @@
+{
+  "fixture_id": "CN-001",
+  "country": "CN",
+  "source": "legacy_oracle",
+  "raw": "Room 2801, Tower B, Jing An Kerry Centre, 1515 Nanjing West Road, Jing An District, Shanghai 200040, China",
+  "country_hint": "CN",
+  "locale": "en-CN",
+  "expected_fields": {
+    "CTRY":          { "value": "CN",                       "required": true  },
+    "CTRY_SUB_DVSN": { "value": "Shanghai",                 "required": true  },
+    "TWN_NM":        { "value": "Shanghai",                 "required": true  },
+    "STRT_NM":       { "value": "Nanjing West Road",        "required": true  },
+    "BLDG_NB":       { "value": "1515",                     "required": false },
+    "BLDG_NM":       { "value": "Jing An Kerry Centre",     "required": false },
+    "PST_CD":        { "value": "200040",                   "required": false }
+  },
+  "validator": "TBD@jpmorgan.com",
+  "validated_at": "TBD",
+  "notes": "Romanised. libpostal known-weak; route to LLM-only via CountryRouter."
+}

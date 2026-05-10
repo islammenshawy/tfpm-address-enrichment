@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Master changelog for TFPM_ADDR_ENRICH schema.
+
+        Liquibase migrations are the only DDL source of truth.
+        Never apply DDL by hand in any environment.
+
+        Apply order matters; do not reorder.
+    -->
+
+    <include file="changelog/001-create-schema-and-users.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/002-idempotency-keys.xml"        relativeToChangelogFile="true"/>
+    <include file="changelog/003-structuring-results.xml"     relativeToChangelogFile="true"/>
+    <include file="changelog/004-exception-queue.xml"         relativeToChangelogFile="true"/>
+    <include file="changelog/005-audit-log.xml"               relativeToChangelogFile="true"/>
+    <include file="changelog/006-grants.xml"                  relativeToChangelogFile="true"/>
+    <include file="changelog/007-field-attributions.xml"      relativeToChangelogFile="true"/>
+    <include file="changelog/008-validation-feedback-and-samples.xml" relativeToChangelogFile="true"/>
+    <include file="changelog/009-grants-accuracy.xml"         relativeToChangelogFile="true"/>
+    <include file="changelog/010-compliance-routing.xml"      relativeToChangelogFile="true"/>
+
+</databaseChangeLog>

@@ -1,0 +1,116 @@
+// Common contract for all address structurer sidecars.
+// libpostal-sidecar implements this today.
+// swift-crf-sidecar will implement this when the model is downloaded.
+// Future vendors (Loqate, SmartyStreets, Google, etc.) implement the same.
+//
+// Protocol version 1. Bump major on breaking changes; never change semantics
+// of an existing field number.
+syntax = "proto3";
+
+package com.jpmc.tfpm.address.proto.v1;
+
+option java_multiple_files = true;
+option java_package = "com.jpmc.tfpm.address.proto.v1";
+option java_outer_classname = "StructurerProto";
+
+import "google/protobuf/empty.proto";
+
+service AddressStructurerService {
+    // Structure a single raw address. Sidecars MUST be stateless and idempotent
+    // for a given (raw_address, country_hint, locale) tuple.
+    rpc Structure (StructureRequest) returns (StructureResponse);
+
+    // Health check for orchestration. MUST return within 100ms.
+    rpc Health (google.protobuf.Empty) returns (HealthResponse);
+
+    // Capability advertisement. Returned set of fields determines what the
+    // FieldMerger will accept from this structurer. Returning a field this
+    // structurer cannot populate is a contract violation.
+    rpc Capabilities (google.protobuf.Empty) returns (CapabilitiesResponse);
+}
+
+message StructureRequest {
+    // Free-text address as it appears in the source system (Oracle, MT 50/59,
+    // corporate file). UTF-8. Up to 2000 chars (longer is truncated by client).
+    string raw_address = 1;
+
+    // ISO 3166-1 alpha-2 country code if known from context (e.g. derived from
+    // BIC). Empty string if unknown. Sidecars MAY use this as a hint but MUST
+    // NOT blindly trust it; they MUST still validate against the address text.
+    string country_hint = 2;
+
+    // BCP 47 locale tag (e.g. "en-AE", "ar-SA"). Empty string if unknown.
+    // Helps with transliteration and abbreviation expansion.
+    string locale = 3;
+
+    // Opaque correlation id propagated to logs and traces. Pass through.
+    string trace_id = 4;
+}
+
+message StructureResponse {
+    // Map keyed by AddressField enum name (STRT_NM, BLDG_NB, PST_CD, TWN_NM,
+    // CTRY_SUB_DVSN, CTRY, BLDG_NM, ADR_LINE). Fields the structurer could
+    // not infer MUST be absent from the map (do not include with empty value).
+    map<string, FieldOutput> fields = 1;
+
+    // Identifier of the model/library/version that produced this result.
+    // E.g. "libpostal-1.0.0", "swift-crf-2026.1", "loqate-v3".
+    // Required for audit trail.
+    string structurer_version = 2;
+
+    // Free-form diagnostics. Not parsed by the orchestrator. Useful for
+    // debugging, training data collection, vendor-specific signals.
+    map<string, string> diagnostics = 3;
+
+    // Latency measured INSIDE the sidecar (excluding network). Nanoseconds.
+    // Used for SLO tracking and cascade tuning.
+    int64 internal_latency_nanos = 4;
+}
+
+message FieldOutput {
+    // The structured value. UTF-8. Sidecar is responsible for normalisation
+    // (case, whitespace, transliteration) per its own conventions; the
+    // FieldMerger trusts the value as-is.
+    string value = 1;
+
+    // Raw confidence as the structurer reports it. NOT comparable across
+    // structurers — the ConfidenceCalibrator on the Java side normalises
+    // to a common 0..1 scale. Sidecars MUST NOT pre-calibrate.
+    double confidence = 2;
+
+    // Optional alternative interpretations, ordered by descending confidence.
+    // Used by the maker/checker UI. Sidecars MAY return empty list.
+    repeated FieldAlternative alternatives = 3;
+}
+
+message FieldAlternative {
+    string value = 1;
+    double confidence = 2;
+}
+
+message HealthResponse {
+    enum Status {
+        UNKNOWN = 0;
+        SERVING = 1;
+        NOT_SERVING = 2;
+        DEGRADED = 3;       // serving but some capabilities reduced
+    }
+    Status status = 1;
+    string detail = 2;       // human-readable, optional
+}
+
+message CapabilitiesResponse {
+    // AddressField enum names this structurer can populate. The orchestrator
+    // will not request fields outside this set; the FieldMerger will discard
+    // fields outside this set even if the sidecar returns them.
+    repeated string supported_fields = 1;
+
+    // Country codes this structurer is known to handle well. Empty list means
+    // "global / no claimed restriction". Used for routing decisions and
+    // accuracy harness slicing.
+    repeated string supported_countries = 2;
+
+    // Maximum supported requests per second per sidecar instance. Used by
+    // the Resilience4j bulkhead config. 0 means "no advertised limit".
+    int32 max_qps = 3;
+}

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                            http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="003-1-create-structuring-results" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE TABLE TFPM_ADDR_ENRICH.STRUCTURING_RESULTS (
+                RESULT_ID          NUMBER(19) GENERATED ALWAYS AS IDENTITY,
+                CORRELATION_ID     VARCHAR2(64 CHAR)  NOT NULL,
+                SOURCE_CHANNEL     VARCHAR2(16 CHAR)  NOT NULL,
+                RAW_ADDRESS        VARCHAR2(2000 CHAR) NOT NULL,
+                COUNTRY_HINT       CHAR(2),
+                FIELDS_JSON        CLOB CONSTRAINT CK_FIELDS_JSON CHECK (FIELDS_JSON IS JSON),
+                STRUCTURER_TRACE   CLOB CONSTRAINT CK_TRACE_JSON  CHECK (STRUCTURER_TRACE IS JSON),
+                OVERALL_CONFIDENCE NUMBER(3,2)         NOT NULL,
+                REQUIRES_REVIEW    CHAR(1) DEFAULT 'N' NOT NULL
+                                   CONSTRAINT CK_REVIEW CHECK (REQUIRES_REVIEW IN ('Y','N')),
+                CREATED_AT         TIMESTAMP(6) DEFAULT SYSTIMESTAMP NOT NULL,
+                CONSTRAINT PK_RESULTS PRIMARY KEY (RESULT_ID),
+                CONSTRAINT CK_RES_CONF CHECK (OVERALL_CONFIDENCE BETWEEN 0 AND 1),
+                CONSTRAINT CK_RES_CHANNEL CHECK (SOURCE_CHANNEL IN ('HTTP','KAFKA','MQ'))
+            )
+            PARTITION BY RANGE (CREATED_AT)
+            INTERVAL (NUMTODSINTERVAL(7, 'DAY'))
+            (PARTITION P_INITIAL VALUES LESS THAN (TIMESTAMP '2026-01-01 00:00:00'));
+        </sql>
+        <rollback>
+            <sql>DROP TABLE TFPM_ADDR_ENRICH.STRUCTURING_RESULTS PURGE;</sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="003-2-create-results-indexes" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_RESULTS_REVIEW
+                ON TFPM_ADDR_ENRICH.STRUCTURING_RESULTS (REQUIRES_REVIEW, CREATED_AT) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_RESULTS_CORR
+                ON TFPM_ADDR_ENRICH.STRUCTURING_RESULTS (CORRELATION_ID) LOCAL;
+
+            CREATE INDEX TFPM_ADDR_ENRICH.IX_RESULTS_COUNTRY_CONF
+                ON TFPM_ADDR_ENRICH.STRUCTURING_RESULTS (COUNTRY_HINT, OVERALL_CONFIDENCE) LOCAL;
+        </sql>
+        <rollback>
+            <sql endDelimiter=";" splitStatements="true">
+                DROP INDEX TFPM_ADDR_ENRICH.IX_RESULTS_COUNTRY_CONF;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_RESULTS_CORR;
+                DROP INDEX TFPM_ADDR_ENRICH.IX_RESULTS_REVIEW;
+            </sql>
+        </rollback>
+    </changeSet>
+
+    <changeSet id="003-3-add-fk-from-idempotency" author="tfpm">
+        <sql endDelimiter=";" splitStatements="true">
+            ALTER TABLE TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS
+                ADD CONSTRAINT FK_IDEM_RESULT
+                FOREIGN KEY (RESULT_REF)
+                REFERENCES TFPM_ADDR_ENRICH.STRUCTURING_RESULTS(RESULT_ID);
+        </sql>
+        <rollback>
+            <sql>ALTER TABLE TFPM_ADDR_ENRICH.IDEMPOTENCY_KEYS DROP CONSTRAINT FK_IDEM_RESULT;</sql>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

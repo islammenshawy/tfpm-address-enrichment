@@ -1,0 +1,19 @@
+{
+  "fixture_id": "CH-001",
+  "country": "CH",
+  "source": "legacy_oracle",
+  "raw": "Bahnhofstrasse 45, 8001 Zürich, Switzerland",
+  "country_hint": "CH",
+  "locale": "de-CH",
+  "expected_fields": {
+    "CTRY":          { "value": "CH",                  "required": true  },
+    "CTRY_SUB_DVSN": { "value": "ZH",                  "required": false },
+    "TWN_NM":        { "value": "Zürich",              "required": true  },
+    "STRT_NM":       { "value": "Bahnhofstrasse",      "required": true  },
+    "BLDG_NB":       { "value": "45",                  "required": false },
+    "PST_CD":        { "value": "8001",                "required": true  }
+  },
+  "validator": "TBD@jpmorgan.com",
+  "validated_at": "TBD",
+  "notes": "DE-CH locale. 4-digit postcode. Canton ZH from city lookup."
+}

@@ -1,0 +1,18 @@
+{
+  "fixture_id": "DE-001",
+  "country": "DE",
+  "source": "legacy_oracle",
+  "raw": "Taunusanlage 14, 60325 Frankfurt am Main, Deutschland",
+  "country_hint": "DE",
+  "locale": "de-DE",
+  "expected_fields": {
+    "CTRY":          { "value": "DE",                       "required": true  },
+    "TWN_NM":        { "value": "Frankfurt am Main",        "required": true  },
+    "STRT_NM":       { "value": "Taunusanlage",             "required": true  },
+    "BLDG_NB":       { "value": "14",                       "required": false },
+    "PST_CD":        { "value": "60325",                    "required": true  }
+  },
+  "validator": "TBD@jpmorgan.com",
+  "validated_at": "TBD",
+  "notes": "DE postcode-before-city; libpostal handles natively."
+}

@@ -1,0 +1,17 @@
+{
+  "fixture_id": "AE-002",
+  "country": "AE",
+  "source": "kafka_payment_event",
+  "raw": "PO Box 73137, Abu Dhabi, United Arab Emirates",
+  "country_hint": "AE",
+  "locale": "en-AE",
+  "expected_fields": {
+    "CTRY": "AE",
+    "CTRY_SUB_DVSN": "Abu Dhabi",
+    "TWN_NM": "Abu Dhabi",
+    "BLDG_NB": "73137",
+    "STRT_NM": "",
+    "PST_CD": ""
+  },
+  "notes": "PO Box address with no street; emirate=Abu Dhabi. Box number goes to BLDG_NB per UAE convention."
+}

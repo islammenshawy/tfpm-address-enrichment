@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.jpmc.tfpm.address</groupId>
+        <artifactId>tfpm-address-enrichment</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+    <artifactId>adapter-prowide</artifactId>
+    <name>TFPM Address — Adapter: Prowide ISO 20022</name>
+    <dependencies>
+        <dependency><groupId>com.jpmc.tfpm.address</groupId><artifactId>domain</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter</artifactId></dependency>
+        <dependency><groupId>com.prowidesoftware</groupId><artifactId>pw-iso20022</artifactId></dependency>
+        <dependency><groupId>org.mapstruct</groupId><artifactId>mapstruct</artifactId></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    </dependencies>
+</project>
