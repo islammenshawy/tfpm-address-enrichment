@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-012",
+  "country": "US",
+  "source": "external_public_addresses",
+  "raw": "100 Federal Street, Boston, MA 02110",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Boston",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "MA",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Federal Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "100",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "02110",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

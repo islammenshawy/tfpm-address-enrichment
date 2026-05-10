@@ -1,0 +1,33 @@
+{
+  "fixture_id": "DE-011",
+  "country": "DE",
+  "source": "external_public_addresses",
+  "raw": "Maximilianstraße 35, 80539 München",
+  "country_hint": "DE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "DE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "München",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Maximilianstraße",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "35",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "80539",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-013",
+  "country": "US",
+  "source": "external_public_addresses",
+  "raw": "555 California Street, San Francisco, CA 94104",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "San Francisco",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "CA",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "California Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "555",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "94104",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

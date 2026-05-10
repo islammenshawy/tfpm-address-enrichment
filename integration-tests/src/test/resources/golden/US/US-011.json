@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-011",
+  "country": "US",
+  "source": "external_public_addresses",
+  "raw": "200 Park Avenue, New York, NY 10166",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "New York",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "NY",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Park Avenue",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "200",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "10166",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

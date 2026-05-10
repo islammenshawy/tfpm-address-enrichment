@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-016",
+  "country": "US",
+  "source": "external_mixed_address_parsing",
+  "raw": "Bismarck 58504 1512 Mutineer US Pl ND",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "BLDG_NB": {
+      "value": "1512",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Mutineer Pl",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Bismarck",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "ND",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "58504",
+      "required": false
+    },
+    "CTRY": {
+      "value": "US",
+      "required": true
+    }
+  },
+  "validator": "dataset:Josephgflowers/mixed-address-parsing",
+  "validated_at": "2026-05-10",
+  "notes": "External dataset sample. Original country: US"
+}

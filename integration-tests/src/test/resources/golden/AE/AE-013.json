@@ -1,0 +1,25 @@
+{
+  "fixture_id": "AE-013",
+  "country": "AE",
+  "source": "external_public_addresses",
+  "raw": "Jumeirah Lake Towers, Cluster D, Dubai, UAE",
+  "country_hint": "AE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dubai",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Dubai",
+      "required": false
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

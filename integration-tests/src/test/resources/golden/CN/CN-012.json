@@ -1,0 +1,37 @@
+{
+  "fixture_id": "CN-012",
+  "country": "CN",
+  "source": "external_public_addresses",
+  "raw": "9 Financial Street, Xicheng District, Beijing 100033, China",
+  "country_hint": "CN",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "CN",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Beijing",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Beijing",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Financial Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "9",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "100033",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

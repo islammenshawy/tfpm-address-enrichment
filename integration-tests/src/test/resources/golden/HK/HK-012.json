@@ -1,0 +1,33 @@
+{
+  "fixture_id": "HK-012",
+  "country": "HK",
+  "source": "external_public_addresses",
+  "raw": "88 Queensway, Admiralty, Hong Kong",
+  "country_hint": "HK",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "HK",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Hong Kong",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Admiralty",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Queensway",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "88",
+      "required": false
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

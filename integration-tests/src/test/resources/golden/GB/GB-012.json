@@ -1,0 +1,33 @@
+{
+  "fixture_id": "GB-012",
+  "country": "GB",
+  "source": "external_public_addresses",
+  "raw": "8 Canada Square, London E14 5HQ",
+  "country_hint": "GB",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "GB",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "London",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Canada Square",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "8",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "E14 5HQ",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

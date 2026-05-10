@@ -1,0 +1,33 @@
+{
+  "fixture_id": "SG-013",
+  "country": "SG",
+  "source": "external_public_addresses",
+  "raw": "168 Robinson Road, Singapore 068912",
+  "country_hint": "SG",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "SG",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Singapore",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Robinson Road",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "168",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "068912",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

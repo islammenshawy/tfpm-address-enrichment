@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-020",
+  "country": "US",
+  "source": "external_mixed_address_parsing",
+  "raw": "2120 2120 Sherman Dr Bis,arck ND 5850j4 US",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "BLDG_NB": {
+      "value": "2120",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Sherman Dr",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Bismarck",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "ND",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "58504",
+      "required": false
+    },
+    "CTRY": {
+      "value": "US",
+      "required": true
+    }
+  },
+  "validator": "dataset:Josephgflowers/mixed-address-parsing",
+  "validated_at": "2026-05-10",
+  "notes": "External dataset sample. Original country: US"
+}

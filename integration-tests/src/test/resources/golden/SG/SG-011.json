@@ -1,0 +1,33 @@
+{
+  "fixture_id": "SG-011",
+  "country": "SG",
+  "source": "external_public_addresses",
+  "raw": "1 Raffles Place, Tower 2, Singapore 048616",
+  "country_hint": "SG",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "SG",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Singapore",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Raffles Place",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "048616",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

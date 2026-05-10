@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-018",
+  "country": "US",
+  "source": "external_mixed_address_parsing",
+  "raw": "Bismarck Loop ND 58504 US Southport 932 932",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "BLDG_NB": {
+      "value": "932",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Southport Loop",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Bismarck",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "ND",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "58504",
+      "required": false
+    },
+    "CTRY": {
+      "value": "US",
+      "required": true
+    }
+  },
+  "validator": "dataset:Josephgflowers/mixed-address-parsing",
+  "validated_at": "2026-05-10",
+  "notes": "External dataset sample. Original country: US"
+}

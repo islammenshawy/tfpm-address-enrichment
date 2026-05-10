@@ -1,0 +1,25 @@
+{
+  "fixture_id": "AE-015",
+  "country": "AE",
+  "source": "external_public_addresses",
+  "raw": "Al Reem Island, Abu Dhabi, United Arab Emirates",
+  "country_hint": "AE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "AE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Abu Dhabi",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Abu Dhabi",
+      "required": false
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

@@ -1,0 +1,33 @@
+{
+  "fixture_id": "SG-014",
+  "country": "SG",
+  "source": "external_public_addresses",
+  "raw": "6 Battery Road, Singapore 049909",
+  "country_hint": "SG",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "SG",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Singapore",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Battery Road",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "6",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "049909",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

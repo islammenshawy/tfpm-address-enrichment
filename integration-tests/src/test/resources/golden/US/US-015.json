@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-015",
+  "country": "US",
+  "source": "external_public_addresses",
+  "raw": "2200 Ross Avenue, Dallas, TX 75201",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Dallas",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "TX",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Ross Avenue",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "2200",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "75201",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

@@ -1,0 +1,33 @@
+{
+  "fixture_id": "DE-013",
+  "country": "DE",
+  "source": "external_public_addresses",
+  "raw": "Königsallee 60, 40212 Düsseldorf",
+  "country_hint": "DE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "DE",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Düsseldorf",
+      "required": true
+    },
+    "STRT_NM": {
+      "value": "Königsallee",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "60",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "40212",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

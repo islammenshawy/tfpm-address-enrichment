@@ -1,0 +1,37 @@
+{
+  "fixture_id": "CN-011",
+  "country": "CN",
+  "source": "external_public_addresses",
+  "raw": "1 Lujiazui Ring Road, Pudong, Shanghai 200120, China",
+  "country_hint": "CN",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "CN",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Shanghai",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "Shanghai",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Lujiazui Ring Road",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "1",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "200120",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

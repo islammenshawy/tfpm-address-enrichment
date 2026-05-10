@@ -1,0 +1,37 @@
+{
+  "fixture_id": "US-014",
+  "country": "US",
+  "source": "external_public_addresses",
+  "raw": "227 West Monroe Street, Chicago, IL 60606",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "US",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Chicago",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "IL",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "West Monroe Street",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "227",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "60606",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}

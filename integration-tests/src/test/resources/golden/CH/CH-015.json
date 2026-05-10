@@ -1,0 +1,37 @@
+{
+  "fixture_id": "CH-015",
+  "country": "CH",
+  "source": "external_public_addresses",
+  "raw": "Via Nassa 5, 6900 Lugano",
+  "country_hint": "CH",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": {
+      "value": "CH",
+      "required": true
+    },
+    "TWN_NM": {
+      "value": "Lugano",
+      "required": true
+    },
+    "CTRY_SUB_DVSN": {
+      "value": "TI",
+      "required": false
+    },
+    "STRT_NM": {
+      "value": "Via Nassa",
+      "required": true
+    },
+    "BLDG_NB": {
+      "value": "5",
+      "required": false
+    },
+    "PST_CD": {
+      "value": "6900",
+      "required": true
+    }
+  },
+  "validator": "public-address-validation@jpmorgan.com",
+  "validated_at": "2026-05-10",
+  "notes": "Well-known financial district address for regression testing"
+}
