@@ -6,6 +6,9 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 
 import org.jooq.DSLContext;
 import org.jooq.exception.DataAccessException;
+import org.springframework.dao.TransientDataAccessException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +46,7 @@ public final class OracleIdempotencyStore implements IdempotencyStore {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public ClaimResult tryClaim(EnrichmentRequest request) {
         var key = computeKey(request);
         try {
@@ -70,6 +74,7 @@ public final class OracleIdempotencyStore implements IdempotencyStore {
     }
 
     @Override
+    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void recordResult(String idempotencyKey, long resultRowId) {
         dsl.update(table("IDEMPOTENCY_KEYS"))
                 .set(field("RESULT_REF"), resultRowId)

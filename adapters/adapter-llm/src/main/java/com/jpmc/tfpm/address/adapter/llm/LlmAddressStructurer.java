@@ -139,7 +139,7 @@ public final class LlmAddressStructurer implements AddressStructurer {
                 }
             }
         } catch (Exception e) {
-            LOG.warn("Failed to parse LLM JSON response: {}", e.getMessage());
+            LOG.warn("Failed to parse LLM JSON response", e);
             return Map.of();
         }
         return fields;

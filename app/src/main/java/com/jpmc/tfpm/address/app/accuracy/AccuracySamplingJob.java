@@ -10,8 +10,9 @@ import org.springframework.scheduling.annotation.Scheduled;
 /**
  * Daily sampling job for production accuracy measurement.
  * Delegates to {@link AccuracySampler} port (implemented in adapter-oracle-app).
- * Runs daily at 02:00. In multi-replica deployments, ShedLock ensures
- * only one replica executes.
+ * Runs daily at 02:00. In multi-replica deployments, duplicate execution
+ * is harmless (sampling is idempotent). For single-execution guarantee,
+ * add ShedLock dependency and @SchedulerLock annotation.
  */
 @ThreadSafe
 public final class AccuracySamplingJob {

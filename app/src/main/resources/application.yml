@@ -207,25 +207,11 @@ resilience4j:
       llm-bh:
         max-concurrent-calls: 20
         max-wait-duration: 200ms
-  retry:
-    instances:
-      libpostal-retry:
-        max-attempts: 2
-        wait-duration: 50ms
-        retry-exceptions:
-          - io.grpc.StatusRuntimeException
-      swift-crf-retry:
-        max-attempts: 2
-        wait-duration: 50ms
-        retry-exceptions:
-          - io.grpc.StatusRuntimeException
-      llm-retry:
-        max-attempts: 2
-        wait-duration: 100ms
-        retry-exceptions:
-          - org.springframework.web.reactive.function.client.WebClientResponseException
-          - org.springframework.web.reactive.function.client.WebClientRequestException
-          - java.util.concurrent.TimeoutException
+  # Retry: Layer 2 (per-structurer) is handled by each client implementation:
+  #   - LLM: Reactor retryWhen in OpenAiCompatibleLlmClient/JpmcInternalGatewayLlmClient
+  #   - Libpostal: catches StatusRuntimeException, returns empty result
+  #   - SwiftCrf: stub (disabled)
+  # Layer 3 (persistence): @Retryable on Oracle DML methods (spring-retry)
 
 # ============================================================
 # Tomcat — bounded request handling. 503 + Retry-After on overflow
