@@ -163,4 +163,45 @@ class LlmAddressStructurerTest {
 
         assertThat(result.fields()).isEmpty();
     }
+
+    // --- Resilience tests ---
+
+    @Test
+    void timeout_returns_empty_result() {
+        when(mockClient.complete(any(LlmCompletionRequest.class)))
+                .thenReturn(Result.failure(EnrichmentError.of(
+                        EnrichmentError.Category.TIMEOUT,
+                        "Gateway timeout after 2000ms",
+                        "corr-timeout")));
+
+        var result = structurer.structure(RawAddress.of("timeout test"));
+
+        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.fields()).isEmpty();
+        assertThat(result.latency()).isNotNull();
+    }
+
+    @Test
+    void upstream_5xx_returns_empty_result() {
+        when(mockClient.complete(any(LlmCompletionRequest.class)))
+                .thenReturn(Result.failure(EnrichmentError.of(
+                        EnrichmentError.Category.UPSTREAM_UNAVAILABLE,
+                        "502 Bad Gateway",
+                        "corr-5xx")));
+
+        var result = structurer.structure(RawAddress.of("5xx test"));
+
+        assertThat(result.fields()).isEmpty();
+    }
+
+    @Test
+    void runtime_exception_returns_empty_result() {
+        when(mockClient.complete(any(LlmCompletionRequest.class)))
+                .thenThrow(new RuntimeException("unexpected failure"));
+
+        var result = structurer.structure(RawAddress.of("exception test"));
+
+        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.fields()).isEmpty();
+    }
 }

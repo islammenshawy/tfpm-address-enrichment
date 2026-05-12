@@ -160,23 +160,43 @@ class CascadeOrchestratorTest {
     }
 
     @Test
-    void concurrency_100_threads_no_corruption() throws Exception {
+    void concurrency_100_threads_x_1000_calls_no_corruption() throws Exception {
         var s1 = stubStructurer("stub", Map.of(
                 AddressField.CTRY, new FieldValue("US", 0.95),
                 AddressField.TWN_NM, new FieldValue("NYC", 0.90)));
 
         var orchestrator = makeOrchestrator(List.of(s1));
-        var executor = Executors.newFixedThreadPool(100);
-        var latch = new CountDownLatch(100);
-        var errors = new AtomicInteger(0);
 
-        for (int i = 0; i < 100; i++) {
-            final int idx = i;
+        // Baseline: single-threaded result for comparison
+        var baseline = orchestrator.orchestrate(RawAddress.of("baseline"), "baseline");
+        assertThat(baseline.isSuccess()).isTrue();
+        var baselineFields = ((Result.Success<CascadeResult>) baseline).value()
+                .structuredAddress().fields().size();
+
+        // Concurrent: 100 threads x 1000 calls = 100,000 total
+        int threads = 100;
+        int callsPerThread = 1000;
+        var executor = Executors.newFixedThreadPool(threads);
+        var latch = new CountDownLatch(threads);
+        var errors = new AtomicInteger(0);
+        var fieldCountMismatches = new AtomicInteger(0);
+
+        for (int t = 0; t < threads; t++) {
+            final int threadIdx = t;
             executor.submit(() -> {
                 try {
-                    var r = orchestrator.orchestrate(
-                            RawAddress.of("addr " + idx), "corr-" + idx);
-                    if (!r.isSuccess()) errors.incrementAndGet();
+                    for (int c = 0; c < callsPerThread; c++) {
+                        var r = orchestrator.orchestrate(
+                                RawAddress.of("addr-" + threadIdx + "-" + c),
+                                "corr-" + threadIdx + "-" + c);
+                        if (!r.isSuccess()) {
+                            errors.incrementAndGet();
+                        } else {
+                            var fields = ((Result.Success<CascadeResult>) r).value()
+                                    .structuredAddress().fields().size();
+                            if (fields != baselineFields) fieldCountMismatches.incrementAndGet();
+                        }
+                    }
                 } catch (Exception e) {
                     errors.incrementAndGet();
                 } finally {
@@ -187,6 +207,8 @@ class CascadeOrchestratorTest {
 
         latch.await();
         executor.shutdown();
-        assertThat(errors.get()).isZero();
+        assertThat(errors.get()).as("No errors across 100K concurrent calls").isZero();
+        assertThat(fieldCountMismatches.get())
+                .as("All results match single-threaded baseline field count").isZero();
     }
 }

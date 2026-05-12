@@ -87,10 +87,70 @@ class FourAxisComplianceRouterTest {
 
     @Test
     void fail_safe_conservative_routes_on_error() {
-        // Router with bad resource path that won't cause error in constructor
-        // but the evaluate should handle gracefully
         var r = router(false);
         var decision = r.evaluate(result(0.99, 0.90, "US"), request("123 Main St", "US"));
+        assertThat(decision).isInstanceOf(ComplianceDecision.Bypass.class);
+    }
+
+    // --- Axis 3: High-risk country ---
+
+    private FourAxisComplianceRouter routerWithHighRiskCountries() {
+        return new FourAxisComplianceRouter(new ComplianceProperties(
+                true,
+                Map.of("CTRY", 0.95, "TWN_NM", 0.80),
+                0.85,
+                "classpath:compliance/high-risk-countries.csv",
+                "",
+                "CONSERVATIVE",
+                false));
+    }
+
+    @Test
+    void route_on_high_risk_country() {
+        var r = routerWithHighRiskCountries();
+        var decision = r.evaluate(result(0.99, 0.99, "IR"), request("Tehran address", "IR"));
+        assertThat(decision).isInstanceOf(ComplianceDecision.RouteToCompliance.class);
+        var route = (ComplianceDecision.RouteToCompliance) decision;
+        assertThat(route.allReasons()).contains(ComplianceReason.HIGH_RISK_COUNTRY);
+        assertThat(route.urgency()).isEqualTo("EXPEDITED");
+    }
+
+    @Test
+    void bypass_on_non_high_risk_country() {
+        var r = routerWithHighRiskCountries();
+        var decision = r.evaluate(result(0.99, 0.99, "US"), request("123 Main St", "US"));
+        assertThat(decision).isInstanceOf(ComplianceDecision.Bypass.class);
+    }
+
+    // --- Axis 4: Pattern triggers ---
+
+    private FourAxisComplianceRouter routerWithPatterns() {
+        return new FourAxisComplianceRouter(new ComplianceProperties(
+                true,
+                Map.of("CTRY", 0.95, "TWN_NM", 0.80),
+                0.85,
+                "",
+                "classpath:compliance/sanctions-patterns.csv",
+                "CONSERVATIVE",
+                false));
+    }
+
+    @Test
+    void route_on_sanctions_pattern_match() {
+        var r = routerWithPatterns();
+        var decision = r.evaluate(result(0.99, 0.99, "IR"),
+                request("Central Bank of Iran, Tehran", "IR"));
+        assertThat(decision).isInstanceOf(ComplianceDecision.RouteToCompliance.class);
+        var route = (ComplianceDecision.RouteToCompliance) decision;
+        assertThat(route.allReasons()).contains(ComplianceReason.SANCTIONS_PATTERN_MATCH);
+        assertThat(route.urgency()).isEqualTo("EXPEDITED");
+    }
+
+    @Test
+    void bypass_when_no_pattern_match() {
+        var r = routerWithPatterns();
+        var decision = r.evaluate(result(0.99, 0.99, "US"),
+                request("383 Madison Avenue, New York", "US"));
         assertThat(decision).isInstanceOf(ComplianceDecision.Bypass.class);
     }
 }

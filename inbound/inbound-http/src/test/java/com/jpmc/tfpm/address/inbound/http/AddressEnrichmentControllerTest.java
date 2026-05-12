@@ -17,9 +17,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.time.Instant;
 
-import static org.mockito.ArgumentMatchers.any;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -96,5 +99,89 @@ class AddressEnrichmentControllerTest {
                                 {"rawAddress": "test"}
                                 """))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void batch_returns_200_with_multiple_results() throws Exception {
+        var result = new EnrichmentResult(
+                "batch-0", EnrichmentResult.Outcome.SUCCESS,
+                StructuredAddress.empty(), 0.90, 1L, Instant.now());
+
+        when(service.enrich(any(EnrichmentRequest.class))).thenReturn(result);
+
+        mockMvc.perform(post("/api/v1/enrich/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                [{"rawAddress": "addr1", "countryHint": "US"},
+                                 {"rawAddress": "addr2", "countryHint": "GB"}]
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void batch_rejects_over_100_items() throws Exception {
+        var items = new StringBuilder("[");
+        for (int i = 0; i < 101; i++) {
+            if (i > 0) items.append(",");
+            items.append("{\"rawAddress\":\"addr").append(i).append("\"}");
+        }
+        items.append("]");
+
+        mockMvc.perform(post("/api/v1/enrich/batch")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(items.toString()))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void get_result_returns_200_when_found() throws Exception {
+        var result = new EnrichmentResult(
+                "corr-3", EnrichmentResult.Outcome.SUCCESS,
+                StructuredAddress.builder().put(AddressField.CTRY, "US", 0.95).build(),
+                0.95, 42L, Instant.now());
+
+        when(resultPersistence.loadResult(eq(42L), anyString()))
+                .thenReturn(Optional.of(result));
+
+        mockMvc.perform(get("/api/v1/results/42"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.outcome").value("SUCCESS"));
+    }
+
+    @Test
+    void get_result_returns_404_when_not_found() throws Exception {
+        when(resultPersistence.loadResult(eq(999L), anyString()))
+                .thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/api/v1/results/999"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void replay_returns_200_on_success() throws Exception {
+        when(exceptionQueue.resolve(eq(1L), eq("operator"), eq("{}"), eq(1)))
+                .thenReturn(true);
+
+        mockMvc.perform(post("/api/v1/replay/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"resolvedBy": "operator", "resolutionJson": "{}", "expectedVersion": "1"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RESOLVED"));
+    }
+
+    @Test
+    void replay_returns_409_on_version_conflict() throws Exception {
+        when(exceptionQueue.resolve(eq(1L), eq("operator"), eq("{}"), eq(1)))
+                .thenReturn(false);
+
+        mockMvc.perform(post("/api/v1/replay/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"resolvedBy": "operator", "resolutionJson": "{}", "expectedVersion": "1"}
+                                """))
+                .andExpect(status().isConflict());
     }
 }
