@@ -101,12 +101,14 @@ enrichment:
     # Order in which structurers are invoked. Each subsequent structurer
     # only runs if the cumulative result has not yet hit the early-exit
     # threshold on all required fields.
-    # All addresses go through at least 2 structurers for consensus.
-    # FieldMerger picks highest confidence; ConsensusAnalyzer flags disagreements.
     order: [libpostal, llm]
-    early-exit-threshold: 0.99
-    timeout-ms: 30000
-    min-sources: 2
+    early-exit-threshold: ${CASCADE_EARLY_EXIT:0.99}
+    timeout-ms: ${CASCADE_TIMEOUT:30000}
+    min-sources: ${CASCADE_MIN_SOURCES:2}
+    # Consensus: compare outputs across structurers, flag disagreements.
+    # Disable for single-model mode (consensus requires 2+ sources).
+    consensus-enabled: ${CASCADE_CONSENSUS:true}
+    parallel: ${CASCADE_PARALLEL:true}
     required-fields: [CTRY, TWN_NM]
     routing:
       # Non-Western: LLM runs first (better accuracy), libpostal as cross-check

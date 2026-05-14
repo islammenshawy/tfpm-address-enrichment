@@ -19,16 +19,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- * Runs the structurer cascade: invokes each structurer in order, checks
- * for early exit, and merges results via {@link FieldMerger}.
+ * Runs structurers in parallel for consensus when multiple are configured,
+ * or sequentially when only one is available. Automatically enables
+ * consensus analysis when 2+ structurers produce results.
  */
 @ThreadSafe
 public final class CascadeOrchestrator {
@@ -43,8 +41,8 @@ public final class CascadeOrchestrator {
     private final Set<AddressField> requiredFields;
     private final MeterRegistry meterRegistry;
     private final Map<String, ConfidenceCalibrator> calibrators;
+    private final ConsensusAnalyzer consensusAnalyzer;
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
 
     public CascadeOrchestrator(
             List<AddressStructurer> structurers,
@@ -52,7 +50,7 @@ public final class CascadeOrchestrator {
             CountryRouter countryRouter,
             double earlyExitThreshold,
             MeterRegistry meterRegistry) {
-        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 500L, meterRegistry);
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 30000L, meterRegistry);
     }
 
     public CascadeOrchestrator(
@@ -70,15 +68,9 @@ public final class CascadeOrchestrator {
         this.requiredFields = Set.of(AddressField.CTRY, AddressField.TWN_NM);
         this.meterRegistry = meterRegistry;
         this.calibrators = fieldMerger.calibratorMap();
+        this.consensusAnalyzer = new ConsensusAnalyzer();
     }
 
-    /**
-     * Run the cascade for a single raw address.
-     *
-     * @param raw           the address to structure
-     * @param correlationId for logging
-     * @return cascade result or failure if no structurer produced usable fields
-     */
     public Result<CascadeResult> orchestrate(RawAddress raw, String correlationId) {
         var applicableStructurers = filterByCountry(raw.countryHint());
         if (applicableStructurers.isEmpty()) {
@@ -88,38 +80,13 @@ public final class CascadeOrchestrator {
                     correlationId));
         }
 
-        // Run all structurers in PARALLEL for consensus (minimum 2 sources)
-        var futures = new java.util.concurrent.ConcurrentLinkedQueue<StructuringResult>();
-        var latch = new java.util.concurrent.CountDownLatch(applicableStructurers.size());
-
-        for (var structurer : applicableStructurers) {
-            final var s = structurer;
-            java.util.concurrent.CompletableFuture.runAsync(() -> {
-                try {
-                    var sample = Timer.start(meterRegistry);
-                    var result = s.structure(raw);
-                    sample.stop(latencyTimer(s.name(), raw.countryHint()));
-                    futures.add(result);
-                    LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
-                            s.name(), result.fields().size(),
-                            result.latency().toMillis(), correlationId);
-                } catch (Exception e) {
-                    LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
-                            s.name(), correlationId, e.getMessage());
-                } finally {
-                    latch.countDown();
-                }
-            });
+        List<StructuringResult> trace;
+        if (applicableStructurers.size() > 1) {
+            trace = runParallel(applicableStructurers, raw, correlationId);
+        } else {
+            trace = runSingle(applicableStructurers.get(0), raw, correlationId);
         }
 
-        // Wait for all structurers to complete (with timeout)
-        try {
-            latch.await(cascadeTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
-
-        var trace = new ArrayList<>(futures);
         if (trace.isEmpty()) {
             return Result.failure(EnrichmentError.of(
                     EnrichmentError.Category.CASCADE_NO_RESULT,
@@ -130,16 +97,70 @@ public final class CascadeOrchestrator {
         var merged = fieldMerger.merge(trace, raw.countryHint());
         double confidence = merged.overallConfidence();
 
-        // Consensus analysis — compare outputs across structurers
-        var consensusAnalyzer = new ConsensusAnalyzer();
-        var consensus = consensusAnalyzer.analyze(trace, merged);
+        // Consensus: automatic when 2+ structurers produced results
+        var activeCount = trace.stream().filter(t -> !t.fields().isEmpty()).count();
+        var consensus = activeCount >= 2
+                ? consensusAnalyzer.analyze(trace, merged)
+                : null;
 
-        if (consensus.hasDisagreements()) {
+        if (consensus != null && consensus.hasDisagreements()) {
             LOG.info("Consensus disagreements on {} fields [corrId={}]: {}",
                     consensus.disagreementCount(), correlationId, consensus.flaggedFields());
         }
 
         return Result.success(new CascadeResult(merged, trace, confidence, consensus));
+    }
+
+    /** Run multiple structurers in parallel, wait for all. */
+    private List<StructuringResult> runParallel(List<AddressStructurer> structurers,
+                                                 RawAddress raw, String correlationId) {
+        var results = new ConcurrentLinkedQueue<StructuringResult>();
+        var latch = new CountDownLatch(structurers.size());
+
+        for (var structurer : structurers) {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    var sample = Timer.start(meterRegistry);
+                    var result = structurer.structure(raw);
+                    sample.stop(latencyTimer(structurer.name(), raw.countryHint()));
+                    results.add(result);
+                    LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
+                            structurer.name(), result.fields().size(),
+                            result.latency().toMillis(), correlationId);
+                } catch (Exception e) {
+                    LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
+                            structurer.name(), correlationId, e.getMessage());
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        try {
+            latch.await(cascadeTimeoutMs, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        return new ArrayList<>(results);
+    }
+
+    /** Run a single structurer (no parallelism needed). */
+    private List<StructuringResult> runSingle(AddressStructurer structurer,
+                                               RawAddress raw, String correlationId) {
+        try {
+            var sample = Timer.start(meterRegistry);
+            var result = structurer.structure(raw);
+            sample.stop(latencyTimer(structurer.name(), raw.countryHint()));
+            LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
+                    structurer.name(), result.fields().size(),
+                    result.latency().toMillis(), correlationId);
+            return List.of(result);
+        } catch (Exception e) {
+            LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
+                    structurer.name(), correlationId, e.getMessage());
+            return List.of();
+        }
     }
 
     private List<AddressStructurer> filterByCountry(String countryHint) {
@@ -151,27 +172,6 @@ public final class CascadeOrchestrator {
         return structurers.stream()
                 .filter(s -> allowedSet.contains(s.name()))
                 .toList();
-    }
-
-    /**
-     * OPT-01: Check only required fields incrementally instead of calling
-     * the full fieldMerger.merge() which iterates all 8 AddressFields.
-     */
-    private boolean shouldEarlyExit(List<StructuringResult> trace, String countryHint) {
-        for (var field : requiredFields) {
-            double best = -1.0;
-            for (var result : trace) {
-                var fv = result.fields().get(field);
-                if (fv == null || fv.value().isEmpty()) continue;
-                var calibrator = calibrators.get(result.structurerName());
-                double cal = calibrator != null
-                        ? calibrator.calibrate(fv.confidence(), field, countryHint)
-                        : Math.max(0.0, Math.min(1.0, fv.confidence()));
-                best = Math.max(best, cal);
-            }
-            if (best < earlyExitThreshold) return false;
-        }
-        return true;
     }
 
     private Timer latencyTimer(String structurer, String country) {
