@@ -1,0 +1,101 @@
+# Local dev profile — runs entirely in-memory, no Docker required.
+#
+# Usage:
+#   mvn -pl app spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=local"
+#   or: make app
+#
+# What's different from default:
+#   - H2 in-memory database (both pools) instead of Oracle
+#   - Liquibase disabled (H2 schema created via spring.sql.init)
+#   - Kafka disabled (no broker needed)
+#   - RabbitMQ disabled (no broker needed)
+#   - libpostal disabled (no gRPC sidecar)
+#   - LLM disabled (no gateway)
+#   - SWIFT CRF disabled (stub)
+#   - StubAddressStructurer enabled (deterministic results)
+#   - Compliance in shadow mode (log only)
+#   - HTTP is always on at :8080
+
+spring:
+  datasource:
+    legacy-read:
+      jdbc-url: jdbc:h2:mem:legacy;DB_CLOSE_DELAY=-1;MODE=Oracle
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+      hikari:
+        pool-name: legacy-read-pool
+        maximum-pool-size: 5
+        minimum-idle: 1
+        read-only: true
+        auto-commit: true
+        connection-init-sql:
+    app-write:
+      jdbc-url: jdbc:h2:mem:app;DB_CLOSE_DELAY=-1;MODE=Oracle
+      username: sa
+      password:
+      driver-class-name: org.h2.Driver
+      hikari:
+        pool-name: app-write-pool
+        maximum-pool-size: 5
+        minimum-idle: 1
+        auto-commit: true
+        connection-init-sql:
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema-h2.sql
+
+  kafka:
+    bootstrap-servers: localhost:29092
+    listener:
+      auto-startup: false
+
+  rabbitmq:
+    host: localhost
+
+liquibase:
+  enabled: false
+
+enrichment:
+  cascade:
+    order: [stub]
+    early-exit-threshold: 0.80
+    timeout-ms: 5000
+
+  libpostal:
+    enabled: false
+  swift-crf:
+    enabled: false
+  llm:
+    enabled: false
+
+  kafka:
+    enabled: false
+  rabbitmq:
+    enabled: false
+
+  test:
+    stub:
+      enabled: true
+
+  compliance:
+    enabled: true
+    shadow-mode: true
+
+  accuracy:
+    sampling:
+      enabled: false
+
+  backfill:
+    enabled: false
+
+server:
+  port: 8080
+
+logging:
+  level:
+    com.jpmc.tfpm.address: DEBUG
+    org.springframework.kafka: OFF
+    org.springframework.amqp: OFF
