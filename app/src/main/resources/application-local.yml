@@ -73,10 +73,10 @@ enrichment:
   llm:
     enabled: ${LLM_ENABLED:true}
     type: ${LLM_TYPE:openai-compatible}
-    endpoint: ${LLM_ENDPOINT:https://api.z.ai/api/paas/v4}
+    endpoint: ${LLM_ENDPOINT:https://api.z.ai/api/coding/paas/v4}
     api-key: ${LLM_API_KEY:104ba3df06ca456dae4ea964d36cd44c.uVg6BlJ3SbvyXoY1}
-    timeout-ms: 15000
-    model: ${LLM_MODEL:glm-4.5}
+    timeout-ms: 30000
+    model: ${LLM_MODEL:glm-5.1}
 
   kafka:
     enabled: false

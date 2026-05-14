@@ -78,85 +78,80 @@ class EndToEndAccuracyIT {
             modeLabels.add("libpostal");
         }
 
-        // Try LLM — auto-detect from env vars (supports Z.AI, Azure OpenAI, or any OpenAI-compatible)
-        var llmKey = System.getenv("LLM_API_KEY");
-        var azureKey = System.getenv("AZURE_OPENAI_API_KEY");
-        var apiKey = (llmKey != null && !llmKey.isBlank()) ? llmKey : azureKey;
-        if (apiKey != null && !apiKey.isBlank()) {
-            try {
-                var endpoint = System.getenv("LLM_ENDPOINT");
-                var model = System.getenv("LLM_MODEL");
-                var isAzure = (llmKey == null || llmKey.isBlank()) && azureKey != null;
-
-                // Defaults per provider
-                if (isAzure) {
-                    var azureEndpoint = System.getenv("AZURE_OPENAI_ENDPOINT");
-                    var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
-                    if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
-                    if (azureEndpoint == null || azureEndpoint.isBlank())
-                        azureEndpoint = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
-                    endpoint = azureEndpoint;
-                    if (model == null) model = deployment;
-                } else {
-                    if (endpoint == null || endpoint.isBlank()) endpoint = "https://api.z.ai/api/paas/v4";
-                    if (model == null || model.isBlank()) model = "glm-4.5";
+        // Add ALL configured LLM providers — each becomes a separate structurer for consensus
+        var objectMapper = new ObjectMapper();
+        var promptResource = new org.springframework.core.io.ByteArrayResource(
+                """
+                {
+                  "systemPrompt": "You are an address parsing engine. Given an unstructured postal address, extract it into ISO 20022 structured fields. Return ONLY valid JSON with a 'fields' object containing CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM keys. Each field has 'value' (string) and 'confidence' (0.0-1.0). Only include fields you can identify.",
+                  "userMessageTemplate": "Parse this address into structured fields:\\nAddress: {{rawAddress}}\\nCountry hint: {{countryHint}}",
+                  "outputSchema": "",
+                  "maxTokens": 500,
+                  "temperature": 0.1
                 }
+                """.getBytes());
+        var llmFields = java.util.EnumSet.of(AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
+                AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM, AddressField.BLDG_NB, AddressField.BLDG_NM);
 
+        // --- Z.AI GLM (LLM_API_KEY) ---
+        var zaiKey = System.getenv("LLM_API_KEY");
+        if (zaiKey != null && !zaiKey.isBlank()) {
+            try {
+                var ep = System.getenv("LLM_ENDPOINT");
+                if (ep == null || ep.isBlank()) ep = "https://api.z.ai/api/coding/paas/v4";
+                var mdl = System.getenv("LLM_MODEL");
+                if (mdl == null || mdl.isBlank()) mdl = "glm-5.1";
+                var wc = org.springframework.web.reactive.function.client.WebClient.builder().baseUrl(ep).build();
+                var meta = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
+                        "z.ai", mdl, false, 0, 0, java.time.Duration.ofSeconds(30));
+                var cb = disabledCircuitBreaker("glm");
+                var client = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
+                        "glm", meta, wc, objectMapper, zaiKey, cb, 2);
+                var pl = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(promptResource, objectMapper);
+                structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(
+                        client, pl, objectMapper, llmFields));
+                calibrators.add(new IdentityConfidenceCalibrator("glm"));
+                modeLabels.add("GLM (" + mdl + ")");
+                System.out.println("GLM enabled: Z.AI " + mdl);
+            } catch (Exception e) {
+                System.err.println("GLM init failed: " + e.getMessage());
+            }
+        }
+
+        // --- Azure OpenAI (AZURE_OPENAI_API_KEY) ---
+        var azureKey = System.getenv("AZURE_OPENAI_API_KEY");
+        if (azureKey != null && !azureKey.isBlank()) {
+            try {
+                var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
+                if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
+                var azureEp = System.getenv("AZURE_OPENAI_ENDPOINT");
+                if (azureEp == null || azureEp.isBlank())
+                    azureEp = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
                 var apiVersionEnv = System.getenv("AZURE_OPENAI_API_VERSION");
                 final var apiVersion = apiVersionEnv != null ? apiVersionEnv : "2024-02-15-preview";
-
-                var webClientBuilder = org.springframework.web.reactive.function.client.WebClient.builder()
-                        .baseUrl(endpoint);
-
-                if (isAzure) {
-                    webClientBuilder.defaultHeader("api-key", apiKey);
-                    webClientBuilder.filter((request, next) -> {
-                        var uri = org.springframework.web.util.UriComponentsBuilder
-                                .fromUri(request.url())
-                                .queryParam("api-version", apiVersion)
-                                .build().toUri();
-                        return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
-                                .from(request).url(uri).build());
-                    });
-                }
-
-                var webClient = webClientBuilder.build();
-                var objectMapper = new ObjectMapper();
-                var finalModel = model;
-                var metadata = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
-                        isAzure ? "azure-openai" : "openai-compatible", finalModel,
-                        false, 0, 0, java.time.Duration.ofSeconds(30));
-                var cbConfig = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
-                        .failureRateThreshold(100).slidingWindowSize(200)
-                        .minimumNumberOfCalls(200).build();
-                var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of("llm-test", cbConfig);
-                cb.transitionToDisabledState();
-                // Azure uses api-key header (already on WebClient), OpenAI-compat uses Bearer
-                var bearerToken = isAzure ? "" : apiKey;
-                var llmClient = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
-                        "llm", metadata, webClient, objectMapper, bearerToken, cb, 2);
-                var promptResource = new org.springframework.core.io.ByteArrayResource(
-                        """
-                        {
-                          "systemPrompt": "You are an address parsing engine. Given an unstructured postal address, extract it into ISO 20022 structured fields. Return ONLY valid JSON with a 'fields' object containing CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM keys. Each field has 'value' (string) and 'confidence' (0.0-1.0). Only include fields you can identify.",
-                          "userMessageTemplate": "Parse this address into structured fields:\\nAddress: {{rawAddress}}\\nCountry hint: {{countryHint}}",
-                          "outputSchema": "",
-                          "maxTokens": 500,
-                          "temperature": 0.1
-                        }
-                        """.getBytes());
-                var promptLoader = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(
-                        promptResource, objectMapper);
+                var wc = org.springframework.web.reactive.function.client.WebClient.builder()
+                        .baseUrl(azureEp)
+                        .defaultHeader("api-key", azureKey)
+                        .filter((request, next) -> {
+                            var uri = org.springframework.web.util.UriComponentsBuilder
+                                    .fromUri(request.url())
+                                    .queryParam("api-version", apiVersion).build().toUri();
+                            return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
+                                    .from(request).url(uri).build());
+                        }).build();
+                var meta = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
+                        "azure-openai", deployment, false, 0, 0, java.time.Duration.ofSeconds(30));
+                var cb = disabledCircuitBreaker("azure");
+                var client = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
+                        "azure-gpt", meta, wc, objectMapper, "", cb, 2);
+                var pl = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(promptResource, objectMapper);
                 structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(
-                        llmClient, promptLoader, objectMapper,
-                        java.util.EnumSet.of(AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
-                                AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM,
-                                AddressField.BLDG_NB, AddressField.BLDG_NM)));
-                calibrators.add(new com.jpmc.tfpm.address.adapter.llm.LlmConfidenceCalibrator());
-                modeLabels.add("LLM (" + finalModel + ")");
-                System.out.println("LLM enabled: " + (isAzure ? "Azure OpenAI" : "OpenAI-compatible") + " " + finalModel);
+                        client, pl, objectMapper, llmFields));
+                calibrators.add(new IdentityConfidenceCalibrator("azure-gpt"));
+                modeLabels.add("GPT (" + deployment + ")");
+                System.out.println("GPT enabled: Azure OpenAI " + deployment);
             } catch (Exception e) {
-                System.err.println("LLM init failed: " + e.getMessage());
+                System.err.println("Azure GPT init failed: " + e.getMessage());
             }
         }
 
@@ -302,7 +297,10 @@ class EndToEndAccuracyIT {
 
         // Count structurer usage
         long libpostalCount = results.stream().filter(r -> r.structurersUsed.contains("libpostal")).count();
-        long llmCount = results.stream().filter(r -> r.structurersUsed.contains("llm")).count();
+        long glmCount = results.stream().filter(r -> r.structurersUsed.contains("glm")).count();
+        long gptCount = results.stream().filter(r -> r.structurersUsed.contains("azure-gpt")).count();
+        long llmCount = results.stream().filter(r -> r.structurersUsed.stream()
+                .anyMatch(s -> s.contains("llm") || s.contains("glm") || s.contains("gpt"))).count();
         long stubCount = results.stream().filter(r -> r.structurersUsed.contains("stub")).count();
 
         var html = new StringBuilder();
@@ -355,8 +353,9 @@ class EndToEndAccuracyIT {
         html.append(card(avgLatency + "ms", "Avg Latency"));
         html.append("</div><div>");
         html.append(card(String.valueOf(libpostalCount), "via libpostal", "badge-libpostal"));
-        html.append(card(String.valueOf(llmCount), "via LLM", "badge-llm"));
-        html.append(card(String.valueOf(stubCount), "via stub", "badge-stub"));
+        if (glmCount > 0) html.append(card(String.valueOf(glmCount), "via GLM", "badge-llm"));
+        if (gptCount > 0) html.append(card(String.valueOf(gptCount), "via GPT", "badge-llm"));
+        if (stubCount > 0) html.append(card(String.valueOf(stubCount), "via stub", "badge-stub"));
         html.append("</div>");
 
         // Per-country summary
@@ -445,7 +444,8 @@ class EndToEndAccuracyIT {
         System.out.printf("Mode: %s%n", structurerMode);
         System.out.printf("Total: %d fixtures, %.0f%% avg accuracy, %d perfect, %dms avg latency%n",
                 total, avgAccuracy * 100, perfect, avgLatency);
-        System.out.printf("Structurers: libpostal=%d, llm=%d, stub=%d%n", libpostalCount, llmCount, stubCount);
+        System.out.printf("Structurers: libpostal=%d, glm=%d, gpt=%d, stub=%d%n",
+                libpostalCount, glmCount, gptCount, stubCount);
         System.out.println("Report: " + REPORT_PATH.toAbsolutePath());
     }
 
@@ -464,9 +464,18 @@ class EndToEndAccuracyIT {
     private static String badgeClass(String structurer) {
         return switch (structurer) {
             case "libpostal" -> "libpostal";
-            case "llm" -> "llm";
+            case "llm", "glm", "azure-gpt" -> "llm";
             case "stub" -> "stub";
             default -> "source";
         };
+    }
+
+    private static io.github.resilience4j.circuitbreaker.CircuitBreaker disabledCircuitBreaker(String name) {
+        var config = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                .failureRateThreshold(100).slidingWindowSize(200)
+                .minimumNumberOfCalls(200).build();
+        var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of(name, config);
+        cb.transitionToDisabledState();
+        return cb;
     }
 }
