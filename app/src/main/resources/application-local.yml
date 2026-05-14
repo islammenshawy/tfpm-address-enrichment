@@ -1,20 +1,20 @@
-# Local dev profile — runs entirely in-memory, no Docker required.
+# Local dev profile — runs in-memory with libpostal sidecar.
 #
 # Usage:
-#   mvn -pl app spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.active=local"
-#   or: make app
+#   make up-sidecars && make app     (with real parsing)
+#   LIBPOSTAL_ENABLED=false make app (HTTP-only, no structurers)
 #
 # What's different from default:
 #   - H2 in-memory database (both pools) instead of Oracle
 #   - Liquibase disabled (H2 schema created via spring.sql.init)
 #   - Kafka disabled (no broker needed)
 #   - RabbitMQ disabled (no broker needed)
-#   - libpostal disabled (no gRPC sidecar)
-#   - LLM disabled (no gateway)
+#   - libpostal enabled by default (expects sidecar on :50051)
+#   - LLM configurable via LLM_ENABLED + LLM_API_KEY
 #   - SWIFT CRF disabled (stub)
-#   - StubAddressStructurer enabled (deterministic results)
+#   - Stub structurer DISABLED (not used in real flows)
 #   - Compliance in shadow mode (log only)
-#   - HTTP is always on at :8080
+#   - HTTP always on at :8080
 
 spring:
   datasource:
@@ -60,7 +60,7 @@ liquibase:
 
 enrichment:
   cascade:
-    order: [libpostal, stub]
+    order: [libpostal]
     early-exit-threshold: 0.80
     timeout-ms: 5000
 
@@ -71,7 +71,7 @@ enrichment:
   swift-crf:
     enabled: false
   llm:
-    enabled: false
+    enabled: ${LLM_ENABLED:false}
 
   kafka:
     enabled: false
@@ -80,7 +80,7 @@ enrichment:
 
   test:
     stub:
-      enabled: true
+      enabled: false
 
   compliance:
     enabled: true

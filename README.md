@@ -115,8 +115,14 @@ curl http://localhost:8080/api/v1/enrich \
   -d '{"rawAddress":"123 Main St, New York, NY 10001","countryHint":"US"}'
 ```
 
-The local profile enables libpostal by default (`LIBPOSTAL_ENABLED=true`).
-To run without libpostal: `LIBPOSTAL_ENABLED=false make app` (falls back to StubAddressStructurer).
+The local profile enables libpostal by default. The stub structurer is **disabled** —
+only real structurers (libpostal, LLM) are used in the cascade.
+
+Without the sidecar running, enrichment requests will return `UNSTRUCTURABLE` (no
+fake results). To add LLM as a second structurer:
+```bash
+LLM_ENABLED=true LLM_API_KEY=sk-... make app
+```
 
 ### Option 2: Full Docker stack
 
