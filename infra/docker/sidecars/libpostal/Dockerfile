@@ -29,7 +29,9 @@ RUN git clone --depth 1 https://github.com/openvenues/libpostal.git && \
 # --- Stage 2: Runtime ---
 FROM python:3.12-slim
 
-RUN apt-get update && apt-get install -y libsnappy-dev && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    build-essential libsnappy-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY --from=builder /usr/local/lib/libpostal* /usr/local/lib/
 COPY --from=builder /usr/local/include/libpostal/ /usr/local/include/libpostal/
@@ -40,7 +42,16 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY server.py structurer_pb2.py structurer_pb2_grpc.py ./
+# Generate proto stubs at build time (matches installed protobuf version)
+COPY structurer.proto /tmp/proto/structurer.proto
+RUN python -m grpc_tools.protoc -I/tmp/proto \
+    --python_out=/app --grpc_python_out=/app \
+    /tmp/proto/structurer.proto && rm -rf /tmp/proto
+
+# Remove build tools after pip install to shrink image
+RUN apt-get purge -y build-essential && apt-get autoremove -y
+
+COPY server.py ./
 
 EXPOSE 50051
 
