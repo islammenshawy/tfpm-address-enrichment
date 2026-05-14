@@ -121,32 +121,82 @@ public final class LlmAddressStructurer implements AddressStructurer {
         }
     }
 
+    // Map common LLM field name variants to our AddressField enum
+    private static final Map<String, AddressField> FIELD_ALIASES = Map.ofEntries(
+            Map.entry("CTRY", AddressField.CTRY), Map.entry("COUNTRY", AddressField.CTRY),
+            Map.entry("country", AddressField.CTRY), Map.entry("country_code", AddressField.CTRY),
+            Map.entry("TWN_NM", AddressField.TWN_NM), Map.entry("CITY", AddressField.TWN_NM),
+            Map.entry("city", AddressField.TWN_NM), Map.entry("town", AddressField.TWN_NM),
+            Map.entry("TOWN_NAME", AddressField.TWN_NM),
+            Map.entry("PST_CD", AddressField.PST_CD), Map.entry("POSTAL_CODE", AddressField.PST_CD),
+            Map.entry("postal_code", AddressField.PST_CD), Map.entry("zip", AddressField.PST_CD),
+            Map.entry("ZIP_CODE", AddressField.PST_CD), Map.entry("zipcode", AddressField.PST_CD),
+            Map.entry("postcode", AddressField.PST_CD),
+            Map.entry("CTRY_SUB_DVSN", AddressField.CTRY_SUB_DVSN), Map.entry("STATE", AddressField.CTRY_SUB_DVSN),
+            Map.entry("state", AddressField.CTRY_SUB_DVSN), Map.entry("province", AddressField.CTRY_SUB_DVSN),
+            Map.entry("region", AddressField.CTRY_SUB_DVSN),
+            Map.entry("STRT_NM", AddressField.STRT_NM), Map.entry("STREET", AddressField.STRT_NM),
+            Map.entry("street", AddressField.STRT_NM), Map.entry("street_name", AddressField.STRT_NM),
+            Map.entry("ADDR_LINE1", AddressField.STRT_NM), Map.entry("road", AddressField.STRT_NM),
+            Map.entry("BLDG_NB", AddressField.BLDG_NB), Map.entry("BUILDING_NUMBER", AddressField.BLDG_NB),
+            Map.entry("building_number", AddressField.BLDG_NB), Map.entry("house_number", AddressField.BLDG_NB),
+            Map.entry("number", AddressField.BLDG_NB),
+            Map.entry("BLDG_NM", AddressField.BLDG_NM), Map.entry("BUILDING_NAME", AddressField.BLDG_NM),
+            Map.entry("building_name", AddressField.BLDG_NM), Map.entry("building", AddressField.BLDG_NM),
+            Map.entry("ADR_LINE", AddressField.ADR_LINE), Map.entry("address_line", AddressField.ADR_LINE)
+    );
+
     private Map<AddressField, FieldValue> parseResponse(String content) {
         var fields = new EnumMap<AddressField, FieldValue>(AddressField.class);
         try {
-            var root = objectMapper.readTree(content);
+            // Strip markdown code fences if present
+            var json = content.trim();
+            if (json.startsWith("```")) {
+                json = json.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "").trim();
+            }
+
+            var root = objectMapper.readTree(json);
+
+            // Try "fields" wrapper first, then root-level fields
             var fieldsNode = root.path("fields");
             if (fieldsNode.isMissingNode() || !fieldsNode.isObject()) {
-                LOG.warn("LLM response missing 'fields' object");
-                return Map.of();
+                fieldsNode = root.path("address");
+            }
+            if (fieldsNode.isMissingNode() || !fieldsNode.isObject()) {
+                // Try root as flat fields
+                fieldsNode = root;
             }
 
             var it = fieldsNode.fields();
             while (it.hasNext()) {
                 var entry = it.next();
-                try {
-                    var field = AddressField.valueOf(entry.getKey());
-                    if (!allowedFields.contains(field)) continue;
+                var fieldName = entry.getKey();
 
-                    var node = entry.getValue();
-                    var value = node.path("value").asText("");
-                    var confidence = node.path("confidence").asDouble(0.0);
+                // Resolve field name via aliases
+                var field = FIELD_ALIASES.get(fieldName);
+                if (field == null) {
+                    try { field = AddressField.valueOf(fieldName); } catch (IllegalArgumentException ignored) {}
+                }
+                if (field == null || !allowedFields.contains(field)) continue;
+                if (fields.containsKey(field)) continue; // first match wins
 
-                    if (!value.isEmpty()) {
-                        fields.put(field, new FieldValue(value, confidence));
-                    }
-                } catch (IllegalArgumentException ignored) {
-                    // unknown field name from LLM — skip
+                var node = entry.getValue();
+                String value;
+                double confidence;
+
+                if (node.isObject()) {
+                    value = node.path("value").asText("");
+                    confidence = node.path("confidence").asDouble(0.85);
+                } else if (node.isTextual()) {
+                    // Flat format: {"CITY": "New York"}
+                    value = node.asText("");
+                    confidence = 0.85;
+                } else {
+                    continue;
+                }
+
+                if (!value.isEmpty()) {
+                    fields.put(field, new FieldValue(value, confidence));
                 }
             }
         } catch (Exception e) {

@@ -196,7 +196,12 @@ public final class OpenAiCompatibleLlmClient implements LlmModelClient {
 
     private Result<LlmCompletionResponse> parseSyncResponse(JsonNode json, Instant start, String correlationId) {
         try {
-            String content = json.path("choices").path(0).path("message").path("content").asText("");
+            var message = json.path("choices").path(0).path("message");
+            String content = message.path("content").asText("");
+            // GLM-5.x reasoning models put output in reasoning_content, content is empty
+            if (content.isEmpty() && message.has("reasoning_content")) {
+                content = message.path("reasoning_content").asText("");
+            }
             String finish = json.path("choices").path(0).path("finish_reason").asText("stop");
             int inputTokens = json.path("usage").path("prompt_tokens").asInt(0);
             int outputTokens = json.path("usage").path("completion_tokens").asInt(0);
