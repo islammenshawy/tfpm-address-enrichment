@@ -60,12 +60,14 @@ liquibase:
 
 enrichment:
   cascade:
-    order: [stub]
+    order: [libpostal, stub]
     early-exit-threshold: 0.80
     timeout-ms: 5000
 
   libpostal:
-    enabled: false
+    enabled: ${LIBPOSTAL_ENABLED:true}
+    endpoint: ${LIBPOSTAL_ENDPOINT:localhost:50051}
+    timeout-ms: 2000
   swift-crf:
     enabled: false
   llm:

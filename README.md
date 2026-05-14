@@ -105,21 +105,24 @@ tfpm-address-enrichment/
 
 ## Quick Start
 
-### Option 1: In-memory (no Docker, no infrastructure)
+### Option 1: Local dev with libpostal (recommended)
 
 ```bash
-make app
-# Runs with H2 in-memory DB, StubAddressStructurer, HTTP only
-# curl http://localhost:8080/api/v1/enrich \
-#   -H "Content-Type: application/json" \
-#   -d '{"rawAddress":"123 Main St, New York, NY 10001","countryHint":"US"}'
+make up-sidecars     # Start libpostal sidecar (first build downloads ~2GB model)
+make app             # Start app with H2 in-memory DB, calls libpostal on :50051
+curl http://localhost:8080/api/v1/enrich \
+  -H "Content-Type: application/json" \
+  -d '{"rawAddress":"123 Main St, New York, NY 10001","countryHint":"US"}'
 ```
+
+The local profile enables libpostal by default (`LIBPOSTAL_ENABLED=true`).
+To run without libpostal: `LIBPOSTAL_ENABLED=false make app` (falls back to StubAddressStructurer).
 
 ### Option 2: Full Docker stack
 
 ```bash
 make up              # Start Oracle + Kafka + RabbitMQ + WireMock
-make up-sidecars     # Start libpostal sidecar (first build downloads ~2GB model)
+make up-sidecars     # Start libpostal sidecar
 make migrate         # Apply Liquibase schema
 make docker-app      # Build + start the app container
 ```
