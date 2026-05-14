@@ -157,6 +157,7 @@ enrichment:
     type: ${LLM_TYPE:openai-compatible}
     endpoint: ${LLM_ENDPOINT:http://localhost:8089}
     api-key: ${LLM_API_KEY:}
+    model: ${LLM_MODEL:}
     timeout-ms: 2000
     fields-allowed: [CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM]
     bulkhead:

@@ -15,6 +15,7 @@ public record LlmProperties(
         String endpoint,
         int timeoutMs,
         String apiKey,
+        String model,
         List<String> fieldsAllowed,
         BulkheadProperties bulkhead,
         PromptProperties prompt) {

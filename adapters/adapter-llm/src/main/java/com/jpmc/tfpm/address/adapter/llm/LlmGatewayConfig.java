@@ -85,8 +85,9 @@ public class LlmGatewayConfig {
             LOG.warn("LLM is enabled but API key is empty — authentication will fail");
         }
 
+        var modelId = props.model() != null && !props.model().isBlank() ? props.model() : "default";
         var metadata = new LlmModelMetadata(
-                type, "default", false, 0, 0,
+                type, modelId, false, 0, 0,
                 Duration.ofMillis(props.timeoutMs()));
 
         if ("jpmc-internal-gateway".equals(type)) {

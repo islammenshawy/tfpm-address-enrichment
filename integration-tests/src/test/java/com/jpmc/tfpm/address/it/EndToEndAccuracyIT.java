@@ -78,48 +78,63 @@ class EndToEndAccuracyIT {
             modeLabels.add("libpostal");
         }
 
-        // Try LLM (Azure OpenAI) — auto-detect from env vars
+        // Try LLM — auto-detect from env vars (supports Z.AI, Azure OpenAI, or any OpenAI-compatible)
+        var llmKey = System.getenv("LLM_API_KEY");
         var azureKey = System.getenv("AZURE_OPENAI_API_KEY");
-        if (azureKey != null && !azureKey.isBlank()) {
+        var apiKey = (llmKey != null && !llmKey.isBlank()) ? llmKey : azureKey;
+        if (apiKey != null && !apiKey.isBlank()) {
             try {
-                var azureEndpoint = System.getenv("AZURE_OPENAI_ENDPOINT");
-                var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
-                if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
-                if (azureEndpoint == null || azureEndpoint.isBlank()) {
-                    azureEndpoint = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
+                var endpoint = System.getenv("LLM_ENDPOINT");
+                var model = System.getenv("LLM_MODEL");
+                var isAzure = (llmKey == null || llmKey.isBlank()) && azureKey != null;
+
+                // Defaults per provider
+                if (isAzure) {
+                    var azureEndpoint = System.getenv("AZURE_OPENAI_ENDPOINT");
+                    var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
+                    if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
+                    if (azureEndpoint == null || azureEndpoint.isBlank())
+                        azureEndpoint = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
+                    endpoint = azureEndpoint;
+                    if (model == null) model = deployment;
+                } else {
+                    if (endpoint == null || endpoint.isBlank()) endpoint = "https://api.z.ai/api/paas/v4";
+                    if (model == null || model.isBlank()) model = "glm-4.5";
                 }
+
                 var apiVersionEnv = System.getenv("AZURE_OPENAI_API_VERSION");
                 final var apiVersion = apiVersionEnv != null ? apiVersionEnv : "2024-02-15-preview";
 
-                // Azure OpenAI needs api-version query param on every request
-                var finalEndpoint = azureEndpoint;
-                var webClient = org.springframework.web.reactive.function.client.WebClient.builder()
-                        .baseUrl(finalEndpoint)
-                        .defaultHeader("api-key", azureKey)
-                        .filter((request, next) -> {
-                            var uri = org.springframework.web.util.UriComponentsBuilder
-                                    .fromUri(request.url())
-                                    .queryParam("api-version", apiVersion)
-                                    .build().toUri();
-                            return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
-                                    .from(request).url(uri).build());
-                        })
-                        .build();
+                var webClientBuilder = org.springframework.web.reactive.function.client.WebClient.builder()
+                        .baseUrl(endpoint);
+
+                if (isAzure) {
+                    webClientBuilder.defaultHeader("api-key", apiKey);
+                    webClientBuilder.filter((request, next) -> {
+                        var uri = org.springframework.web.util.UriComponentsBuilder
+                                .fromUri(request.url())
+                                .queryParam("api-version", apiVersion)
+                                .build().toUri();
+                        return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
+                                .from(request).url(uri).build());
+                    });
+                }
+
+                var webClient = webClientBuilder.build();
                 var objectMapper = new ObjectMapper();
+                var finalModel = model;
                 var metadata = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
-                        "azure-openai", deployment, false, 0, 0, java.time.Duration.ofSeconds(30));
-                // Disable circuit breaker for testing — all 135 calls should go through
+                        isAzure ? "azure-openai" : "openai-compatible", finalModel,
+                        false, 0, 0, java.time.Duration.ofSeconds(30));
                 var cbConfig = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
-                        .failureRateThreshold(100)
-                        .slidingWindowSize(200)
-                        .minimumNumberOfCalls(200)
-                        .permittedNumberOfCallsInHalfOpenState(200)
-                        .build();
+                        .failureRateThreshold(100).slidingWindowSize(200)
+                        .minimumNumberOfCalls(200).build();
                 var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of("llm-test", cbConfig);
                 cb.transitionToDisabledState();
+                // Azure uses api-key header (already on WebClient), OpenAI-compat uses Bearer
+                var bearerToken = isAzure ? "" : apiKey;
                 var llmClient = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
-                        "llm", metadata, webClient, objectMapper, "", cb, 2);
-                // Use prompt without outputSchema — Azure older API versions don't support json_schema response_format
+                        "llm", metadata, webClient, objectMapper, bearerToken, cb, 2);
                 var promptResource = new org.springframework.core.io.ByteArrayResource(
                         """
                         {
@@ -138,8 +153,8 @@ class EndToEndAccuracyIT {
                                 AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM,
                                 AddressField.BLDG_NB, AddressField.BLDG_NM)));
                 calibrators.add(new com.jpmc.tfpm.address.adapter.llm.LlmConfidenceCalibrator());
-                modeLabels.add("LLM (" + deployment + ")");
-                System.out.println("LLM enabled: Azure OpenAI " + deployment);
+                modeLabels.add("LLM (" + finalModel + ")");
+                System.out.println("LLM enabled: " + (isAzure ? "Azure OpenAI" : "OpenAI-compatible") + " " + finalModel);
             } catch (Exception e) {
                 System.err.println("LLM init failed: " + e.getMessage());
             }

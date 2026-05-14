@@ -72,10 +72,11 @@ enrichment:
     enabled: false
   llm:
     enabled: ${LLM_ENABLED:true}
-    type: ${LLM_TYPE:azure-openai}
-    endpoint: ${AZURE_OPENAI_ENDPOINT:https://azuretest123.openai.azure.com/openai/deployments/${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}}
-    api-key: ${AZURE_OPENAI_API_KEY:}
-    timeout-ms: 5000
+    type: ${LLM_TYPE:openai-compatible}
+    endpoint: ${LLM_ENDPOINT:https://api.z.ai/api/paas/v4}
+    api-key: ${LLM_API_KEY:104ba3df06ca456dae4ea964d36cd44c.uVg6BlJ3SbvyXoY1}
+    timeout-ms: 15000
+    model: ${LLM_MODEL:glm-4.5}
 
   kafka:
     enabled: false
