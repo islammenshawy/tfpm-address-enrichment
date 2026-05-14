@@ -271,11 +271,104 @@ make it              # Integration tests (golden set: 135 fixtures)
 - Python 3.12 + libpostal for sidecar
 - Testcontainers for integration tests
 
+## AI-Assisted Development
+
+This project is designed to work with AI coding assistants. Both Claude Code and GitHub Copilot can build, test, and modify the project.
+
+### Claude Code
+
+Claude Code reads `CLAUDE.md` automatically on every session. It contains all architectural constraints, forbidden patterns, testing requirements, and coding rules.
+
+```bash
+# Open the project
+cd tfpm-address-enrichment
+claude
+
+# Claude Code will read CLAUDE.md and understand:
+# - Module boundaries (domain → app → adapters → inbound)
+# - @ThreadSafe contract (final fields, no synchronized, no HashMap)
+# - @Calibrated requirement for structurers
+# - Result<T> pattern for fallible operations
+# - Five retry layers
+# - 17 ArchUnit rules that enforce all of the above at build time
+```
+
+**Useful prompts for Claude Code:**
+```
+"Run the tests and show me what fails"
+"Add a new structurer adapter for Google Address Validation API"
+"Run the accuracy report and show results"
+"Fix any ArchUnit violations"
+"Add golden set fixtures for Japan (JP)"
+```
+
+**Key files Claude Code should read first:**
+1. `CLAUDE.md` — loaded automatically, all rules
+2. `README.md` — architecture, quick start, API
+3. `docs/ARCHITECTURE.md` — module boundaries, decision log
+4. `app/src/main/resources/application.yml` — all config in one place
+
+### GitHub Copilot
+
+Copilot works best with the `.github/copilot-instructions.md` file (if present) or by reading the project conventions from existing code patterns.
+
+**Workspace setup for Copilot:**
+
+1. Open the project in VS Code or IntelliJ with Copilot enabled
+2. The project follows consistent patterns Copilot will pick up:
+   - All beans use constructor injection (no `@Autowired` fields)
+   - All service classes are `@ThreadSafe` with `final` fields
+   - All structurers are `@Calibrated` with a matching `ConfidenceCalibrator`
+   - Config classes use `@ConfigurationProperties` records
+   - Tests use AssertJ assertions + Mockito mocks
+
+**Copilot Chat prompts:**
+```
+@workspace How do I add a new inbound channel?
+@workspace Explain the cascade pipeline flow
+@workspace What's the idempotency pattern?
+@workspace Show me how LLM calls are made
+```
+
+**Pattern references for Copilot (open these files as context):**
+- New structurer? → Look at `adapter-libpostal/` (gRPC) or `adapter-llm/` (HTTP)
+- New inbound channel? → Look at `inbound-kafka/` or `inbound-rabbitmq/`
+- New Oracle adapter? → Look at `adapter-oracle-app/OracleResultPersistence.java`
+- New domain port? → Look at `domain/ResultPersistence.java` (interface) + adapter impl
+- New test? → Look at `app/src/test/.../CascadeOrchestratorTest.java`
+
+### Common Tasks (both tools)
+
+| Task | Command |
+|------|---------|
+| Build everything | `make build-all` |
+| Run tests | `make verify` |
+| Run in-memory (local) | `make up-sidecars && make app` |
+| Run accuracy report | `mvn verify -pl integration-tests -am -Dit.test=EndToEndAccuracyIT` |
+| Open accuracy report | `open integration-tests/target/accuracy-report.html` |
+| Add a structurer | Create module in `adapters/`, implement `AddressStructurer`, add `@Configuration` |
+| Add golden fixtures | Add JSON files to `integration-tests/src/test/resources/golden/<COUNTRY>/` |
+
+### Environment Variables
+
+```bash
+# Azure OpenAI (same credentials as emp_ranking project)
+export AZURE_OPENAI_API_KEY=your-key
+export AZURE_OPENAI_ENDPOINT=https://your-instance.openai.azure.com/openai/deployments/gpt-4.1-mini
+export AZURE_OPENAI_DEPLOYMENT_NAME=gpt-4.1-mini
+
+# Optional overrides
+export LIBPOSTAL_ENABLED=true          # default: true in local profile
+export LLM_ENABLED=true               # default: true in local profile
+export KAFKA_ENABLED=false             # default: false in local profile
+export RABBITMQ_ENABLED=false          # default: false in local profile
+```
+
 ## Documentation
 
 | File | Contents |
 |------|----------|
-| `CLAUDE.md` | Operating manual — constraints, rules, patterns |
+| `CLAUDE.md` | Operating manual — constraints, rules, patterns (read by Claude Code) |
 | `docs/ARCHITECTURE.md` | Module boundaries, decision log |
 | `docs/COMPLIANCE_INTEGRATION.md` | Four-axis routing, fail-safe policy |
 | `docs/COUNTRY_STRATEGY.md` | Per-country tiers and mitigations |
