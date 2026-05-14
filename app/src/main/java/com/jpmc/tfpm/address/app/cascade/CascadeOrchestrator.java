@@ -88,37 +88,38 @@ public final class CascadeOrchestrator {
                     correlationId));
         }
 
-        var trace = new ArrayList<StructuringResult>();
-        var deadline = Instant.now().plusMillis(cascadeTimeoutMs);
+        // Run all structurers in PARALLEL for consensus (minimum 2 sources)
+        var futures = new java.util.concurrent.ConcurrentLinkedQueue<StructuringResult>();
+        var latch = new java.util.concurrent.CountDownLatch(applicableStructurers.size());
 
         for (var structurer : applicableStructurers) {
-            if (Instant.now().isAfter(deadline)) {
-                LOG.debug("Cascade budget exhausted after {}ms [corrId={}]",
-                        cascadeTimeoutMs, correlationId);
-                break;
-            }
-
-            try {
-                var sample = Timer.start(meterRegistry);
-                var result = structurer.structure(raw);
-                sample.stop(latencyTimer(structurer.name(), raw.countryHint()));
-
-                trace.add(result);
-                LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
-                        structurer.name(), result.fields().size(),
-                        result.latency().toMillis(), correlationId);
-
-                if (shouldEarlyExit(trace, raw.countryHint())) {
-                    LOG.debug("Early exit after '{}' — required fields above threshold [corrId={}]",
-                            structurer.name(), correlationId);
-                    break;
+            final var s = structurer;
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                try {
+                    var sample = Timer.start(meterRegistry);
+                    var result = s.structure(raw);
+                    sample.stop(latencyTimer(s.name(), raw.countryHint()));
+                    futures.add(result);
+                    LOG.debug("Structurer '{}' returned {} fields in {}ms [corrId={}]",
+                            s.name(), result.fields().size(),
+                            result.latency().toMillis(), correlationId);
+                } catch (Exception e) {
+                    LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
+                            s.name(), correlationId, e.getMessage());
+                } finally {
+                    latch.countDown();
                 }
-            } catch (Exception e) {
-                LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
-                        structurer.name(), correlationId, e.getMessage());
-            }
+            });
         }
 
+        // Wait for all structurers to complete (with timeout)
+        try {
+            latch.await(cascadeTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        var trace = new ArrayList<>(futures);
         if (trace.isEmpty()) {
             return Result.failure(EnrichmentError.of(
                     EnrichmentError.Category.CASCADE_NO_RESULT,
@@ -129,7 +130,16 @@ public final class CascadeOrchestrator {
         var merged = fieldMerger.merge(trace, raw.countryHint());
         double confidence = merged.overallConfidence();
 
-        return Result.success(new CascadeResult(merged, trace, confidence));
+        // Consensus analysis — compare outputs across structurers
+        var consensusAnalyzer = new ConsensusAnalyzer();
+        var consensus = consensusAnalyzer.analyze(trace, merged);
+
+        if (consensus.hasDisagreements()) {
+            LOG.info("Consensus disagreements on {} fields [corrId={}]: {}",
+                    consensus.disagreementCount(), correlationId, consensus.flaggedFields());
+        }
+
+        return Result.success(new CascadeResult(merged, trace, confidence, consensus));
     }
 
     private List<AddressStructurer> filterByCountry(String countryHint) {

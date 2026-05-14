@@ -101,12 +101,19 @@ enrichment:
     # Order in which structurers are invoked. Each subsequent structurer
     # only runs if the cumulative result has not yet hit the early-exit
     # threshold on all required fields.
-    order: [libpostal, swift-crf, llm]
-    early-exit-threshold: 0.92
-    timeout-ms: 500
+    # All addresses go through at least 2 structurers for consensus.
+    # FieldMerger picks highest confidence; ConsensusAnalyzer flags disagreements.
+    order: [libpostal, llm]
+    early-exit-threshold: 0.99
+    timeout-ms: 30000
+    min-sources: 2
     required-fields: [CTRY, TWN_NM]
     routing:
-      CN: [llm]
+      # Non-Western: LLM runs first (better accuracy), libpostal as cross-check
+      CN: [llm, libpostal]
+      AE: [llm, libpostal]
+      HK: [llm, libpostal]
+      SG: [llm, libpostal]
   # Confidence threshold below which a result goes to EXCEPTION_QUEUE
   # for human review. Calibrated, not raw.
   review-threshold: 0.70

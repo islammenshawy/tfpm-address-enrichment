@@ -83,7 +83,7 @@ class CascadeOrchestratorTest {
     }
 
     @Test
-    void early_exit_when_threshold_met() {
+    void all_structurers_run_in_parallel_for_consensus() {
         var callCount = new AtomicInteger(0);
         var s1 = new AddressStructurer() {
             @Override public String name() { return "fast"; }
@@ -101,7 +101,9 @@ class CascadeOrchestratorTest {
             @Override public Set<AddressField> supportedFields() { return EnumSet.allOf(AddressField.class); }
             @Override public StructuringResult structure(RawAddress raw) {
                 callCount.incrementAndGet();
-                return StructuringResult.empty("slow", Duration.ZERO);
+                return new StructuringResult("slow", Map.of(
+                        AddressField.CTRY, new FieldValue("US", 0.95)),
+                        Duration.ZERO, Map.of());
             }
         };
 
@@ -109,8 +111,12 @@ class CascadeOrchestratorTest {
         var result = orchestrator.orchestrate(RawAddress.of("test"), "corr-2");
 
         assertThat(result.isSuccess()).isTrue();
-        // s2 should NOT be called because s1 already met threshold
-        assertThat(callCount.get()).isEqualTo(1);
+        // Both structurers run in parallel for consensus
+        assertThat(callCount.get()).isEqualTo(2);
+        // Consensus analysis present
+        var cascade = ((Result.Success<CascadeResult>) result).value();
+        assertThat(cascade.consensus()).isNotNull();
+        assertThat(cascade.consensus().sourceCount()).isEqualTo(2);
     }
 
     @Test
