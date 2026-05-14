@@ -5,15 +5,25 @@ import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
 /**
- * Day-1 identity calibrator for the LLM structurer. Clamps raw confidence to [0,1].
- * Real calibration from golden-set analysis replaces this later.
+ * Identity calibrator for LLM structurers. Clamps raw confidence to [0,1].
+ * Accepts a dynamic name matching the provider key from config.
  */
 @ThreadSafe
 public final class LlmConfidenceCalibrator implements ConfidenceCalibrator {
 
+    private final String name;
+
+    public LlmConfidenceCalibrator() {
+        this("llm");
+    }
+
+    public LlmConfidenceCalibrator(String structurerName) {
+        this.name = structurerName;
+    }
+
     @Override
     public String structurerName() {
-        return "llm";
+        return name;
     }
 
     @Override

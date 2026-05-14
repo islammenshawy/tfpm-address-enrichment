@@ -60,7 +60,7 @@ liquibase:
 
 enrichment:
   cascade:
-    order: [libpostal, llm]
+    order: [libpostal, glm, azure-gpt]
     early-exit-threshold: 0.80
     timeout-ms: 5000
 
@@ -72,11 +72,20 @@ enrichment:
     enabled: false
   llm:
     enabled: ${LLM_ENABLED:true}
-    type: ${LLM_TYPE:openai-compatible}
-    endpoint: ${LLM_ENDPOINT:https://api.z.ai/api/coding/paas/v4}
-    api-key: ${LLM_API_KEY:104ba3df06ca456dae4ea964d36cd44c.uVg6BlJ3SbvyXoY1}
-    timeout-ms: 30000
-    model: ${LLM_MODEL:glm-5.1}
+    providers:
+      glm:
+        type: openai-compatible
+        endpoint: ${GLM_ENDPOINT:https://api.z.ai/api/coding/paas/v4}
+        api-key: ${GLM_API_KEY:104ba3df06ca456dae4ea964d36cd44c.uVg6BlJ3SbvyXoY1}
+        model: ${GLM_MODEL:glm-5.1}
+        timeout-ms: 30000
+      azure-gpt:
+        type: azure-openai
+        endpoint: ${AZURE_OPENAI_ENDPOINT:https://azuretest123.openai.azure.com/openai/deployments/gpt-4.1-mini}
+        api-key: ${AZURE_OPENAI_API_KEY:}
+        model: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}
+        api-version: ${AZURE_OPENAI_API_VERSION:2024-02-15-preview}
+        timeout-ms: 30000
 
   kafka:
     enabled: false

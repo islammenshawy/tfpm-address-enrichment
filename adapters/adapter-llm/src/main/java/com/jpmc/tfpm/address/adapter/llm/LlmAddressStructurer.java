@@ -35,6 +35,7 @@ public final class LlmAddressStructurer implements AddressStructurer {
 
     private static final Logger LOG = LoggerFactory.getLogger(LlmAddressStructurer.class);
 
+    private final String structurerName;
     private final LlmModelClient llmClient;
     private final PromptTemplateLoader promptTemplateLoader;
     private final ObjectMapper objectMapper;
@@ -45,6 +46,16 @@ public final class LlmAddressStructurer implements AddressStructurer {
             PromptTemplateLoader promptTemplateLoader,
             ObjectMapper objectMapper,
             Set<AddressField> allowedFields) {
+        this(llmClient.name(), llmClient, promptTemplateLoader, objectMapper, allowedFields);
+    }
+
+    public LlmAddressStructurer(
+            String name,
+            LlmModelClient llmClient,
+            PromptTemplateLoader promptTemplateLoader,
+            ObjectMapper objectMapper,
+            Set<AddressField> allowedFields) {
+        this.structurerName = Objects.requireNonNull(name, "name");
         this.llmClient = Objects.requireNonNull(llmClient, "llmClient");
         this.promptTemplateLoader = Objects.requireNonNull(promptTemplateLoader, "promptTemplateLoader");
         this.objectMapper = Objects.requireNonNull(objectMapper, "objectMapper");
@@ -54,7 +65,7 @@ public final class LlmAddressStructurer implements AddressStructurer {
 
     @Override
     public String name() {
-        return "llm";
+        return structurerName;
     }
 
     @Override

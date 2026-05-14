@@ -52,7 +52,7 @@ class LlmAddressStructurerTest {
 
     @Test
     void name_is_llm() {
-        assertThat(structurer.name()).isEqualTo("llm");
+        assertThat(structurer.name()).isEqualTo("test-llm");
     }
 
     @Test
@@ -72,7 +72,7 @@ class LlmAddressStructurerTest {
 
         var result = structurer.structure(RawAddress.of("123 Main St, New York"));
 
-        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.structurerName()).isEqualTo("test-llm");
         assertThat(result.fields()).hasSize(3);
         assertThat(result.fields().get(AddressField.CTRY).value()).isEqualTo("US");
         assertThat(result.fields().get(AddressField.CTRY).confidence()).isEqualTo(0.95);
@@ -102,7 +102,7 @@ class LlmAddressStructurerTest {
 
         var result = structurer.structure(RawAddress.of("test"));
 
-        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.structurerName()).isEqualTo("test-llm");
         assertThat(result.fields()).isEmpty();
     }
 
@@ -176,7 +176,7 @@ class LlmAddressStructurerTest {
 
         var result = structurer.structure(RawAddress.of("timeout test"));
 
-        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.structurerName()).isEqualTo("test-llm");
         assertThat(result.fields()).isEmpty();
         assertThat(result.latency()).isNotNull();
     }
@@ -201,7 +201,7 @@ class LlmAddressStructurerTest {
 
         var result = structurer.structure(RawAddress.of("exception test"));
 
-        assertThat(result.structurerName()).isEqualTo("llm");
+        assertThat(result.structurerName()).isEqualTo("test-llm");
         assertThat(result.fields()).isEmpty();
     }
 }

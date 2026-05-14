@@ -101,7 +101,7 @@ enrichment:
     # Order in which structurers are invoked. Each subsequent structurer
     # only runs if the cumulative result has not yet hit the early-exit
     # threshold on all required fields.
-    order: [libpostal, llm]
+    order: [libpostal, glm, azure-gpt]
     early-exit-threshold: ${CASCADE_EARLY_EXIT:0.99}
     timeout-ms: ${CASCADE_TIMEOUT:30000}
     min-sources: ${CASCADE_MIN_SOURCES:2}
@@ -151,20 +151,28 @@ enrichment:
       max-concurrent-calls: 30
       max-wait-duration-ms: 100
 
-  # ----- Structurer: internal LLM gateway -----
+  # ----- LLM structurers (dynamic, config-driven) -----
+  # Each provider under 'providers' becomes a separate AddressStructurer bean.
+  # Add/remove entries to change the model set — no code changes needed.
   llm:
     enabled: ${LLM_ENABLED:false}
-    type: ${LLM_TYPE:openai-compatible}
-    endpoint: ${LLM_ENDPOINT:http://localhost:8089}
-    api-key: ${LLM_API_KEY:}
-    model: ${LLM_MODEL:}
-    timeout-ms: 2000
     fields-allowed: [CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM]
-    bulkhead:
-      max-concurrent-calls: 20
-      max-wait-duration-ms: 200
     prompt:
       template-resource: classpath:prompts/address-structuring.json
+    providers:
+      glm:
+        type: openai-compatible
+        endpoint: ${GLM_ENDPOINT:https://api.z.ai/api/coding/paas/v4}
+        api-key: ${GLM_API_KEY:}
+        model: ${GLM_MODEL:glm-5.1}
+        timeout-ms: 30000
+      azure-gpt:
+        type: azure-openai
+        endpoint: ${AZURE_OPENAI_ENDPOINT:}
+        api-key: ${AZURE_OPENAI_API_KEY:}
+        model: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}
+        api-version: ${AZURE_OPENAI_API_VERSION:2024-02-15-preview}
+        timeout-ms: 30000
 
   # ----- Inbound/outbound channel config (on/off per channel) -----
   # HTTP is always enabled. Kafka and RabbitMQ are configurable.
