@@ -12,8 +12,8 @@ ORACLE_URL := jdbc:oracle:thin:@//localhost:1521/FREEPDB1
 ORACLE_USER := system
 ORACLE_PASS := oracle
 
-.PHONY: help up wait down reset logs oracle-shell kafka-topics rabbitmq-console wiremock-reload \
-        migrate migrate-rollback build verify it accuracy app app-debug ports clean
+.PHONY: help up up-sidecars wait down reset logs oracle-shell kafka-topics rabbitmq-console wiremock-reload \
+        migrate migrate-rollback build build-all verify it accuracy app app-debug docker-app docker-all ports clean
 
 help:
 	@echo ""
@@ -38,15 +38,17 @@ help:
 	@echo "  make wiremock-reload  Reload WireMock LLM stub mappings"
 	@echo ""
 	@echo "Build & test:"
-	@echo "  make build            mvn clean install -DskipTests"
+	@echo "  make build            Build Java app (mvn clean install -DskipTests)"
+	@echo "  make build-all        Build Java app + libpostal sidecar Docker image"
 	@echo "  make verify           mvn clean verify (unit + ArchUnit)"
-	@echo "  make it               mvn -P it verify (integration tests)"
-	@echo "  make accuracy         mvn -P accuracy verify (accuracy harness)"
+	@echo "  make it               Integration tests (golden set, no Docker needed)"
+	@echo "  make accuracy         Accuracy harness (mvn -P accuracy verify)"
 	@echo ""
 	@echo "Run:"
-	@echo "  make app              Start the app locally (outside Docker)"
-	@echo "  make app-debug        Start the app with remote debug on 5005"
-	@echo "  make docker-app       Build and run the app as a Docker container"
+	@echo "  make app              Start app locally in-memory (H2, no Docker)"
+	@echo "  make app-debug        Start app with remote debug on 5005"
+	@echo "  make docker-all       Build + start everything in Docker"
+	@echo "  make docker-app       Build + start just the app in Docker"
 	@echo ""
 
 # ============================================================
@@ -127,6 +129,10 @@ wiremock-reload:
 build:
 	mvn clean install -DskipTests
 
+build-all: build
+	$(COMPOSE) --profile sidecars build
+	@echo "Java app + libpostal sidecar built."
+
 verify:
 	mvn clean verify
 
@@ -153,6 +159,10 @@ app-debug:
 docker-app: build
 	$(COMPOSE) --profile app up -d --build app
 	@echo "App running at http://localhost:8080"
+
+docker-all: build
+	$(COMPOSE) --profile app --profile sidecars up -d --build
+	@echo "Full stack running: app :8080, libpostal :50051, kafka :29092, rabbitmq :5672"
 
 clean:
 	mvn clean
