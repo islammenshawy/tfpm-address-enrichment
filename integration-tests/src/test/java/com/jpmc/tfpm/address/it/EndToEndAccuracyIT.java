@@ -78,6 +78,73 @@ class EndToEndAccuracyIT {
             modeLabels.add("libpostal");
         }
 
+        // Try LLM (Azure OpenAI) — auto-detect from env vars
+        var azureKey = System.getenv("AZURE_OPENAI_API_KEY");
+        if (azureKey != null && !azureKey.isBlank()) {
+            try {
+                var azureEndpoint = System.getenv("AZURE_OPENAI_ENDPOINT");
+                var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
+                if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
+                if (azureEndpoint == null || azureEndpoint.isBlank()) {
+                    azureEndpoint = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
+                }
+                var apiVersionEnv = System.getenv("AZURE_OPENAI_API_VERSION");
+                final var apiVersion = apiVersionEnv != null ? apiVersionEnv : "2024-02-15-preview";
+
+                // Azure OpenAI needs api-version query param on every request
+                var finalEndpoint = azureEndpoint;
+                var webClient = org.springframework.web.reactive.function.client.WebClient.builder()
+                        .baseUrl(finalEndpoint)
+                        .defaultHeader("api-key", azureKey)
+                        .filter((request, next) -> {
+                            var uri = org.springframework.web.util.UriComponentsBuilder
+                                    .fromUri(request.url())
+                                    .queryParam("api-version", apiVersion)
+                                    .build().toUri();
+                            return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
+                                    .from(request).url(uri).build());
+                        })
+                        .build();
+                var objectMapper = new ObjectMapper();
+                var metadata = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
+                        "azure-openai", deployment, false, 0, 0, java.time.Duration.ofSeconds(30));
+                // Disable circuit breaker for testing — all 135 calls should go through
+                var cbConfig = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                        .failureRateThreshold(100)
+                        .slidingWindowSize(200)
+                        .minimumNumberOfCalls(200)
+                        .permittedNumberOfCallsInHalfOpenState(200)
+                        .build();
+                var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of("llm-test", cbConfig);
+                cb.transitionToDisabledState();
+                var llmClient = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
+                        "llm", metadata, webClient, objectMapper, "", cb, 2);
+                // Use prompt without outputSchema — Azure older API versions don't support json_schema response_format
+                var promptResource = new org.springframework.core.io.ByteArrayResource(
+                        """
+                        {
+                          "systemPrompt": "You are an address parsing engine. Given an unstructured postal address, extract it into ISO 20022 structured fields. Return ONLY valid JSON with a 'fields' object containing CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM keys. Each field has 'value' (string) and 'confidence' (0.0-1.0). Only include fields you can identify.",
+                          "userMessageTemplate": "Parse this address into structured fields:\\nAddress: {{rawAddress}}\\nCountry hint: {{countryHint}}",
+                          "outputSchema": "",
+                          "maxTokens": 500,
+                          "temperature": 0.1
+                        }
+                        """.getBytes());
+                var promptLoader = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(
+                        promptResource, objectMapper);
+                structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(
+                        llmClient, promptLoader, objectMapper,
+                        java.util.EnumSet.of(AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
+                                AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM,
+                                AddressField.BLDG_NB, AddressField.BLDG_NM)));
+                calibrators.add(new com.jpmc.tfpm.address.adapter.llm.LlmConfidenceCalibrator());
+                modeLabels.add("LLM (" + deployment + ")");
+                System.out.println("LLM enabled: Azure OpenAI " + deployment);
+            } catch (Exception e) {
+                System.err.println("LLM init failed: " + e.getMessage());
+            }
+        }
+
         // If no real structurers available, add stub as last resort for CI
         if (structurers.isEmpty()) {
             var stub = new com.jpmc.tfpm.address.app.cascade.StubAddressStructurer();
@@ -90,8 +157,9 @@ class EndToEndAccuracyIT {
 
         var merger = new FieldMerger(calibrators);
         var meterRegistry = new SimpleMeterRegistry();
+        // High threshold (0.99) forces ALL structurers to run — measures combined accuracy
         var orchestrator = new CascadeOrchestrator(
-                structurers, merger, CountryRouter.noOp(), 0.80, meterRegistry);
+                structurers, merger, CountryRouter.noOp(), 0.99, meterRegistry);
 
         Files.walk(GOLDEN_DIR)
                 .filter(p -> p.toString().endsWith(".json"))

@@ -94,10 +94,14 @@ public final class OpenAiCompatibleLlmClient implements LlmModelClient {
         var requestBody = buildRequestPayload(request, /*stream=*/ false);
 
         try {
-            return webClient.post()
+            var req = webClient.post()
                     .uri("/chat/completions")
-                    .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
-                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+            // Only add Bearer auth when token is non-empty (Azure uses api-key header instead)
+            if (bearerToken != null && !bearerToken.isEmpty()) {
+                req = req.header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken);
+            }
+            return req
                     .bodyValue(requestBody)
                     .retrieve()
                     .bodyToMono(JsonNode.class)
@@ -130,9 +134,12 @@ public final class OpenAiCompatibleLlmClient implements LlmModelClient {
 
         var serverSentEventType = new org.springframework.core.ParameterizedTypeReference<ServerSentEvent<String>>() {};
 
-        Flux<ServerSentEvent<String>> events = webClient.post()
-                .uri("/chat/completions")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
+        var streamReq = webClient.post()
+                .uri("/chat/completions");
+        if (bearerToken != null && !bearerToken.isEmpty()) {
+            streamReq = streamReq.header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken);
+        }
+        Flux<ServerSentEvent<String>> events = streamReq
                 .header(HttpHeaders.ACCEPT, MediaType.TEXT_EVENT_STREAM_VALUE)
                 .bodyValue(buildRequestPayload(request, true))
                 .retrieve()
