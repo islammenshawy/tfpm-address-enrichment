@@ -95,7 +95,8 @@ services:
 
   # ============================================================
   # libpostal sidecar — Python gRPC server wrapping the libpostal
-  # C library. First build downloads ~2GB of model data (cached).
+  # C library. Model data embedded in repo (764MB compressed).
+  # FULLY OFFLINE build — no downloads during docker build.
   # Enable with: docker compose --profile sidecars up -d
   # ============================================================
   libpostal-sidecar:

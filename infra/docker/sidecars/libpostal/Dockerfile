@@ -1,29 +1,21 @@
-# libpostal gRPC sidecar — builds libpostal from source, downloads
-# model data, and runs the Python gRPC server.
+# libpostal gRPC sidecar — FULLY OFFLINE build.
+#
+# Model data is pre-downloaded and split into chunks in model-data/.
+# No internet access needed for model data during docker build.
 #
 # Build:
 #   docker build -t tfpm-libpostal-sidecar .
 #
 # Run:
 #   docker run -p 50051:50051 tfpm-libpostal-sidecar
-#
-# NOTE: First build downloads ~2GB of model data. Subsequent builds
-# use Docker layer cache. The final image is ~2.5GB.
 
+# --- Stage 1: Build libpostal C library from source ---
 FROM python:3.12-slim AS builder
 
-# Install build dependencies for libpostal
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    curl \
-    autoconf \
-    automake \
-    libtool \
-    pkg-config \
-    git \
+    build-essential curl autoconf automake libtool pkg-config git \
     && rm -rf /var/lib/apt/lists/*
 
-# Build libpostal from source
 WORKDIR /tmp
 RUN git clone --depth 1 https://github.com/openvenues/libpostal.git && \
     cd libpostal && \
@@ -33,31 +25,38 @@ RUN git clone --depth 1 https://github.com/openvenues/libpostal.git && \
     make install && \
     ldconfig
 
-# Download libpostal model data (~2GB)
-# This is the trained model that powers address parsing.
-# Downloaded once and cached in the Docker layer.
-RUN libpostal_data download all /opt/libpostal_data
+# --- Stage 2: Reassemble model data from repo chunks (OFFLINE) ---
+FROM python:3.12-slim AS model
 
-# --- Runtime stage ---
+WORKDIR /tmp
+COPY model-data/libpostal-data.tar.gz.part-* ./
+COPY model-data/SHA256SUMS ./
+
+# Verify integrity then reassemble — no downloads
+RUN sha256sum -c SHA256SUMS && \
+    cat libpostal-data.tar.gz.part-* > libpostal-data.tar.gz && \
+    tar xzf libpostal-data.tar.gz -C /opt && \
+    rm -f libpostal-data.tar.gz libpostal-data.tar.gz.part-*
+
+# --- Stage 3: Runtime ---
 FROM python:3.12-slim
 
-# Install runtime dependencies only
-RUN apt-get update && apt-get install -y \
-    libsnappy-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y libsnappy-dev && rm -rf /var/lib/apt/lists/*
 
-# Copy libpostal shared library and data from builder
+# Copy libpostal shared library from builder
 COPY --from=builder /usr/local/lib/libpostal* /usr/local/lib/
 COPY --from=builder /usr/local/include/libpostal/ /usr/local/include/libpostal/
-COPY --from=builder /opt/libpostal_data/ /opt/libpostal_data/
 RUN ldconfig
 
-# Install Python dependencies
+# Copy pre-downloaded model data (NO DOWNLOAD at build time)
+COPY --from=model /opt/libpostal_data/ /opt/libpostal_data/
+
+# Python deps
 WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy sidecar code
+# Sidecar code
 COPY server.py structurer_pb2.py structurer_pb2_grpc.py ./
 
 EXPOSE 50051
