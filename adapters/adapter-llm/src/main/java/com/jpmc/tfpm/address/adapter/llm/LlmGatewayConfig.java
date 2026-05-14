@@ -52,10 +52,22 @@ public class LlmGatewayConfig {
                 .maxLifeTime(Duration.ofMinutes(5))
                 .build();
         var httpClient = HttpClient.create(provider);
-        return WebClient.builder()
+        var type = props.type() != null ? props.type() : "openai-compatible";
+        var builder = WebClient.builder()
                 .baseUrl(props.endpoint())
-                .clientConnector(new ReactorClientHttpConnector(httpClient))
-                .build();
+                .clientConnector(new ReactorClientHttpConnector(httpClient));
+
+        // Azure OpenAI uses api-key header; the client adds Bearer auth per-request
+        // so we add the api-version query param for Azure here
+        if ("azure-openai".equals(type)) {
+            var apiVersion = System.getenv("AZURE_OPENAI_API_VERSION");
+            if (apiVersion == null) apiVersion = "2024-02-15-preview";
+            builder.defaultHeader("api-key", props.apiKey() != null ? props.apiKey() : "");
+            builder.defaultUriVariables(java.util.Map.of("api-version", apiVersion));
+            LOG.info("WebClient configured for Azure OpenAI (api-version={})", apiVersion);
+        }
+
+        return builder.build();
     }
 
     @Bean
@@ -84,6 +96,14 @@ public class LlmGatewayConfig {
                     "llm", metadata, llmWebClient, objectMapper,
                     () -> new JpmcInternalGatewayLlmClient.CachedToken(apiKey, java.time.Instant.MAX),
                     cb, retry, Duration.ofSeconds(15));
+        }
+
+        if ("azure-openai".equals(type)) {
+            LOG.info("Creating Azure OpenAI LLM client");
+            // Azure uses api-key header (set on WebClient), not Bearer token
+            return new OpenAiCompatibleLlmClient(
+                    "llm", metadata, llmWebClient, objectMapper,
+                    "", cb, 2);
         }
 
         LOG.info("Creating OpenAI-compatible LLM client (type={})", type);

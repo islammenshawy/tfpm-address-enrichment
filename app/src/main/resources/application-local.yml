@@ -60,7 +60,7 @@ liquibase:
 
 enrichment:
   cascade:
-    order: [libpostal]
+    order: [libpostal, llm]
     early-exit-threshold: 0.80
     timeout-ms: 5000
 
@@ -71,7 +71,11 @@ enrichment:
   swift-crf:
     enabled: false
   llm:
-    enabled: ${LLM_ENABLED:false}
+    enabled: ${LLM_ENABLED:true}
+    type: ${LLM_TYPE:azure-openai}
+    endpoint: ${AZURE_OPENAI_ENDPOINT:https://azuretest123.openai.azure.com/openai/deployments/${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}}
+    api-key: ${AZURE_OPENAI_API_KEY:}
+    timeout-ms: 5000
 
   kafka:
     enabled: false
