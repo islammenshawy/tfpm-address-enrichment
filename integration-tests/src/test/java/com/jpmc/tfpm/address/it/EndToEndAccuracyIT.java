@@ -326,28 +326,20 @@ class EndToEndAccuracyIT {
                         v.confidence * 100));
             }
 
-            // Structured readable address from actual output
+            // Structured output with named labels
+            var fieldLabels = Map.of(
+                    "CTRY", "Country", "TWN_NM", "City", "CTRY_SUB_DVSN", "State/Province",
+                    "STRT_NM", "Street", "BLDG_NB", "Building #", "BLDG_NM", "Building Name",
+                    "PST_CD", "Postal Code", "ADR_LINE", "Address Line");
             var structuredAddr = new StringBuilder();
             var actuals = r.fields;
-            if (actuals.containsKey("BLDG_NB") && !actuals.get("BLDG_NB").actual.isEmpty())
-                structuredAddr.append(actuals.get("BLDG_NB").actual).append(" ");
-            if (actuals.containsKey("STRT_NM") && !actuals.get("STRT_NM").actual.isEmpty())
-                structuredAddr.append(actuals.get("STRT_NM").actual);
-            if (actuals.containsKey("BLDG_NM") && !actuals.get("BLDG_NM").actual.isEmpty()) {
-                if (!structuredAddr.isEmpty()) structuredAddr.append(", ");
-                structuredAddr.append(actuals.get("BLDG_NM").actual);
-            }
-            if (actuals.containsKey("TWN_NM") && !actuals.get("TWN_NM").actual.isEmpty()) {
-                if (!structuredAddr.isEmpty()) structuredAddr.append(", ");
-                structuredAddr.append(actuals.get("TWN_NM").actual);
-            }
-            if (actuals.containsKey("CTRY_SUB_DVSN") && !actuals.get("CTRY_SUB_DVSN").actual.isEmpty())
-                structuredAddr.append(" ").append(actuals.get("CTRY_SUB_DVSN").actual);
-            if (actuals.containsKey("PST_CD") && !actuals.get("PST_CD").actual.isEmpty())
-                structuredAddr.append(" ").append(actuals.get("PST_CD").actual);
-            if (actuals.containsKey("CTRY") && !actuals.get("CTRY").actual.isEmpty()) {
-                if (!structuredAddr.isEmpty()) structuredAddr.append(", ");
-                structuredAddr.append(actuals.get("CTRY").actual);
+            for (var fieldOrder : List.of("CTRY", "TWN_NM", "CTRY_SUB_DVSN", "STRT_NM", "BLDG_NB", "BLDG_NM", "PST_CD", "ADR_LINE")) {
+                if (actuals.containsKey(fieldOrder) && !actuals.get(fieldOrder).actual.isEmpty()) {
+                    var label = fieldLabels.getOrDefault(fieldOrder, fieldOrder);
+                    structuredAddr.append(String.format(
+                            "<div><small style='color:#888'>%s:</small> <b>%s</b></div>",
+                            label, actuals.get(fieldOrder).actual));
+                }
             }
             var structuredText = structuredAddr.isEmpty() ? "<i>no output</i>" : structuredAddr.toString();
 
