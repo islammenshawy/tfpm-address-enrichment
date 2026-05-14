@@ -57,6 +57,11 @@ up:
 	$(COMPOSE) up -d
 	@echo ""
 	@echo "Started. Run 'make wait' to block until services are ready."
+	@echo "For libpostal sidecar: make up-sidecars"
+
+up-sidecars:
+	$(COMPOSE) --profile sidecars up -d --build
+	@echo "Sidecars started (first build downloads ~2GB libpostal model data)."
 
 wait:
 	@./scripts/dev/wait-for-services.sh

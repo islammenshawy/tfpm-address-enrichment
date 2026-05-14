@@ -94,20 +94,23 @@ services:
       retries: 10
 
   # ============================================================
-  # libpostal sidecar — NOT INCLUDED by default. Requires real
-  # libpostal binary + a gRPC server speaking proto/structurer.proto.
-  # See docs/DOCKER_DEV_GUIDE.md "Adding sidecars locally".
-  # When you implement it, uncomment and provide the Dockerfile in
-  # infra/docker/sidecars/libpostal/.
+  # libpostal sidecar — Python gRPC server wrapping the libpostal
+  # C library. First build downloads ~2GB of model data (cached).
+  # Enable with: docker compose --profile sidecars up -d
   # ============================================================
-  # libpostal-sidecar:
-  #   build:
-  #     context: ./sidecars/libpostal
-  #   container_name: tfpm-libpostal
-  #   ports:
-  #     - "50051:50051"
-  #   profiles:
-  #     - sidecars
+  libpostal-sidecar:
+    build:
+      context: ./sidecars/libpostal
+    container_name: tfpm-libpostal
+    ports:
+      - "50051:50051"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import grpc; ch=grpc.insecure_channel('localhost:50051'); grpc.channel_ready_future(ch).result(timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    profiles:
+      - sidecars
 
   # ============================================================
   # SWIFT CRF sidecar — NOT INCLUDED. Activated only when the
