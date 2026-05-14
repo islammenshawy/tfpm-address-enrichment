@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-010",
+  "country": "GB",
+  "source": "mq",
+  "raw": "WEALTH MANAGEMENT DIV, 1 CHURCHILL PLACE CANARY, WHARF LONDON E14 5HP GB",
+  "country_hint": "GB",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "GB", "required": true },
+    "TWN_NM": { "value": "London", "required": true },
+    "STRT_NM": { "value": "Churchill Place", "required": false },
+    "BLDG_NB": { "value": "1", "required": false },
+    "PST_CD": { "value": "E14 5HP", "required": false }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "NAME OVERFLOW + TRUNCATION: 'WEALTH MANAGEMENT DIV' is a department name spilling into address. 'CANARY' + 'WHARF' split across lines. Structurer must ignore the dept name and parse the address."
+}

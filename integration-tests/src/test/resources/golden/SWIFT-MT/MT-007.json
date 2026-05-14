@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-007",
+  "country": "HK",
+  "source": "mq",
+  "raw": "UNIT 2701 27F TWO INTL, FINANCE CENTRE 8 FINANCE, STREET CENTRAL HK",
+  "country_hint": "HK",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "HK", "required": true },
+    "TWN_NM": { "value": "Hong Kong", "required": true },
+    "CTRY_SUB_DVSN": { "value": "Central", "required": false },
+    "STRT_NM": { "value": "Finance Street", "required": false },
+    "BLDG_NB": { "value": "8", "required": false }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "HK address truncated at 35 chars per line. 'INTERNATIONAL' abbreviated to 'INTL'. No postal code (correct for HK). Floor/unit in line 1."
+}

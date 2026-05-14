@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-009",
+  "country": "CH",
+  "source": "mq",
+  "raw": "BAHNHOFSTRASSE 45, 8001 ZURICH SWITZERLAND",
+  "country_hint": "CH",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "CH", "required": true },
+    "TWN_NM": { "value": "Zurich", "required": true },
+    "STRT_NM": { "value": "Bahnhofstrasse", "required": true },
+    "BLDG_NB": { "value": "45", "required": false },
+    "PST_CD": { "value": "8001", "required": true }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "Swiss address from MT. 4-digit PLZ. Country name instead of code. UPPERCASE throughout."
+}

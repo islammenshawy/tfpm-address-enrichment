@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-001",
+  "country": "GB",
+  "source": "mq",
+  "raw": "25 BANK STREET, CANARY WHARF, LONDON E14 5JP",
+  "country_hint": "GB",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "GB", "required": true },
+    "TWN_NM": { "value": "London", "required": true },
+    "STRT_NM": { "value": "Bank Street", "required": true },
+    "BLDG_NB": { "value": "25", "required": false },
+    "PST_CD": { "value": "E14 5JP", "required": true }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "Clean 3-line MT103 :59: field. Name already stripped. Standard UK address in UPPERCASE (common in SWIFT)."
+}

@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-005",
+  "country": "US",
+  "source": "mq",
+  "raw": "GLOBAL TRANSACTION SERV, ICES 383 MADISON AVENUE, NEW YORK NY 10179",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "US", "required": true },
+    "TWN_NM": { "value": "New York", "required": true },
+    "CTRY_SUB_DVSN": { "value": "NY", "required": false },
+    "STRT_NM": { "value": "Madison Avenue", "required": true },
+    "PST_CD": { "value": "10179", "required": false }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "NAME OVERFLOW: 'GLOBAL TRANSACTION SERVICES' spills from line 1 into line 2 ('ICES'). The structurer must recognize 'ICES 383 MADISON AVENUE' as address, not treat 'ICES' as a street name. 35-char truncation mid-word."
+}

@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-002",
+  "country": "AE",
+  "source": "mq",
+  "raw": "OFFICE 1204 EMIRATES TOWERS, SHEIKH ZAYED ROAD DUBAI UAE",
+  "country_hint": "AE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "AE", "required": true },
+    "TWN_NM": { "value": "Dubai", "required": true },
+    "STRT_NM": { "value": "Sheikh Zayed Road", "required": false },
+    "BLDG_NM": { "value": "Emirates Towers", "required": false },
+    "BLDG_NB": { "value": "1204", "required": false }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "UAE address from MT103 :59:. No postal code (UAE has none). All UPPERCASE. Emirate=Dubai as TWN_NM."
+}

@@ -1,0 +1,19 @@
+{
+  "fixture_id": "MT-003",
+  "country": "US",
+  "source": "mq",
+  "raw": "383 MADISON AVE FL 45, NEW YORK NY 10179 US",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "US", "required": true },
+    "TWN_NM": { "value": "New York", "required": true },
+    "CTRY_SUB_DVSN": { "value": "NY", "required": false },
+    "STRT_NM": { "value": "Madison Ave", "required": true },
+    "BLDG_NB": { "value": "383", "required": false },
+    "PST_CD": { "value": "10179", "required": true }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "US address with floor notation truncated to 'FL 45'. Comma joins from MT 3-line format."
+}

@@ -1,0 +1,18 @@
+{
+  "fixture_id": "MT-004",
+  "country": "DE",
+  "source": "mq",
+  "raw": "TAUNUSANLAGE 14, 60325 FRANKFURT AM MAIN DE",
+  "country_hint": "DE",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": { "value": "DE", "required": true },
+    "TWN_NM": { "value": "Frankfurt am Main", "required": true },
+    "STRT_NM": { "value": "Taunusanlage", "required": true },
+    "BLDG_NB": { "value": "14", "required": false },
+    "PST_CD": { "value": "60325", "required": true }
+  },
+  "validator": "swift-mt-test@jpmorgan.com",
+  "validated_at": "2026-05-14",
+  "notes": "German address from SWIFT MT. PLZ-before-city format. All UPPERCASE."
+}
