@@ -8,6 +8,7 @@ import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AddressStructurer.StructuringResult;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
+import com.jpmc.tfpm.address.domain.ConsensusResult;
 import com.jpmc.tfpm.address.domain.CountryRouter;
 import com.jpmc.tfpm.address.domain.Result;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
@@ -31,10 +32,8 @@ import java.util.stream.Collectors;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * End-to-end accuracy test that runs the cascade against ALL golden set
- * fixtures and generates an HTML report with per-country, per-field results.
- *
- * Report output: integration-tests/target/accuracy-report.html
+ * End-to-end accuracy test. Auto-detects available structurers (libpostal sidecar,
+ * LLM providers via env vars). Generates styled HTML report with consensus analysis.
  */
 @DisplayName("End-to-End Accuracy Report")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -47,435 +46,348 @@ class EndToEndAccuracyIT {
     private static final List<FixtureResult> results = Collections.synchronizedList(new ArrayList<>());
     private static String structurerMode = "unknown";
 
-    record FixtureResult(
-            String fixtureId, String country, String source, String raw,
-            Map<String, ExpectedVsActual> fields, boolean cascadeSuccess,
-            List<String> structurersUsed,
-            int expectedFieldCount, int matchedFieldCount,
-            double accuracy, long latencyMs) {}
+    record FixtureResult(String fixtureId, String country, String source, String raw,
+                         Map<String, FieldDetail> fields, boolean cascadeSuccess,
+                         List<String> structurersUsed, ConsensusResult consensus,
+                         int expectedCount, int matchedCount, double accuracy, long latencyMs) {}
 
-    record ExpectedVsActual(String expected, String actual, double confidence,
-                            String structurerSource, boolean match) {}
+    record FieldDetail(String expected, String actual, double confidence,
+                       String sourceStructurer, boolean agreed, Map<String, String> alternatives,
+                       boolean match) {}
 
     @Test
     @Order(1)
-    @DisplayName("Run cascade against all golden fixtures")
-    void run_cascade_against_golden_set() throws IOException {
+    void run_cascade() throws IOException {
         if (!Files.exists(GOLDEN_DIR)) return;
 
-        // Detect available structurers — NO STUB (real models only)
         var structurers = new ArrayList<AddressStructurer>();
         var calibrators = new ArrayList<ConfidenceCalibrator>();
-        var modeLabels = new ArrayList<String>();
-
-        // Try libpostal (check if sidecar is reachable)
-        boolean libpostalAvailable = isGrpcReachable("localhost", 50051);
-        if (libpostalAvailable) {
-            var channel = io.grpc.ManagedChannelBuilder.forTarget("localhost:50051")
-                    .usePlaintext().build();
-            structurers.add(new com.jpmc.tfpm.address.adapter.libpostal.LibpostalAddressStructurer(channel, 2000));
-            calibrators.add(new com.jpmc.tfpm.address.adapter.libpostal.LibpostalConfidenceCalibrator());
-            modeLabels.add("libpostal");
-        }
-
-        // Add ALL configured LLM providers — each becomes a separate structurer for consensus
+        var labels = new ArrayList<String>();
         var objectMapper = new ObjectMapper();
-        var promptResource = new org.springframework.core.io.ByteArrayResource(
-                """
-                {
-                  "systemPrompt": "You are an address parsing engine. Given an unstructured postal address, extract it into ISO 20022 structured fields. Return ONLY valid JSON with a 'fields' object containing CTRY, TWN_NM, PST_CD, CTRY_SUB_DVSN, STRT_NM, BLDG_NB, BLDG_NM keys. Each field has 'value' (string) and 'confidence' (0.0-1.0). Only include fields you can identify.",
-                  "userMessageTemplate": "Parse this address into structured fields:\\nAddress: {{rawAddress}}\\nCountry hint: {{countryHint}}",
-                  "outputSchema": "",
-                  "maxTokens": 500,
-                  "temperature": 0.1
-                }
-                """.getBytes());
-        var llmFields = java.util.EnumSet.of(AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
-                AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM, AddressField.BLDG_NB, AddressField.BLDG_NM);
 
-        // --- Z.AI GLM (LLM_API_KEY) ---
-        var zaiKey = System.getenv("LLM_API_KEY");
-        if (zaiKey != null && !zaiKey.isBlank()) {
-            try {
-                var ep = System.getenv("LLM_ENDPOINT");
-                if (ep == null || ep.isBlank()) ep = "https://api.z.ai/api/coding/paas/v4";
-                var mdl = System.getenv("LLM_MODEL");
-                if (mdl == null || mdl.isBlank()) mdl = "glm-5.1";
-                var wc = org.springframework.web.reactive.function.client.WebClient.builder().baseUrl(ep).build();
-                var meta = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
-                        "z.ai", mdl, false, 0, 0, java.time.Duration.ofSeconds(30));
-                var cb = disabledCircuitBreaker("glm");
-                var client = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
-                        "glm", meta, wc, objectMapper, zaiKey, cb, 2);
-                var pl = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(promptResource, objectMapper);
-                structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(
-                        client, pl, objectMapper, llmFields));
-                calibrators.add(new IdentityConfidenceCalibrator("glm"));
-                modeLabels.add("GLM (" + mdl + ")");
-                System.out.println("GLM enabled: Z.AI " + mdl);
-            } catch (Exception e) {
-                System.err.println("GLM init failed: " + e.getMessage());
-            }
+        // Auto-detect libpostal
+        if (isReachable("localhost", 50051)) {
+            var ch = io.grpc.ManagedChannelBuilder.forTarget("localhost:50051").usePlaintext().build();
+            structurers.add(new com.jpmc.tfpm.address.adapter.libpostal.LibpostalAddressStructurer(ch, 2000));
+            calibrators.add(new com.jpmc.tfpm.address.adapter.libpostal.LibpostalConfidenceCalibrator());
+            labels.add("libpostal");
         }
 
-        // --- Azure OpenAI (AZURE_OPENAI_API_KEY) ---
-        var azureKey = System.getenv("AZURE_OPENAI_API_KEY");
-        if (azureKey != null && !azureKey.isBlank()) {
-            try {
-                var deployment = System.getenv("AZURE_OPENAI_DEPLOYMENT_NAME");
-                if (deployment == null || deployment.isBlank()) deployment = "gpt-4.1-mini";
-                var azureEp = System.getenv("AZURE_OPENAI_ENDPOINT");
-                if (azureEp == null || azureEp.isBlank())
-                    azureEp = "https://azuretest123.openai.azure.com/openai/deployments/" + deployment;
-                var apiVersionEnv = System.getenv("AZURE_OPENAI_API_VERSION");
-                final var apiVersion = apiVersionEnv != null ? apiVersionEnv : "2024-02-15-preview";
-                var wc = org.springframework.web.reactive.function.client.WebClient.builder()
-                        .baseUrl(azureEp)
-                        .defaultHeader("api-key", azureKey)
-                        .filter((request, next) -> {
-                            var uri = org.springframework.web.util.UriComponentsBuilder
-                                    .fromUri(request.url())
-                                    .queryParam("api-version", apiVersion).build().toUri();
-                            return next.exchange(org.springframework.web.reactive.function.client.ClientRequest
-                                    .from(request).url(uri).build());
-                        }).build();
-                var meta = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
-                        "azure-openai", deployment, false, 0, 0, java.time.Duration.ofSeconds(30));
-                var cb = disabledCircuitBreaker("azure");
-                var client = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
-                        "azure-gpt", meta, wc, objectMapper, "", cb, 2);
-                var pl = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(promptResource, objectMapper);
-                structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(
-                        client, pl, objectMapper, llmFields));
-                calibrators.add(new IdentityConfidenceCalibrator("azure-gpt"));
-                modeLabels.add("GPT (" + deployment + ")");
-                System.out.println("GPT enabled: Azure OpenAI " + deployment);
-            } catch (Exception e) {
-                System.err.println("Azure GPT init failed: " + e.getMessage());
-            }
-        }
+        // Auto-detect LLM providers from env — same vars the app reads
+        addLlmFromEnv(structurers, calibrators, labels, objectMapper,
+                "GLM_API_KEY", "GLM_ENDPOINT", "GLM_MODEL",
+                "glm", "https://api.z.ai/api/coding/paas/v4", "glm-5.1", false);
+        addLlmFromEnv(structurers, calibrators, labels, objectMapper,
+                "AZURE_OPENAI_API_KEY", "AZURE_OPENAI_ENDPOINT", "AZURE_OPENAI_DEPLOYMENT_NAME",
+                "azure-gpt", "https://azuretest123.openai.azure.com/openai/deployments/gpt-4.1-mini",
+                "gpt-4.1-mini", true);
 
-        // If no real structurers available, add stub as last resort for CI
         if (structurers.isEmpty()) {
-            var stub = new com.jpmc.tfpm.address.app.cascade.StubAddressStructurer();
-            structurers.add(stub);
+            structurers.add(new com.jpmc.tfpm.address.app.cascade.StubAddressStructurer());
             calibrators.add(new IdentityConfidenceCalibrator("stub"));
-            modeLabels.add("stub (no real models available)");
+            labels.add("stub");
         }
 
-        structurerMode = String.join(" → ", modeLabels);
-
+        structurerMode = String.join(" → ", labels);
         var merger = new FieldMerger(calibrators);
-        var meterRegistry = new SimpleMeterRegistry();
-        // High threshold (0.99) forces ALL structurers to run — measures combined accuracy
-        var orchestrator = new CascadeOrchestrator(
-                structurers, merger, CountryRouter.noOp(), 0.99, meterRegistry);
+        var orchestrator = new CascadeOrchestrator(structurers, merger, CountryRouter.noOp(),
+                0.99, 60000L, new SimpleMeterRegistry());
 
-        Files.walk(GOLDEN_DIR)
-                .filter(p -> p.toString().endsWith(".json"))
-                .sorted()
-                .forEach(path -> {
-                    try {
-                        var fixture = MAPPER.readTree(path.toFile());
-                        processFixture(fixture, orchestrator);
-                    } catch (IOException e) {
-                        // skip
-                    }
-                });
-
-        assertThat(results).as("Should have processed fixtures").isNotEmpty();
+        Files.walk(GOLDEN_DIR).filter(p -> p.toString().endsWith(".json")).sorted().forEach(path -> {
+            try { processFixture(MAPPER.readTree(path.toFile()), orchestrator); }
+            catch (IOException ignored) {}
+        });
+        assertThat(results).isNotEmpty();
     }
 
-    private static boolean isGrpcReachable(String host, int port) {
-        try (var socket = new java.net.Socket()) {
-            socket.connect(new java.net.InetSocketAddress(host, port), 500);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+    private void addLlmFromEnv(List<AddressStructurer> structurers, List<ConfidenceCalibrator> calibrators,
+                                List<String> labels, ObjectMapper om,
+                                String keyEnv, String epEnv, String modelEnv,
+                                String name, String defaultEp, String defaultModel, boolean isAzure) {
+        var key = System.getenv(keyEnv);
+        if (key == null || key.isBlank()) return;
+        try {
+            var ep = System.getenv(epEnv);
+            if (ep == null || ep.isBlank()) ep = defaultEp;
+            var model = System.getenv(modelEnv);
+            if (model == null || model.isBlank()) model = defaultModel;
+
+            var wcb = org.springframework.web.reactive.function.client.WebClient.builder().baseUrl(ep);
+            if (isAzure) {
+                wcb.defaultHeader("api-key", key);
+                var ver = Optional.ofNullable(System.getenv("AZURE_OPENAI_API_VERSION")).orElse("2024-02-15-preview");
+                wcb.filter((req, next) -> next.exchange(
+                        org.springframework.web.reactive.function.client.ClientRequest.from(req)
+                                .url(org.springframework.web.util.UriComponentsBuilder.fromUri(req.url())
+                                        .queryParam("api-version", ver).build().toUri()).build()));
+            }
+            var meta = new com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata(
+                    isAzure ? "azure-openai" : "openai-compatible", model, false, 0, 0, Duration.ofSeconds(30));
+            var cbCfg = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                    .failureRateThreshold(100).slidingWindowSize(200).minimumNumberOfCalls(200).build();
+            var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of(name, cbCfg);
+            cb.transitionToDisabledState();
+            var client = new com.jpmc.tfpm.address.adapter.llm.client.OpenAiCompatibleLlmClient(
+                    name, meta, wcb.build(), om, isAzure ? "" : key, cb, 2);
+            var prompt = new com.jpmc.tfpm.address.adapter.llm.PromptTemplateLoader(
+                    new org.springframework.core.io.ClassPathResource("prompts/address-structuring.json"), om);
+            structurers.add(new com.jpmc.tfpm.address.adapter.llm.LlmAddressStructurer(name, client, prompt, om,
+                    EnumSet.of(AddressField.CTRY, AddressField.TWN_NM, AddressField.PST_CD,
+                            AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM, AddressField.BLDG_NB, AddressField.BLDG_NM)));
+            calibrators.add(new IdentityConfidenceCalibrator(name));
+            labels.add(name + " (" + model + ")");
+            System.out.println("Enabled: " + name + " → " + model);
+        } catch (Exception e) { System.err.println(name + " init failed: " + e.getMessage()); }
     }
 
     private void processFixture(JsonNode fixture, CascadeOrchestrator orchestrator) {
-        var fixtureId = fixture.path("fixture_id").asText("unknown");
+        var id = fixture.path("fixture_id").asText("?");
         var country = fixture.path("country").asText("");
         var source = fixture.path("source").asText("");
         var raw = fixture.path("raw").asText("");
-        var countryHint = fixture.path("country_hint").asText("");
+        var hint = fixture.path("country_hint").asText("");
         var locale = fixture.path("locale").asText("");
-        var expectedFields = fixture.path("expected_fields");
+        var expected = fixture.path("expected_fields");
 
-        com.jpmc.tfpm.address.domain.RawAddress rawAddress;
-        try {
-            rawAddress = new com.jpmc.tfpm.address.domain.RawAddress(raw, countryHint, locale);
-        } catch (IllegalArgumentException e) {
-            rawAddress = com.jpmc.tfpm.address.domain.RawAddress.of(raw);
-        }
+        com.jpmc.tfpm.address.domain.RawAddress addr;
+        try { addr = new com.jpmc.tfpm.address.domain.RawAddress(raw, hint, locale); }
+        catch (Exception e) { addr = com.jpmc.tfpm.address.domain.RawAddress.of(raw); }
 
         var start = Instant.now();
-        var cascadeResult = orchestrator.orchestrate(rawAddress, "e2e-" + fixtureId);
-        var latencyMs = Duration.between(start, Instant.now()).toMillis();
+        var cr = orchestrator.orchestrate(addr, "e2e-" + id);
+        var ms = Duration.between(start, Instant.now()).toMillis();
 
-        boolean cascadeSuccess = cascadeResult.isSuccess();
-        CascadeResult cascade = cascadeSuccess
-                ? ((Result.Success<CascadeResult>) cascadeResult).value()
-                : null;
-        StructuredAddress structured = cascade != null ? cascade.structuredAddress() : StructuredAddress.empty();
+        var cascade = cr.isSuccess() ? ((Result.Success<CascadeResult>) cr).value() : null;
+        var structured = cascade != null ? cascade.structuredAddress() : StructuredAddress.empty();
+        var consensus = cascade != null ? cascade.consensus() : null;
+        var usedStructurers = cascade != null
+                ? cascade.structurerTrace().stream().filter(t -> !t.fields().isEmpty())
+                    .map(StructuringResult::structurerName).distinct().toList()
+                : List.<String>of();
 
-        // Extract which structurers contributed
-        List<String> structurersUsed = cascade != null
-                ? cascade.structurerTrace().stream()
-                    .filter(t -> !t.fields().isEmpty())
-                    .map(StructuringResult::structurerName)
-                    .distinct()
-                    .toList()
-                : List.of();
-
-        // Build a map of field -> source structurer
-        var fieldSourceMap = new HashMap<AddressField, String>();
+        // Field-source map
+        var fieldSource = new HashMap<AddressField, String>();
         if (cascade != null) {
-            for (var trace : cascade.structurerTrace()) {
-                for (var field : trace.fields().keySet()) {
-                    // Last structurer with this field wins (merger picks highest confidence)
-                    var mergedFv = structured.get(field);
-                    var traceFv = trace.fields().get(field);
-                    if (mergedFv.isPresent() && traceFv != null
-                            && mergedFv.get().value().equals(traceFv.value())) {
-                        fieldSourceMap.put(field, trace.structurerName());
-                    }
+            for (var t : cascade.structurerTrace()) {
+                for (var f : t.fields().keySet()) {
+                    var mv = structured.get(f);
+                    if (mv.isPresent() && t.fields().get(f) != null
+                            && mv.get().value().equals(t.fields().get(f).value()))
+                        fieldSource.put(f, t.structurerName());
                 }
             }
         }
 
-        var fieldResults = new LinkedHashMap<String, ExpectedVsActual>();
-        int expectedCount = 0;
-        int matchedCount = 0;
-
-        var it = expectedFields.fieldNames();
+        var fields = new LinkedHashMap<String, FieldDetail>();
+        int expCount = 0, matched = 0;
+        var it = expected.fieldNames();
         while (it.hasNext()) {
-            var fieldName = it.next();
-            var node = expectedFields.path(fieldName);
-            String expectedValue;
-            if (node.isObject()) {
-                expectedValue = node.path("value").asText("");
-            } else {
-                expectedValue = node.asText("");
-            }
-            if (expectedValue.isEmpty()) continue;
-            expectedCount++;
-
+            var fn = it.next();
+            var node = expected.path(fn);
+            var expVal = node.isObject() ? node.path("value").asText("") : node.asText("");
+            if (expVal.isEmpty()) continue;
+            expCount++;
             try {
-                var field = AddressField.valueOf(fieldName);
-                var actualFv = structured.get(field);
-                String actualValue = actualFv.map(FieldValue::value).orElse("");
-                double confidence = actualFv.map(FieldValue::confidence).orElse(0.0);
-                String fieldSource = fieldSourceMap.getOrDefault(field, "—");
-                boolean match = expectedValue.equalsIgnoreCase(actualValue);
-                if (match) matchedCount++;
-                fieldResults.put(fieldName, new ExpectedVsActual(
-                        expectedValue, actualValue, confidence, fieldSource, match));
-            } catch (IllegalArgumentException e) {
-                // skip invalid field names
-            }
+                var field = AddressField.valueOf(fn);
+                var actual = structured.get(field);
+                var actVal = actual.map(FieldValue::value).orElse("");
+                var conf = actual.map(FieldValue::confidence).orElse(0.0);
+                var src = fieldSource.getOrDefault(field, "—");
+                boolean match = expVal.equalsIgnoreCase(actVal);
+                if (match) matched++;
+
+                boolean agreed = true;
+                var alts = Map.<String, String>of();
+                if (consensus != null && consensus.fieldConsensus().containsKey(field)) {
+                    var fc = consensus.fieldConsensus().get(field);
+                    agreed = fc.agreed();
+                    alts = fc.alternatives();
+                }
+                fields.put(fn, new FieldDetail(expVal, actVal, conf, src, agreed, alts, match));
+            } catch (IllegalArgumentException ignored) {}
         }
 
-        double accuracy = expectedCount > 0 ? (double) matchedCount / expectedCount : 0.0;
-        results.add(new FixtureResult(fixtureId, country, source, raw,
-                fieldResults, cascadeSuccess, structurersUsed,
-                expectedCount, matchedCount, accuracy, latencyMs));
+        double acc = expCount > 0 ? (double) matched / expCount : 0;
+        results.add(new FixtureResult(id, country, source, raw, fields, cr.isSuccess(),
+                usedStructurers, consensus, expCount, matched, acc, ms));
     }
 
     @Test
     @Order(2)
-    @DisplayName("Generate HTML accuracy report")
-    void generate_html_report() throws IOException {
+    void generate_report() throws IOException {
         if (results.isEmpty()) return;
-
         int total = results.size();
         long perfect = results.stream().filter(r -> r.accuracy == 1.0).count();
-        double avgAccuracy = results.stream().mapToDouble(r -> r.accuracy).average().orElse(0);
-        long avgLatency = (long) results.stream().mapToLong(r -> r.latencyMs).average().orElse(0);
+        double avgAcc = results.stream().mapToDouble(r -> r.accuracy).average().orElse(0);
+        long avgMs = (long) results.stream().mapToLong(r -> r.latencyMs).average().orElse(0);
+        long consensusOk = results.stream().filter(r -> r.consensus != null && !r.consensus.hasDisagreements()).count();
+        long consensusFlagged = results.stream().filter(r -> r.consensus != null && r.consensus.hasDisagreements()).count();
 
-        // Count structurer usage
-        long libpostalCount = results.stream().filter(r -> r.structurersUsed.contains("libpostal")).count();
-        long glmCount = results.stream().filter(r -> r.structurersUsed.contains("glm")).count();
-        long gptCount = results.stream().filter(r -> r.structurersUsed.contains("azure-gpt")).count();
-        long llmCount = results.stream().filter(r -> r.structurersUsed.stream()
-                .anyMatch(s -> s.contains("llm") || s.contains("glm") || s.contains("gpt"))).count();
-        long stubCount = results.stream().filter(r -> r.structurersUsed.contains("stub")).count();
+        var structurerCounts = results.stream().flatMap(r -> r.structurersUsed.stream())
+                .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
 
         var html = new StringBuilder();
         html.append("""
-                <!DOCTYPE html>
-                <html><head>
-                <meta charset="UTF-8">
-                <title>TFPM Address Enrichment — Accuracy Report</title>
-                <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 20px; background: #f5f5f5; }
-                h1 { color: #1a1a2e; }
-                h2 { color: #16213e; margin-top: 30px; }
-                table { border-collapse: collapse; width: 100%%; margin: 10px 0; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-                th { background: #1a1a2e; color: white; padding: 10px 12px; text-align: left; font-size: 13px; }
-                td { padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-                tr:hover { background: #f0f4ff; }
-                .match { color: #27ae60; }
-                .miss { color: #e74c3c; }
-                .card { display: inline-block; background: white; padding: 20px; margin: 8px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); min-width: 140px; text-align: center; }
-                .card .value { font-size: 32px; font-weight: bold; color: #1a1a2e; }
-                .card .label { font-size: 12px; color: #666; margin-top: 4px; }
-                .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin: 1px; }
-                .badge-libpostal { background: #dbeafe; color: #1e40af; }
-                .badge-llm { background: #fef3c7; color: #92400e; }
-                .badge-stub { background: #fee2e2; color: #991b1b; }
-                .badge-source { background: #e5e7eb; color: #374151; }
-                .badge-ok { background: #d1fae5; color: #065f46; }
-                .badge-fail { background: #fee2e2; color: #991b1b; }
-                .mode-banner { background: %s; color: white; padding: 12px 20px; border-radius: 8px; margin: 10px 0; font-size: 14px; }
-                .field-row { margin: 2px 0; }
-                </style>
-                </head><body>
-                """.formatted(structurerMode.contains("stub-only") ? "#dc2626" : "#059669"));
+            <!DOCTYPE html><html><head><meta charset="UTF-8">
+            <title>TFPM Address Enrichment — Accuracy Report</title>
+            <style>
+            * { box-sizing: border-box; }
+            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #1a1a2e; }
+            h1 { margin: 0 0 5px; font-size: 24px; }
+            h2 { color: #16213e; margin: 30px 0 10px; font-size: 18px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
+            .subtitle { color: #666; font-size: 13px; margin-bottom: 15px; }
+            .cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+            .card { background: white; padding: 16px 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; min-width: 120px; }
+            .card .v { font-size: 28px; font-weight: 700; }
+            .card .l { font-size: 11px; color: #888; margin-top: 3px; }
+            table { border-collapse: collapse; width: 100%%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin: 10px 0; }
+            th { background: #1a1a2e; color: white; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
+            td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: top; }
+            tr:hover { background: #f8f9ff; }
+            .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+            .b-lib { background: #dbeafe; color: #1e40af; }
+            .b-glm { background: #fef3c7; color: #92400e; }
+            .b-gpt { background: #ede9fe; color: #5b21b6; }
+            .b-stub { background: #fee2e2; color: #991b1b; }
+            .b-ok { background: #d1fae5; color: #065f46; }
+            .b-fail { background: #fee2e2; color: #991b1b; }
+            .b-src { background: #f3f4f6; color: #374151; }
+            .b-agree { background: #d1fae5; color: #065f46; }
+            .b-disagree { background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; }
+            .match { color: #059669; }
+            .miss { color: #dc2626; }
+            .field-label { color: #888; font-size: 11px; }
+            .field-val { font-weight: 600; }
+            .expected { background: #f0fdf4; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #22c55e; margin: 2px 0; font-size: 12px; }
+            .actual { background: #eff6ff; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #3b82f6; margin: 2px 0; font-size: 12px; }
+            .consensus-flag { background: #fff7ed; padding: 6px 10px; border-radius: 6px; border-left: 3px solid #f59e0b; margin: 4px 0; font-size: 11px; }
+            .mode-bar { padding: 12px 20px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: white; }
+            .raw-addr { font-size: 11px; color: #555; max-width: 250px; word-wrap: break-word; font-style: italic; }
+            </style></head><body>
+            """);
 
-        html.append("<h1>TFPM Address Enrichment — Accuracy Report</h1>");
-        html.append("<p>Generated: ").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))).append("</p>");
+        html.append("<h1>Address Enrichment — Accuracy Report</h1>");
+        html.append("<div class='subtitle'>").append(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                .append(" · ").append(structurerMode).append("</div>");
 
-        // Mode banner
-        html.append("<div class='mode-banner'>Structurer Mode: <b>").append(structurerMode).append("</b>");
-        if (structurerMode.contains("stub-only")) {
-            html.append(" — ⚠️ Results are FAKE. Run with <code>make up-sidecars</code> for real parsing.");
-        }
+        // Mode bar
+        var modeColor = structurerMode.contains("stub") ? "#dc2626" : "#059669";
+        html.append("<div class='mode-bar' style='background:").append(modeColor).append("'>")
+                .append("Pipeline: <b>").append(structurerMode).append("</b>");
+        if (structurerMode.contains("stub")) html.append(" — ⚠ Stub mode, results are synthetic");
         html.append("</div>");
 
         // Summary cards
-        html.append("<div>");
-        html.append(card(String.valueOf(total), "Total Fixtures"));
-        html.append(card(String.format("%.0f%%", avgAccuracy * 100), "Avg Accuracy"));
-        html.append(card(String.valueOf(perfect), "Perfect Matches"));
-        html.append(card(avgLatency + "ms", "Avg Latency"));
-        html.append("</div><div>");
-        html.append(card(String.valueOf(libpostalCount), "via libpostal", "badge-libpostal"));
-        if (glmCount > 0) html.append(card(String.valueOf(glmCount), "via GLM", "badge-llm"));
-        if (gptCount > 0) html.append(card(String.valueOf(gptCount), "via GPT", "badge-llm"));
-        if (stubCount > 0) html.append(card(String.valueOf(stubCount), "via stub", "badge-stub"));
+        html.append("<div class='cards'>");
+        html.append(card(total, "Fixtures")).append(card(String.format("%.0f%%", avgAcc * 100), "Accuracy"))
+                .append(card(perfect, "Perfect")).append(card(avgMs + "ms", "Avg Latency"));
+        structurerCounts.forEach((s, c) -> html.append(card(c, s, badgeCls(s))));
+        if (consensusOk + consensusFlagged > 0) {
+            html.append(card(consensusOk, "Consensus ✓", "b-agree"));
+            html.append(card(consensusFlagged, "Flagged ⚠", "b-disagree"));
+        }
         html.append("</div>");
 
-        // Per-country summary
-        html.append("<h2>Per-Country Accuracy</h2>");
-        html.append("<table><tr><th>Country</th><th>Fixtures</th><th>Avg Accuracy</th><th>Perfect</th><th>Structurers</th><th>Avg Latency</th></tr>");
+        // Per-country
+        html.append("<h2>Per-Country Summary</h2><table><tr><th>Country</th><th>Fixtures</th><th>Accuracy</th><th>Perfect</th><th>Consensus</th><th>Sources</th><th>Latency</th></tr>");
         var byCountry = new TreeMap<String, List<FixtureResult>>();
         results.forEach(r -> byCountry.computeIfAbsent(r.country, k -> new ArrayList<>()).add(r));
-        for (var entry : byCountry.entrySet()) {
-            var cr = entry.getValue();
-            double ca = cr.stream().mapToDouble(r -> r.accuracy).average().orElse(0);
-            long cp = cr.stream().filter(r -> r.accuracy == 1.0).count();
-            long cl = (long) cr.stream().mapToLong(r -> r.latencyMs).average().orElse(0);
-            var structurers = cr.stream().flatMap(r -> r.structurersUsed.stream())
+        for (var e : byCountry.entrySet()) {
+            var cr = e.getValue();
+            var ca = cr.stream().mapToDouble(r -> r.accuracy).average().orElse(0);
+            var cp = cr.stream().filter(r -> r.accuracy == 1.0).count();
+            var cl = (long) cr.stream().mapToLong(r -> r.latencyMs).average().orElse(0);
+            var cc = cr.stream().filter(r -> r.consensus != null && !r.consensus.hasDisagreements()).count();
+            var cf = cr.stream().filter(r -> r.consensus != null && r.consensus.hasDisagreements()).count();
+            var srcs = cr.stream().flatMap(r -> r.structurersUsed.stream())
                     .collect(Collectors.groupingBy(s -> s, Collectors.counting()));
-            var structBadges = new StringBuilder();
-            structurers.forEach((s, c) -> structBadges.append(badge(s, s + ":" + c)));
-            html.append(String.format("<tr><td><b>%s</b></td><td>%d</td><td>%.0f%%</td><td>%d</td><td>%s</td><td>%dms</td></tr>",
-                    entry.getKey(), cr.size(), ca * 100, cp, structBadges, cl));
+            var srcBadges = new StringBuilder();
+            srcs.forEach((s, c) -> srcBadges.append("<span class='badge ").append(badgeCls(s)).append("'>")
+                    .append(s).append(":").append(c).append("</span> "));
+            var consensusHtml = cc + cf > 0
+                    ? "<span class='badge b-agree'>✓ " + cc + "</span> <span class='badge b-disagree'>⚠ " + cf + "</span>"
+                    : "—";
+            html.append(String.format("<tr><td><b>%s</b></td><td>%d</td><td>%.0f%%</td><td>%d</td><td>%s</td><td>%s</td><td>%dms</td></tr>",
+                    e.getKey(), cr.size(), ca * 100, cp, consensusHtml, srcBadges, cl));
         }
         html.append("</table>");
 
-        // Detailed results
-        html.append("<h2>Detailed Results</h2>");
-        html.append("<table><tr><th>Fixture</th><th>Country</th><th>Source</th><th>Structurers</th><th>Raw Input</th><th>Structured Output</th><th>Field Details</th><th>Accuracy</th><th>ms</th></tr>");
+        // Detail table
+        html.append("<h2>Detailed Results</h2><table><tr><th>ID</th><th>Country</th><th>Sources</th><th>Consensus</th><th>Raw Input</th><th>Expected</th><th>Actual Output</th><th>Accuracy</th></tr>");
         for (var r : results) {
-            // Structurer badges
             var badges = new StringBuilder();
-            for (var s : r.structurersUsed) {
-                badges.append(badge(s, s));
-            }
-            if (r.structurersUsed.isEmpty()) {
-                badges.append("<span class='badge badge-fail'>none</span>");
-            }
+            r.structurersUsed.forEach(s -> badges.append("<span class='badge ").append(badgeCls(s)).append("'>").append(s).append("</span> "));
+            if (r.structurersUsed.isEmpty()) badges.append("<span class='badge b-fail'>none</span>");
 
-            // Field details
-            var fieldsHtml = new StringBuilder();
-            for (var f : r.fields.entrySet()) {
-                var v = f.getValue();
-                var cls = v.match ? "match" : "miss";
-                var icon = v.match ? "✓" : "✗";
-                fieldsHtml.append(String.format(
-                        "<div class='field-row'><span class='%s'>%s</span> <b>%s</b>: " +
-                        "<span class='%s'>%s</span> → %s " +
-                        "<span class='badge badge-%s'>%s</span> " +
-                        "<small>(%.0f%%)</small></div>",
-                        cls, icon, f.getKey(),
-                        cls, v.expected.isEmpty() ? "—" : v.expected,
-                        v.actual.isEmpty() ? "<i>empty</i>" : v.actual,
-                        badgeClass(v.structurerSource), v.structurerSource,
-                        v.confidence * 100));
-            }
-
-            // Structured output with named labels
-            var fieldLabels = Map.of(
-                    "CTRY", "Country", "TWN_NM", "City", "CTRY_SUB_DVSN", "State/Province",
-                    "STRT_NM", "Street", "BLDG_NB", "Building #", "BLDG_NM", "Building Name",
-                    "PST_CD", "Postal Code", "ADR_LINE", "Address Line");
-            var structuredAddr = new StringBuilder();
-            var actuals = r.fields;
-            for (var fieldOrder : List.of("CTRY", "TWN_NM", "CTRY_SUB_DVSN", "STRT_NM", "BLDG_NB", "BLDG_NM", "PST_CD", "ADR_LINE")) {
-                if (actuals.containsKey(fieldOrder) && !actuals.get(fieldOrder).actual.isEmpty()) {
-                    var label = fieldLabels.getOrDefault(fieldOrder, fieldOrder);
-                    structuredAddr.append(String.format(
-                            "<div><small style='color:#888'>%s:</small> <b>%s</b></div>",
-                            label, actuals.get(fieldOrder).actual));
+            // Consensus cell
+            var consHtml = "—";
+            if (r.consensus != null) {
+                if (r.consensus.hasDisagreements()) {
+                    consHtml = "<span class='badge b-disagree'>⚠ " + r.consensus.disagreementCount() + " disagreement(s)</span>";
+                    for (var ff : r.consensus.flaggedFields()) {
+                        var fc = r.consensus.fieldConsensus().get(ff);
+                        if (fc != null && !fc.alternatives().isEmpty()) {
+                            consHtml += "<div class='consensus-flag'><b>" + ff + "</b>: ";
+                            for (var alt : fc.alternatives().entrySet())
+                                consHtml += "<span class='badge " + badgeCls(alt.getKey()) + "'>" + alt.getKey() + "</span> " + alt.getValue() + " ";
+                            consHtml += "</div>";
+                        }
+                    }
+                } else {
+                    consHtml = "<span class='badge b-agree'>✓ All agree (" + r.consensus.agreementCount() + " fields)</span>";
                 }
             }
-            var structuredText = structuredAddr.isEmpty() ? "<i>no output</i>" : structuredAddr.toString();
 
-            var accBadge = r.accuracy == 1.0 ? "badge-ok" : "badge-fail";
-            html.append(String.format(
-                    "<tr><td><b>%s</b></td><td>%s</td><td><span class='badge badge-source'>%s</span></td>" +
-                    "<td>%s</td>" +
-                    "<td style='max-width:220px;word-wrap:break-word;font-size:11px'>%s</td>" +
-                    "<td style='max-width:220px;font-size:12px;color:#1a1a2e'><b>%s</b></td>" +
-                    "<td>%s</td>" +
-                    "<td><span class='badge %s'>%.0f%%</span></td><td>%d</td></tr>",
-                    r.fixtureId, r.country, r.source, badges, r.raw, structuredText, fieldsHtml,
-                    accBadge, r.accuracy * 100, r.latencyMs));
+            // Expected column
+            var expHtml = new StringBuilder();
+            for (var f : r.fields.entrySet()) {
+                if (f.getValue().expected.isEmpty()) continue;
+                expHtml.append("<div class='expected'><span class='field-label'>").append(fieldLabel(f.getKey()))
+                        .append(":</span> ").append(f.getValue().expected).append("</div>");
+            }
+
+            // Actual output column
+            var actHtml = new StringBuilder();
+            for (var f : r.fields.entrySet()) {
+                var d = f.getValue();
+                var icon = d.match ? "<span class='match'>✓</span>" : "<span class='miss'>✗</span>";
+                var srcBadge = "<span class='badge " + badgeCls(d.sourceStructurer) + "'>" + d.sourceStructurer + "</span>";
+                actHtml.append("<div class='actual'>").append(icon).append(" <span class='field-label'>")
+                        .append(fieldLabel(f.getKey())).append(":</span> <span class='field-val'>")
+                        .append(d.actual.isEmpty() ? "<i>empty</i>" : d.actual)
+                        .append("</span> ").append(srcBadge);
+                if (!d.agreed) actHtml.append(" <span class='badge b-disagree'>⚠</span>");
+                actHtml.append("</div>");
+            }
+
+            var accBadge = r.accuracy == 1.0 ? "b-ok" : "b-fail";
+            html.append(String.format("<tr><td><b>%s</b></td><td>%s</td><td>%s</td><td>%s</td>" +
+                            "<td class='raw-addr'>%s</td><td>%s</td><td>%s</td><td><span class='badge %s'>%.0f%%</span></td></tr>",
+                    r.fixtureId, r.country, badges, consHtml, r.raw, expHtml, actHtml, accBadge, r.accuracy * 100));
         }
-        html.append("</table>");
-        html.append("</body></html>");
+        html.append("</table></body></html>");
 
         Files.writeString(REPORT_PATH, html.toString());
-        System.out.println("\n=== ACCURACY REPORT ===");
-        System.out.printf("Mode: %s%n", structurerMode);
-        System.out.printf("Total: %d fixtures, %.0f%% avg accuracy, %d perfect, %dms avg latency%n",
-                total, avgAccuracy * 100, perfect, avgLatency);
-        System.out.printf("Structurers: libpostal=%d, glm=%d, gpt=%d, stub=%d%n",
-                libpostalCount, glmCount, gptCount, stubCount);
+        System.out.printf("%n=== ACCURACY REPORT ===%nMode: %s%nTotal: %d, %.0f%% accuracy, %d perfect, %dms avg%n",
+                structurerMode, total, avgAcc * 100, perfect, avgMs);
+        System.out.printf("Consensus: %d agreed, %d flagged%n", consensusOk, consensusFlagged);
+        structurerCounts.forEach((s, c) -> System.out.printf("  %s: %d%n", s, c));
         System.out.println("Report: " + REPORT_PATH.toAbsolutePath());
     }
 
-    private static String card(String value, String label) {
-        return String.format("<div class='card'><div class='value'>%s</div><div class='label'>%s</div></div>", value, label);
+    private static boolean isReachable(String host, int port) {
+        try (var s = new java.net.Socket()) { s.connect(new java.net.InetSocketAddress(host, port), 500); return true; }
+        catch (Exception e) { return false; }
     }
 
-    private static String card(String value, String label, String cls) {
-        return String.format("<div class='card'><div class='value'><span class='badge %s' style='font-size:24px;padding:4px 12px'>%s</span></div><div class='label'>%s</div></div>", cls, value, label);
+    private static String card(Object v, String l) { return "<div class='card'><div class='v'>" + v + "</div><div class='l'>" + l + "</div></div>"; }
+    private static String card(Object v, String l, String cls) { return "<div class='card'><div class='v'><span class='badge " + cls + "' style='font-size:20px;padding:4px 14px'>" + v + "</span></div><div class='l'>" + l + "</div></div>"; }
+
+    private static String badgeCls(String s) {
+        return switch (s) { case "libpostal" -> "b-lib"; case "stub" -> "b-stub"; default -> s.contains("gpt") || s.contains("azure") ? "b-gpt" : s.contains("glm") ? "b-glm" : "b-src"; };
     }
 
-    private static String badge(String structurer, String text) {
-        return String.format("<span class='badge badge-%s'>%s</span> ", badgeClass(structurer), text);
-    }
-
-    private static String badgeClass(String structurer) {
-        return switch (structurer) {
-            case "libpostal" -> "libpostal";
-            case "llm", "glm", "azure-gpt" -> "llm";
-            case "stub" -> "stub";
-            default -> "source";
-        };
-    }
-
-    private static io.github.resilience4j.circuitbreaker.CircuitBreaker disabledCircuitBreaker(String name) {
-        var config = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
-                .failureRateThreshold(100).slidingWindowSize(200)
-                .minimumNumberOfCalls(200).build();
-        var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of(name, config);
-        cb.transitionToDisabledState();
-        return cb;
+    private static String fieldLabel(String f) {
+        return switch (f) { case "CTRY" -> "Country"; case "TWN_NM" -> "City"; case "CTRY_SUB_DVSN" -> "State"; case "STRT_NM" -> "Street"; case "BLDG_NB" -> "Bldg #"; case "BLDG_NM" -> "Bldg"; case "PST_CD" -> "Postal"; case "ADR_LINE" -> "Line"; default -> f; };
     }
 }
