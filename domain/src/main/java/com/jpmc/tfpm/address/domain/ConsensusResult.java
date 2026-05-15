@@ -26,13 +26,24 @@ public record ConsensusResult(
         int agreementCount,
         int disagreementCount,
         int sourceCount,
-        Set<AddressField> flaggedFields) {
+        Set<AddressField> flaggedFields,
+        Map<String, Double> sourceWeights) {
 
     public ConsensusResult {
         Objects.requireNonNull(fieldConsensus, "fieldConsensus");
         Objects.requireNonNull(flaggedFields, "flaggedFields");
         fieldConsensus = Map.copyOf(fieldConsensus);
         flaggedFields = Set.copyOf(flaggedFields);
+        sourceWeights = sourceWeights != null ? Map.copyOf(sourceWeights) : Map.of();
+    }
+
+    /** Backwards-compatible constructor without weights. */
+    public ConsensusResult(Map<AddressField, FieldConsensus> fieldConsensus,
+                           double overallConsensus, int agreementCount,
+                           int disagreementCount, int sourceCount,
+                           Set<AddressField> flaggedFields) {
+        this(fieldConsensus, overallConsensus, agreementCount,
+                disagreementCount, sourceCount, flaggedFields, Map.of());
     }
 
     public boolean hasDisagreements() {

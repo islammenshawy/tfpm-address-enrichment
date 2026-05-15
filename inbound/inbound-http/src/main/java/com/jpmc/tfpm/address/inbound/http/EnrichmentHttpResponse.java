@@ -29,6 +29,7 @@ public record EnrichmentHttpResponse(
             int agreementCount,
             int disagreementCount,
             double overallConsensus,
+            Map<String, Double> sourceWeights,
             Map<String, FieldConsensusResponse> fields) {}
 
     public record FieldConsensusResponse(
@@ -54,7 +55,7 @@ public record EnrichmentHttpResponse(
             }
             consensusResp = new ConsensusResponse(
                     cr.sourceCount(), cr.agreementCount(), cr.disagreementCount(),
-                    cr.overallConsensus(), fieldConsensus);
+                    cr.overallConsensus(), cr.sourceWeights(), fieldConsensus);
         }
 
         return new EnrichmentHttpResponse(

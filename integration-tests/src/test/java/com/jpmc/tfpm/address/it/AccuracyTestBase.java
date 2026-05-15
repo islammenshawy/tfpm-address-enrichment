@@ -40,7 +40,8 @@ abstract class AccuracyTestBase {
     record FieldDetail(String expected, String actual, double confidence, boolean match) {}
 
     record ConsensusInfo(int sourceCount, int agreements, int disagreements,
-                         double overall, Map<String, FieldConsensusInfo> fields) {}
+                         double overall, Map<String, Double> sourceWeights,
+                         Map<String, FieldConsensusInfo> fields) {}
 
     record FieldConsensusInfo(boolean agreed, String consensusValue,
                                Map<String, String> sourceValues) {}
@@ -295,12 +296,17 @@ abstract class AccuracyTestBase {
                         fc.path("consensusValue").asText(""),
                         svMap));
             });
+            var weightsMap = new LinkedHashMap<String, Double>();
+            var weightsNode = consensusNode.path("sourceWeights");
+            weightsNode.fieldNames().forEachRemaining(src ->
+                    weightsMap.put(src, weightsNode.path(src).asDouble(1.0)));
+
             consensus = new ConsensusInfo(
                     consensusNode.path("sourceCount").asInt(0),
                     consensusNode.path("agreementCount").asInt(0),
                     consensusNode.path("disagreementCount").asInt(0),
                     consensusNode.path("overallConsensus").asDouble(0),
-                    cFields);
+                    weightsMap, cFields);
         }
 
         var fields = new LinkedHashMap<String, FieldDetail>();
@@ -498,6 +504,13 @@ abstract class AccuracyTestBase {
                 consensusHtml.append(String.format(
                         "<div style='margin-bottom:4px'><span class='badge %s'>%d✓ %d✗</span> <small>%.0f%%</small></div>",
                         consBadge, c.agreements, c.disagreements, c.overall * 100));
+                // Show source weights
+                if (!c.sourceWeights.isEmpty()) {
+                    consensusHtml.append("<div style='font-size:10px;color:#888;margin-bottom:3px'>Weights: ");
+                    c.sourceWeights.forEach((src, w) ->
+                            consensusHtml.append(String.format("<span class='badge b-src'>%s</span> %.1f ", src, w)));
+                    consensusHtml.append("</div>");
+                }
                 for (var fc : c.fields.entrySet()) {
                     var fci = fc.getValue();
                     var icon = fci.agreed ? "<span class='match'>✓</span>" : "<span class='miss'>⚠</span>";
@@ -506,8 +519,10 @@ abstract class AccuracyTestBase {
                     if (!fci.agreed) {
                         consensusHtml.append("<div style='margin-left:12px;font-size:10px;color:#666'>");
                         for (var sv : fci.sourceValues.entrySet()) {
+                            var weight = c.sourceWeights.getOrDefault(sv.getKey(), 1.0);
+                            var weightLabel = weight < 1.0 ? String.format(" <small>(%.1f)</small>", weight) : "";
                             consensusHtml.append("<span class='badge b-src'>").append(sv.getKey())
-                                    .append("</span> ").append(sv.getValue()).append("<br>");
+                                    .append("</span>").append(weightLabel).append(" ").append(sv.getValue()).append("<br>");
                         }
                         consensusHtml.append("</div>");
                     }

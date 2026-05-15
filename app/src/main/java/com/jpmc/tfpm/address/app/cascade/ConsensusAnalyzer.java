@@ -137,8 +137,16 @@ public final class ConsensusAnalyzer {
         int totalFields = agreements + disagreements;
         double overallConsensus = totalFields > 0 ? (double) agreements / totalFields : 0.0;
 
+        // Collect the actual weights used for each source in this country
+        var weightsUsed = new java.util.LinkedHashMap<String, Double>();
+        for (var t : trace) {
+            if (!t.fields().isEmpty()) {
+                weightsUsed.put(t.structurerName(), getWeight(t.structurerName(), country));
+            }
+        }
+
         return new ConsensusResult(fieldConsensus, overallConsensus,
-                agreements, disagreements, sourceCount, flaggedFields);
+                agreements, disagreements, sourceCount, flaggedFields, weightsUsed);
     }
 
     /** Backward-compatible: no country hint. */
