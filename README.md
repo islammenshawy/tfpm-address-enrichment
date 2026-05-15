@@ -69,7 +69,7 @@ Addresses flow through structurers in order until confidence thresholds are met:
 
 1. **libpostal** (gRPC sidecar) — fast statistical parser, good for Western addresses
 2. **LLM** (HTTP to OpenAI/JPMC gateway) — handles complex/non-Western addresses
-3. **SWIFT CRF** (stub) — future SWIFT-provided model
+3. **SWIFT CRF** (stub) — future SWIFT-provided model [Planned]
 
 Each structurer returns fields with raw confidence scores. The **FieldMerger** picks the highest-calibrated-confidence value per field across all structurers.
 

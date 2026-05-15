@@ -83,6 +83,7 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
     /**
      * Transform a successful value. No-op on failure.
      */
+    // Safe covariant cast — Failure<T> contains no T value, so casting Failure<T> to Failure<U> is type-safe.
     @SuppressWarnings("unchecked")
     default <U> Result<U> map(Function<? super T, ? extends U> mapper) {
         Objects.requireNonNull(mapper, "mapper");
@@ -95,6 +96,8 @@ public sealed interface Result<T> permits Result.Success, Result.Failure {
     /**
      * Chain another fallible operation. No-op on failure.
      */
+    // Safe covariant cast — Failure<T> contains no T value, so casting Failure<T> to Failure<U> is type-safe.
+    // The Success branch cast is safe because mapper already returns Result<U>.
     @SuppressWarnings("unchecked")
     default <U> Result<U> flatMap(Function<? super T, ? extends Result<U>> mapper) {
         Objects.requireNonNull(mapper, "mapper");

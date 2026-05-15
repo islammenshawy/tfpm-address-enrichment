@@ -82,7 +82,14 @@ public class LlmGatewayConfig implements BeanDefinitionRegistryPostProcessor, En
             // Register AddressStructurer bean
             var structurerDef = new RootBeanDefinition();
             structurerDef.setBeanClass(LlmAddressStructurer.class);
-            structurerDef.setInstanceSupplier(() -> createStructurer(name, config, props));
+            structurerDef.setInstanceSupplier(() -> {
+                try {
+                    return createStructurer(name, config, props);
+                } catch (Exception e) {
+                    LOG.error("Failed to create LLM provider '{}': {}", name, e.getMessage(), e);
+                    throw e;
+                }
+            });
             registry.registerBeanDefinition("llmStructurer-" + name, structurerDef);
 
             // Register ConfidenceCalibrator bean
@@ -162,7 +169,7 @@ public class LlmGatewayConfig implements BeanDefinitionRegistryPostProcessor, En
             var res = new DefaultResourceLoader().getResource("classpath:prompts/countries/" + code + ".md");
             if (res.exists()) {
                 try { loader.registerCountrySupplement(code, res.getContentAsString(StandardCharsets.UTF_8)); }
-                catch (IOException ignored) {}
+                catch (IOException e) { LOG.debug("Failed to load country supplement for {}: {}", code, e.getMessage(), e); }
             }
         }
         return loader;
@@ -174,7 +181,7 @@ public class LlmGatewayConfig implements BeanDefinitionRegistryPostProcessor, En
                     AddressField.CTRY_SUB_DVSN, AddressField.STRT_NM, AddressField.BLDG_NB, AddressField.BLDG_NM);
         }
         var fields = EnumSet.noneOf(AddressField.class);
-        props.fieldsAllowed().forEach(n -> { try { fields.add(AddressField.valueOf(n)); } catch (Exception ignored) {} });
+        props.fieldsAllowed().forEach(n -> { try { fields.add(AddressField.valueOf(n)); } catch (Exception e) { LOG.warn("Unknown LLM field name '{}': {}", n, e.getMessage(), e); } });
         return fields.isEmpty() ? EnumSet.allOf(AddressField.class) : fields;
     }
 }

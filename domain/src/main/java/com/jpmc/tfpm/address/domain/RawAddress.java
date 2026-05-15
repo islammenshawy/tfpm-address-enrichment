@@ -3,6 +3,9 @@ package com.jpmc.tfpm.address.domain;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * The raw, unstructured address as it appears in a source system.
  *
@@ -21,7 +24,9 @@ import java.util.regex.Pattern;
  */
 public record RawAddress(String raw, String countryHint, String locale) {
 
+    private static final Logger LOG = LoggerFactory.getLogger(RawAddress.class);
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
+    private static final Pattern ISO_ALPHA2 = Pattern.compile("[A-Z]{2}");
     public RawAddress {
         Objects.requireNonNull(raw, "raw");
         Objects.requireNonNull(countryHint, "countryHint");
@@ -30,9 +35,12 @@ public record RawAddress(String raw, String countryHint, String locale) {
             throw new IllegalArgumentException(
                     "raw address exceeds 2000 chars; channel adapter must reject earlier");
         }
-        if (!countryHint.isEmpty() && countryHint.length() != 2) {
-            throw new IllegalArgumentException(
-                    "countryHint must be empty or ISO 3166-1 alpha-2 (2 chars)");
+        if (!countryHint.isEmpty()) {
+            countryHint = countryHint.toUpperCase(java.util.Locale.ROOT);
+            if (!ISO_ALPHA2.matcher(countryHint).matches()) {
+                LOG.warn("Invalid countryHint '{}' — not ISO 3166-1 alpha-2; treating as empty", countryHint);
+                countryHint = "";
+            }
         }
     }
 

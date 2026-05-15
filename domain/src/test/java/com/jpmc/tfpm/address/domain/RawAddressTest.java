@@ -65,16 +65,17 @@ class RawAddressTest {
     }
 
     @Test
-    void rejects_country_hint_with_wrong_length() {
-        assertThatThrownBy(() -> new RawAddress("addr", "USA", ""))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("alpha-2");
+    void invalid_country_hint_normalized_to_empty() {
+        // Invalid hints are silently treated as empty (logged as warning)
+        assertThat(new RawAddress("addr", "USA", "").countryHint()).isEmpty();
+        assertThat(new RawAddress("addr", "U", "").countryHint()).isEmpty();
+        assertThat(new RawAddress("addr", "1X", "").countryHint()).isEmpty();
     }
 
     @Test
-    void rejects_single_char_country_hint() {
-        assertThatThrownBy(() -> new RawAddress("addr", "U", ""))
-                .isInstanceOf(IllegalArgumentException.class);
+    void valid_country_hint_uppercased() {
+        assertThat(new RawAddress("addr", "us", "").countryHint()).isEqualTo("US");
+        assertThat(new RawAddress("addr", "gb", "").countryHint()).isEqualTo("GB");
     }
 
     @Test

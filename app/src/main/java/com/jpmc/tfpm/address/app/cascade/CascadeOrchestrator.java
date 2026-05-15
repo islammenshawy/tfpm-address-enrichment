@@ -195,7 +195,7 @@ public final class CascadeOrchestrator {
                             result.latency().toMillis(), correlationId);
                 } catch (Exception e) {
                     LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
-                            structurer.name(), correlationId, e.getMessage());
+                            structurer.name(), correlationId, e.getMessage(), e);
                 } finally {
                     MDC.clear();
                     latch.countDown();
@@ -225,7 +225,7 @@ public final class CascadeOrchestrator {
             return List.of(result);
         } catch (Exception e) {
             LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
-                    structurer.name(), correlationId, e.getMessage());
+                    structurer.name(), correlationId, e.getMessage(), e);
             return List.of();
         }
     }

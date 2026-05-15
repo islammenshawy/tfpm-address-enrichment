@@ -211,7 +211,7 @@ tables loaded from Oracle), the only acceptable types are:
     <spring-boot.version>3.3.5</spring-boot.version>
     <prowide-iso20022.version>SRU2025-10.3.5</prowide-iso20022.version>
     <mapstruct.version>1.6.3</mapstruct.version>
-    <lombok.version>1.18.36</lombok.version>
+    <lombok.version>1.18.38</lombok.version>
     <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
     <jooq.version>3.19.15</jooq.version>
     <ojdbc.version>23.5.0.24.07</ojdbc.version>
