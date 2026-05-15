@@ -22,6 +22,7 @@ import org.junit.jupiter.api.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -91,11 +92,11 @@ class EndToEndAccuracyIT {
         structurerMode = String.join(" → ", labels);
         var merger = new FieldMerger(calibrators);
         // Weighted consensus: libpostal strong on Western, weak everywhere else
-        var consensusWeights = Map.of(
-                "libpostal", Map.of("default", 0.3,
-                        "US", 1.0, "GB", 1.0, "DE", 1.0, "CH", 1.0, "FR", 1.0,
-                        "IT", 1.0, "NL", 1.0, "AU", 1.0, "CA", 1.0, "AT", 1.0,
-                        "BE", 1.0, "ES", 1.0, "PT", 1.0, "SE", 1.0, "NO", 1.0));
+        var libpostalWeights = new HashMap<String, Double>();
+        libpostalWeights.put("default", 0.3);
+        for (var wc : List.of("US","GB","DE","CH","FR","IT","NL","AU","CA","AT","BE","ES","PT","SE","NO","DK","FI"))
+            libpostalWeights.put(wc, 1.0);
+        var consensusWeights = Map.<String, Map<String, Double>>of("libpostal", libpostalWeights);
         var orchestrator = new CascadeOrchestrator(structurers, merger, CountryRouter.noOp(),
                 0.99, 60000L, new SimpleMeterRegistry(), consensusWeights);
 

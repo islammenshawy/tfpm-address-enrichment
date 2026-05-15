@@ -1,0 +1,303 @@
+TFPM Address Enrichment Service - GPT-5 Assessment
+Generated: 2026-05-14
+Scope: repository structure, implementation gaps, bugs, and improvement opportunities only. No source-code changes were made.
+
+Executive Summary
+=================
+
+The codebase is a solid Maven multi-module skeleton with domain/app/adapters/inbound separation, compile currently succeeds, and many important contracts are represented in code. However, several implementation choices materially diverge from CLAUDE.md and the architecture docs. The largest risks are channel-contract drift, non-atomic idempotency/result persistence, fallible ports not returning Result<T>, unused compliance/field-attribution persistence, LLM providers not actually being registered as AddressStructurer beans, and a committed LLM API key in local config.
+
+Highest Priority Findings
+=========================
+
+P0 - IBM MQ channel is missing and RabbitMQ is implemented instead.
+- Evidence: parent pom includes inbound/inbound-rabbitmq, README documents RabbitMQ, domain SourceChannel has RABBITMQ, and integration tests use rabbitmq:3.13.
+- Contract gap: CLAUDE.md requires HTTP, Kafka, and IBM MQ transactional JMS. RabbitMQ is not an approved substitute under the provided operating manual.
+- Impact: channel semantics, operational dependencies, retry/redelivery behavior, and compliance with the hard multi-channel input constraint are wrong.
+- Improvement: replace inbound-rabbitmq with inbound-mq using Spring JMS and IBM MQ allclient, or explicitly change the governing docs if RabbitMQ is truly approved.
+
+P0 - Idempotency key includes source channel, so the same logical address can be processed multiple times across channels.
+- Evidence: OracleIdempotencyStore.computeKey appends request.sourceChannel().name().
+- Conflict: the critical multi-container requirement says the same message via three channels must produce exactly one result row.
+- Impact: the same address delivered by HTTP, Kafka, and MQ/RabbitMQ gets separate idempotency keys and can create separate STRUCTURING_RESULTS rows.
+- Improvement: compute the key from canonical business identity only, or introduce an explicit source message/payment identity shared across channels.
+
+P0 - Result persistence and idempotency record are not atomic.
+- Evidence: AddressEnrichmentServiceImpl calls resultPersistence.persistResult(...) and idempotencyStore.recordResult(...) as separate operations after the cascade.
+- Impact: a crash or transient Oracle error between these calls leaves an idempotency row with no RESULT_REF or a result row with no idempotency mapping. Duplicates can return an empty PERSISTED_DUPLICATE response or reprocess incorrectly.
+- Improvement: after the cascade returns, persist result, field attributions, exception queue row if needed, compliance routing, and idempotency RESULT_REF in one short Oracle transaction.
+
+P0 - Fallible domain ports do not consistently return Result<T>.
+- Evidence: AddressEnrichmentService.enrich returns EnrichmentResult; AddressStructurer.structure returns StructuringResult; IdempotencyStore, ResultPersistence, ExceptionQueue, FieldAttributionWriter, ComplianceRoutingWriter, AuditLog and AccuracySampler return raw values, Optional, boolean, void, or throw.
+- Contract gap: CLAUDE.md and docs/RETRY_AND_RESULT.md require Result<T> for recoverable domain/infrastructure failures.
+- Impact: retry boundaries cannot reliably inspect EnrichmentError.isRetryable(), and several adapters swallow failures instead of making policy decisions explicit.
+- Improvement: migrate fallible ports to Result<T> and handle retryability at each documented boundary.
+
+P0 - A real API key appears committed in application-local.yml.
+- Evidence: app/src/main/resources/application-local.yml has a non-empty default GLM_API_KEY value.
+- Impact: credential exposure and possible unintended calls/costs from local runs.
+- Improvement: remove the default, rotate the exposed key, and require environment or Vault-backed secret injection.
+
+P1 - LLM providers are likely not registered as individual AddressStructurer beans.
+- Evidence: LlmGatewayConfig exposes @Bean List<AddressStructurer> llmStructurers(...) and @Bean List<ConfidenceCalibrator> llmCalibrators(...).
+- Bug: Spring does not flatten a List bean into separate AddressStructurer beans when injecting List<AddressStructurer> into CascadeOrchestrator.
+- Impact: enabling LLM may still leave the cascade without glm/azure-gpt structurers and without their calibrators.
+- Improvement: register each provider as an individual bean via a registrar/factory, or change the cascade wiring to consume an explicit provider registry.
+
+P1 - Field attribution writer is implemented but never called.
+- Evidence: JooqFieldAttributionWriter exists and OracleAppAdapterConfig registers it, but only config/domain references exist; AddressEnrichmentServiceImpl never injects or calls FieldAttributionWriter.
+- Impact: FIELD_ATTRIBUTIONS stays empty, breaking provenance, accuracy measurement, and calibrator tuning workflows.
+- Improvement: call writeAttributions after result persistence in the same post-cascade transaction.
+
+P1 - Compliance routing writer is implemented but never called.
+- Evidence: JooqComplianceRoutingWriter exists and is registered, but AddressEnrichmentServiceImpl.evaluateCompliance only logs decisions.
+- Impact: COMPLIANCE_ROUTING does not capture bypass/route/block decisions as required by docs/COMPLIANCE_INTEGRATION.md.
+- Improvement: inject ComplianceRoutingWriter and persist every decision, including shadow decisions.
+
+P1 - Compliance routing does not dispatch route/block outcomes.
+- Evidence: AddressEnrichmentServiceImpl only logs RouteToCompliance and Block.
+- Impact: when shadow mode is disabled, no message is sent to a compliance destination and block does not affect the returned outcome.
+- Improvement: add a compliance dispatch port using configured destination type and make block/route behavior explicit in the service contract.
+
+P1 - Cascade order, early exit, min-sources, parallel flag, and consensus-enabled config are not honored.
+- Evidence: application.yml declares enrichment.cascade.order, early-exit-threshold, min-sources, consensus-enabled, and parallel. CascadeOrchestrator only receives List<AddressStructurer>, country router, threshold, and timeout; it runs all structurers in parallel when more than one is applicable.
+- Impact: changing cascade.order in config may not change execution order, early exit does not happen, min-sources is ignored, and consensus cannot be disabled.
+- Improvement: inject cascade properties explicitly and make orchestration deterministic from configuration.
+
+P1 - Cascade parallelism uses the common ForkJoinPool and does not cancel timed-out work.
+- Evidence: CascadeOrchestrator.runParallel uses CompletableFuture.runAsync without an executor and waits on CountDownLatch.
+- Impact: unbounded/common-pool work can starve unrelated tasks, structurer calls continue after timeout, and configured bulkheads are bypassed at the orchestration layer.
+- Improvement: use bounded per-structurer executors/bulkheads, propagate cancellation, and include trace context across async boundaries.
+
+P1 - Trace ID is not propagated to libpostal and is weak for LLM calls.
+- Evidence: proto StructureRequest has trace_id, but LibpostalAddressStructurer does not set it. LlmAddressStructurer reads MDC, but CascadeOrchestrator runs parallel tasks without MDC propagation.
+- Impact: gRPC sidecars and parallel LLM calls may lose request correlation.
+- Improvement: pass correlationId through AddressStructurer input or a request context object rather than relying on MDC.
+
+P1 - Kafka error handling is bypassed by catch-and-swallow logic.
+- Evidence: AddressEnrichmentKafkaListener catches Exception, logs, and does not rethrow; DefaultErrorHandler/DLT only sees exceptions that escape the listener.
+- Impact: configured DLT publishing may never happen for processing failures; messages can redeliver indefinitely.
+- Improvement: classify failures, ack/drop only known bad input, and rethrow or delegate to the error handler for retry/DLT behavior.
+
+P1 - RabbitMQ listener sends failures straight to DLQ with no channel-native retry.
+- Evidence: AddressEnrichmentRabbitListener catches Exception and calls basicNack(..., false, false).
+- Impact: transient Oracle/model failures are not retried by the channel.
+- Improvement: with IBM MQ, use transactional JMS redelivery; if RabbitMQ remains, implement bounded redelivery/dead-letter policy explicitly.
+
+P1 - Persistence retry annotations may not catch jOOQ failures and are defeated in some writers.
+- Evidence: @Retryable targets Spring TransientDataAccessException, while jOOQ commonly throws org.jooq.exception.DataAccessException. JooqFieldAttributionWriter and JooqComplianceRoutingWriter catch Exception internally, so @Retryable cannot trigger.
+- Impact: Oracle deadlocks and transient connection failures may not retry as intended.
+- Improvement: translate jOOQ exceptions to domain Result failures or Spring transient exceptions, and do not swallow retryable errors inside @Retryable methods.
+
+P1 - Local H2 is packaged as an app runtime dependency.
+- Evidence: app/pom.xml includes com.h2database:h2 with runtime scope.
+- Contract gap: CLAUDE.md forbids embedded H2 in production paths.
+- Impact: the production boot artifact can include H2 even if only intended for local development.
+- Improvement: move H2 to a dev/test profile or test scope and keep production artifacts Oracle-only.
+
+P1 - README and implementation intentionally contradict CLAUDE.md in several places.
+- Evidence: README states RabbitMQ instead of IBM MQ, Result<T> at cascade not service level, and H2 local DB.
+- Impact: future changes may follow README instead of the governing manual, creating more drift.
+- Improvement: reconcile README with CLAUDE.md, or formally update the governing constraints.
+
+Other Bugs And Gaps
+===================
+
+P2 - ArchUnit no_writes_to_payments_topics rule is effectively a no-op.
+- Evidence: ArchitectureTest checks dependency on a non-existent PaymentsTopicWriter class.
+- Impact: a KafkaTemplate can still be configured for a payments.* topic through properties or arbitrary producer code.
+- Improvement: validate configured topic properties at startup and add tests for forbidden topic names.
+
+P2 - ArchUnit field-injection rule is too weak.
+- Evidence: ArchitectureTest.no_field_injection checks classes annotated with @Autowired, not fields annotated with @Autowired.
+- Impact: field injection can slip through.
+- Improvement: enforce fields().should().notBeAnnotatedWith(Autowired.class).
+
+P2 - ArchUnit does not verify every AddressStructurer has a matching ConfidenceCalibrator bean.
+- Evidence: it only checks @Calibrated annotation.
+- Impact: swift-crf or dynamic LLM providers can run with raw-confidence fallback.
+- Improvement: add a Spring context test asserting each structurer name has exactly one calibrator.
+
+P2 - Swift CRF is a stub that throws if enabled and has no calibrator.
+- Evidence: SwiftCrfAddressStructurer.structure throws UnsupportedOperationException; no SwiftCrfConfidenceCalibrator exists.
+- Impact: enabling the flag creates noisy empty cascade results rather than a functional adapter.
+- Improvement: fail startup if enabled until the real adapter/calibrator exists, or keep the bean unregistered.
+
+P2 - Accuracy sampling is not idempotent across replicas.
+- Evidence: AccuracySamplingJob says duplicate execution is harmless, but JooqAccuracySampler inserts sampled rows directly and no locking is shown in the job.
+- Impact: multiple replicas can enqueue duplicate ACCURACY_SAMPLES.
+- Improvement: use a DB uniqueness constraint/insert-first duplicate handling or a scheduler lock approved for the stack.
+
+P2 - Accuracy sampling failures are swallowed and sampleBucket has no retry.
+- Evidence: JooqAccuracySampler catches Exception and returns 0.
+- Impact: daily sampling can silently under-sample with only logs as evidence.
+- Improvement: return Result<Integer>, retry transient Oracle failures, and alert on failure.
+
+P2 - Compliance router uses countryHint, not structured CTRY, for high-risk-country decisions.
+- Evidence: FourAxisComplianceRouter reads request.address().countryHint().
+- Impact: high-risk countries inferred by structurers are missed when the hint is empty or wrong.
+- Improvement: prefer structured CTRY when present, then fall back to countryHint.
+
+P2 - Shadow compliance decisions are returned as Bypass and are not persisted.
+- Evidence: FourAxisComplianceRouter returns new ComplianceDecision.Bypass() when shadowMode is true.
+- Impact: operators cannot report what would have routed unless logs are mined.
+- Improvement: preserve the would-route decision and store it with a shadow flag.
+
+P2 - HTTP request validation is thin.
+- Evidence: AddressEnrichmentController directly constructs RawAddress from request DTO fields without @Valid/null checks.
+- Impact: malformed requests can become IllegalArgumentException/500-style failures instead of structured 400/422 responses.
+- Improvement: add DTO validation and map expected input errors to Result/HTTP problem responses.
+
+P2 - Batch enrichment is sequential and can exceed the HTTP budget.
+- Evidence: /enrich/batch loops through up to 100 calls synchronously.
+- Impact: a batch can easily exceed the 500ms pipeline target and tie up Tomcat threads.
+- Improvement: reduce batch size, make batch async, or explicitly document a separate SLA.
+
+P2 - Tomcat overflow protection uses hardcoded constants.
+- Evidence: TomcatOverflowConfig has MAX_CONCURRENT_REQUESTS=400 and RETRY_AFTER_SECONDS=5.
+- Impact: capacity cannot be tuned per environment without code changes.
+- Improvement: externalize these values under application.yml.
+
+P2 - FieldNormalizer is constructed per cascade request.
+- Evidence: CascadeOrchestrator creates new FieldNormalizer inside orchestrate.
+- Impact: resource loading is repeated under concurrency and test output showed repeated dictionary load logs.
+- Improvement: make FieldNormalizer a stateless singleton bean with immutable preloaded data.
+
+P2 - LLM JPMC internal gateway client appears unwired.
+- Evidence: LlmGatewayConfig always returns OpenAiCompatibleLlmClient, including azure-openai; JpmcInternalGatewayLlmClient has no visible factory/token-source wiring.
+- Impact: the documented internal gateway reference implementation is dead or incomplete.
+- Improvement: add provider-type-specific client creation and configuration for OAuth token source.
+
+P2 - OpenAI-compatible client ignores Retry-After and does not base retry on EnrichmentError.isRetryable().
+- Evidence: retryWhen filters Throwable/status codes directly.
+- Impact: retry behavior is split between exception code and domain error taxonomy.
+- Improvement: translate failures to EnrichmentError first or centralize retry predicate around isRetryable().
+
+P2 - Kafka/Rabbit output queues/topics are configured but not used.
+- Evidence: application.yml has enrichment.kafka.output-topic and enrichment.rabbitmq.output-queue, but listeners only log results.
+- Impact: channel output contract is unclear; shadow-mode output may be only Oracle, but config/docs imply messaging outputs.
+- Improvement: either remove unused output config or implement approved TFPM_ADDR_ENRICH-only output behavior.
+
+P2 - Kafka producer topic guard for payments.* is missing.
+- Evidence: KafkaConfig creates a DLT KafkaTemplate and uses configured dltTopic without validation.
+- Impact: misconfiguration could publish to a forbidden payments.* topic.
+- Improvement: validate all producer topics against ^payments\..*$ at startup.
+
+P2 - OracleResultPersistence hardcodes review threshold 0.70.
+- Evidence: persistResult computes REQUIRES_REVIEW using 0.70, while service reviewThreshold is configurable.
+- Impact: persisted REQUIRES_REVIEW can disagree with service outcome.
+- Improvement: persist the outcome decided by the service or pass the configured threshold into persistence.
+
+P2 - OracleResultPersistence returns -1 if insert returning fails.
+- Evidence: resultId != null ? ... : -1L.
+- Impact: downstream idempotency and exception-queue rows can point at invalid result IDs.
+- Improvement: return Result.failure on missing generated key.
+
+P2 - OracleResultPersistence.deserializeFields uses unchecked raw Map parsing.
+- Evidence: readValue(json, Map.class) and unchecked cast.
+- Impact: malformed JSON can cause runtime ClassCastException and silently empty addresses.
+- Improvement: use a typed DTO/TypeReference and return Result on parse failure.
+
+P2 - JooqFieldAttributionWriter selected-field detection compares only value.
+- Evidence: wasSelected checks merged value equality for field.
+- Impact: two structurers producing the same value will both be marked selected even if only one won by confidence/order.
+- Improvement: carry selected structurer provenance from FieldMerger.
+
+P2 - JooqComplianceRoutingWriter manually builds JSON strings.
+- Evidence: allReasonsJson is assembled by string concatenation.
+- Impact: future reason values/details can break JSON encoding.
+- Improvement: use the shared ObjectMapper bean or a typed JSON writer.
+
+P2 - DataSourceConfig uses SQLDialect.DEFAULT for Oracle contexts.
+- Evidence: buildDsl sets SQLDialect.DEFAULT.
+- Impact: jOOQ may not generate Oracle-specific SQL for RETURNING, SKIP LOCKED, and other dialect-sensitive features.
+- Improvement: use SQLDialect.ORACLE for Oracle contexts and H2 only in dev/test-specific config.
+
+P2 - Liquibase changelog path may not be available on the app classpath.
+- Evidence: application.yml points to classpath:/infra/liquibase/changelog-master.xml while infra is a top-level directory, not app/src/main/resources.
+- Impact: startup migrations may fail when LIQUIBASE_ENABLED=true.
+- Improvement: package migrations as resources or run migrations only through the documented ops/make path.
+
+P2 - Legacy backfill labels requests as SourceChannel.HTTP.
+- Evidence: LegacyBackfillJob constructs EnrichmentRequest.SourceChannel.HTTP.
+- Impact: metrics/idempotency/audit cannot distinguish backfill from HTTP traffic.
+- Improvement: add a BACKFILL/LEGACY source channel if backfill is a first-class source, or pass an explicit source reference separate from inbound channel.
+
+P2 - Prowide MxMessageEnricher mutates MX objects and could violate shadow mode if wired into payment flow.
+- Evidence: it parses a pacs.008 and injects structured fields back into PostalAddress27.
+- Impact: using this on live payment messages would modify production payment data unless strictly isolated.
+- Improvement: make shadow/live lifecycle explicit and keep enriched MX output inside TFPM_ADDR_ENRICH until phase-2 approval.
+
+P2 - ObjectMapper/JAXB construction gate is not enforced in ArchUnit.
+- Evidence: grep found ObjectMapper construction only in tests, but no ArchUnit/CI rule enforces it.
+- Impact: future production code can add new mappers unnoticed.
+- Improvement: add an ArchUnit or grep gate for production sources.
+
+P2 - Inbound @ThreadSafe coverage is incomplete.
+- Evidence: controllers/listeners are annotated, but filters/config classes on request path are not uniformly checked by ArchUnit.
+- Impact: future inbound beans can miss the thread-safety contract.
+- Improvement: enforce @ThreadSafe for RestController, KafkaListener, JmsListener/RabbitListener, and servlet filters.
+
+P3 - Lombok version differs from the pinned version in CLAUDE.md.
+- Evidence: parent pom uses 1.18.38, while CLAUDE.md pins 1.18.36.
+- Impact: minor build reproducibility drift.
+- Improvement: align the property with the pinned version or update the manual.
+
+P3 - README endpoint list exceeds implemented API details.
+- Evidence: README describes outputs and operational decisions that are not fully wired, while controller only exposes enrich, batch, results, and replay.
+- Impact: docs overstate readiness.
+- Improvement: mark incomplete features as planned or wire them end-to-end.
+
+P3 - Some catch blocks log only messages or ignore exceptions.
+- Evidence: CascadeOrchestrator logs e.getMessage without stack; LlmGatewayConfig logs provider creation failure without stack; prompt supplement IOExceptions are ignored.
+- Impact: production debugging loses root-cause data.
+- Improvement: log full stack traces for unexpected failures and include correlation IDs.
+
+P3 - RawAddress countryHint validation only checks length.
+- Evidence: RawAddress allows any two characters.
+- Impact: invalid country codes can enter routing/compliance logic.
+- Improvement: normalize uppercase and validate [A-Z]{2} or empty.
+
+P3 - Result<T> has unchecked casts without explanatory comments.
+- Evidence: Result.map and flatMap suppress unchecked warnings.
+- Impact: minor CLAUDE.md style violation.
+- Improvement: add comments explaining the safe covariance cast pattern or refactor.
+
+Test And CI Gaps
+================
+
+- Unit test execution was started but manually aborted by the user; compile had already succeeded.
+- Integration tests do not exercise real HTTP, Kafka, and IBM MQ listeners together. MultiContainerIdempotencyTest calls service.enrich directly and uses RabbitMQ.
+- MultiContainerIdempotencyTest contains contradictory expectations: it says exactly one STRUCTURING_RESULTS row, but also expects three idempotency rows because the key includes channel. With current service code, three different channel keys can all claim and persist independently.
+- Crash-safety test does not actually crash a replica; it sleeps and then continues.
+- Golden-set accuracy tests validate fixture shape and stub cascade behavior, not real libpostal/LLM/SWIFT accuracy.
+- No IBM MQ Testcontainer coverage exists.
+- No visible tests for adapter-oracle-legacy, inbound-rabbitmq, MxMessageEnricher, TomcatOverflowConfig, JooqFieldAttributionWriter, JooqComplianceRoutingWriter, JooqAccuracySampler, or real LLM WebClient behavior.
+- No coverage gates are configured in the parent pom even though CLAUDE.md requires module coverage thresholds.
+
+Architecture Strengths
+======================
+
+- Maven modules are separated along domain, app, adapters, inbound, architecture tests, and integration tests.
+- Domain model is mostly pure Java records/interfaces with defensive copies.
+- Constructor injection is used consistently in inspected production code.
+- Compile succeeds with Java 21.
+- No production new ObjectMapper construction was found in the inspected grep results.
+- No direct JDBC use was found in production code; jOOQ is used for persistence.
+- Legacy adapter appears read-only at code level.
+- Several key beans are annotated @ThreadSafe and fields are mostly final.
+- Liquibase migrations, compliance resources, prompt resources, and golden fixtures are present.
+
+Recommended Fix Order
+=====================
+
+1. Remove and rotate the committed GLM API key.
+2. Decide and document the channel truth: implement IBM MQ JMS per CLAUDE.md or formally update the governing constraints.
+3. Fix idempotency identity so cross-channel duplicates produce one result row.
+4. Make post-cascade persistence atomic and return Result<T> from all fallible ports.
+5. Wire FIELD_ATTRIBUTIONS and COMPLIANCE_ROUTING into AddressEnrichmentServiceImpl.
+6. Fix LLM provider bean registration and calibrator registration.
+7. Make cascade ordering, early exit, timeout, min-sources, parallel mode, and consensus config real.
+8. Replace common-pool parallelism with bounded, trace-propagating execution and actual Resilience4j bulkheads/retries.
+9. Repair Kafka/MQ retry/DLT behavior and add forbidden payments.* producer-topic validation.
+10. Strengthen ArchUnit and integration tests so the stated hard constraints are enforceable.
