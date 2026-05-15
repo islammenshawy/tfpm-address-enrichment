@@ -1,0 +1,52 @@
+meta {
+  name: CN-008 — CN
+  type: http
+  seq: 38
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-CN-008
+}
+
+body:json {
+  {
+    "rawAddress": "No. 27 Zhongguancun Dajie, Haidian Qu, Beijing 100080, China",
+    "countryHint": "CN",
+    "locale": "en-CN"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("CN-008 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("cn");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("beijing");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("100080");
+    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
+    expect(actual_CTRY_SUB_DVSN).to.eq("haidian");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("zhongguancun dajie");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("27");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("no. 27 zhongguancun dajie");
+  });
+}

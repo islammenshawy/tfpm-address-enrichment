@@ -1,0 +1,52 @@
+meta {
+  name: CN-009 — CN
+  type: http
+  seq: 39
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-CN-009
+}
+
+body:json {
+  {
+    "rawAddress": "\u5382\u623f3\u53f7, \u7ecf\u6d4e\u6280\u672f\u5f00\u53d1\u533a\u4e1c\u73af\u8def56\u53f7, \u5929\u6d25\u5e02, 300457, \u4e2d\u56fd",
+    "countryHint": "CN",
+    "locale": "zh-CN"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("CN-009 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("cn");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("tianjin");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("300457");
+    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
+    expect(actual_CTRY_SUB_DVSN).to.eq("economic-technological development area");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("donghuan lu");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("56");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("factory 3, 56 donghuan lu");
+  });
+}

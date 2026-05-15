@@ -21,7 +21,7 @@ import static org.jooq.impl.DSL.*;
  * for concurrent claim and optimistic locking for resolve.
  */
 @ThreadSafe
-public final class JooqExceptionQueue implements ExceptionQueue {
+public class JooqExceptionQueue implements ExceptionQueue {
 
     private static final Logger LOG = LoggerFactory.getLogger(JooqExceptionQueue.class);
 

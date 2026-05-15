@@ -1,0 +1,48 @@
+meta {
+  name: MT-006 — SG
+  type: http
+  seq: 111
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-MT-006
+}
+
+body:json {
+  {
+    "rawAddress": "10 ANSON ROAD NO 12-34, INTERNATIONAL PLAZA SINGAP, ORE 079903",
+    "countryHint": "SG",
+    "locale": ""
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("MT-006 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("sg");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("singapore");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("anson road");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("10");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("079903");
+  });
+}

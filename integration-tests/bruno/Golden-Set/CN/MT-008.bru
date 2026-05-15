@@ -1,0 +1,44 @@
+meta {
+  name: MT-008 — CN
+  type: http
+  seq: 113
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-MT-008
+}
+
+body:json {
+  {
+    "rawAddress": "ROOM 2801 TOWER B JING, AN KERRY CENTRE 1515 NANJ, ING WEST RD SHANGHAI CN",
+    "countryHint": "CN",
+    "locale": ""
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("MT-008 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("cn");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("shanghai");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("nanjing west road");
+  });
+}

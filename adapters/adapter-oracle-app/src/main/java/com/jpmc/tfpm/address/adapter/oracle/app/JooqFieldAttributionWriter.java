@@ -25,7 +25,7 @@ import static org.jooq.impl.DSL.*;
  * Calibrates ALL fields (not just selected) using the injected calibrators.
  */
 @ThreadSafe
-public final class JooqFieldAttributionWriter implements FieldAttributionWriter {
+public class JooqFieldAttributionWriter implements FieldAttributionWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JooqFieldAttributionWriter.class);
 

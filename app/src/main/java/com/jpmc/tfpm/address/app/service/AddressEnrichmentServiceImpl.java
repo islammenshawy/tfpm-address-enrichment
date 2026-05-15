@@ -162,8 +162,12 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             outcome = EnrichmentResult.Outcome.SUCCESS;
         }
 
+        var sources = cascadeResult.structurerTrace().stream()
+                .map(t -> t.structurerName())
+                .toList();
         var enrichmentResult = new EnrichmentResult(
-                correlationId, outcome, address, confidence, resultRowId, Instant.now());
+                correlationId, outcome, address, confidence, resultRowId, Instant.now(),
+                sources, cascadeResult.consensus());
 
         evaluateCompliance(enrichmentResult, request);
 

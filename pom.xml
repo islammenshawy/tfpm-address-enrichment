@@ -109,6 +109,15 @@
                 <scope>import</scope>
             </dependency>
 
+            <!-- OpenTelemetry BOM — must come AFTER Spring Boot BOM to override its managed OTel versions -->
+            <dependency>
+                <groupId>io.opentelemetry</groupId>
+                <artifactId>opentelemetry-bom</artifactId>
+                <version>${opentelemetry.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Internal modules -->
             <dependency>
                 <groupId>com.jpmc.tfpm.address</groupId>

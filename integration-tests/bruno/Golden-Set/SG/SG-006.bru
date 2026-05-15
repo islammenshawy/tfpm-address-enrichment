@@ -1,0 +1,52 @@
+meta {
+  name: SG-006 — SG
+  type: http
+  seq: 96
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-SG-006
+}
+
+body:json {
+  {
+    "rawAddress": "5 Changi Business Park Central 1, #03-12, Changi City Point, Singapore 486038",
+    "countryHint": "SG",
+    "locale": "en-SG"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("SG-006 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("sg");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("singapore");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("486038");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("changi business park central 1");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("5");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("5 changi business park central 1, #03-12");
+    const actual_BLDG_NM = (body.fields.BLDG_NM?.value || "").toLowerCase();
+    expect(actual_BLDG_NM).to.eq("changi city point");
+  });
+}

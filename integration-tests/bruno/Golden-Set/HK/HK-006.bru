@@ -1,0 +1,52 @@
+meta {
+  name: HK-006 — HK
+  type: http
+  seq: 81
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-HK-006
+}
+
+body:json {
+  {
+    "rawAddress": "Suite 3501, 35/F, Times Square Tower 1, 1 Matheson Street, Causeway Bay, Hong Kong",
+    "countryHint": "HK",
+    "locale": "en-HK"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("HK-006 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("hk");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("hong kong");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("matheson street");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("1");
+    const actual_BLDG_NM = (body.fields.BLDG_NM?.value || "").toLowerCase();
+    expect(actual_BLDG_NM).to.eq("times square tower 1");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("suite 3501, 35/f, times square tower 1");
+    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
+    expect(actual_CTRY_SUB_DVSN).to.eq("causeway bay");
+  });
+}

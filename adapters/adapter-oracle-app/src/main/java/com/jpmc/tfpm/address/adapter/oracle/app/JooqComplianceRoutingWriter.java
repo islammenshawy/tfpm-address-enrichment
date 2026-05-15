@@ -17,7 +17,7 @@ import java.time.LocalDateTime;
 import static org.jooq.impl.DSL.*;
 
 @ThreadSafe
-public final class JooqComplianceRoutingWriter implements ComplianceRoutingWriter {
+public class JooqComplianceRoutingWriter implements ComplianceRoutingWriter {
 
     private static final Logger LOG = LoggerFactory.getLogger(JooqComplianceRoutingWriter.class);
 

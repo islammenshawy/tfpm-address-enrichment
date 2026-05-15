@@ -1,0 +1,44 @@
+meta {
+  name: AE-013 — AE
+  type: http
+  seq: 13
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-AE-013
+}
+
+body:json {
+  {
+    "rawAddress": "Jumeirah Lake Towers, Cluster D, Dubai, UAE",
+    "countryHint": "AE",
+    "locale": ""
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("AE-013 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("ae");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("dubai");
+    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
+    expect(actual_CTRY_SUB_DVSN).to.eq("dubai");
+  });
+}

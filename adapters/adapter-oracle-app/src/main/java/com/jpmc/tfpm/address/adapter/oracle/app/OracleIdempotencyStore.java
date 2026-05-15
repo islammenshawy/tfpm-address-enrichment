@@ -25,7 +25,7 @@ import static org.jooq.impl.DSL.*;
  * Oracle-backed idempotency store using INSERT-first-catch-ORA-00001.
  */
 @ThreadSafe
-public final class OracleIdempotencyStore implements IdempotencyStore {
+public class OracleIdempotencyStore implements IdempotencyStore {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleIdempotencyStore.class);
     private static final int MAX_RESULT_POLL_ATTEMPTS = 3;

@@ -11,10 +11,18 @@ import com.jpmc.tfpm.address.domain.LlmModelClient.LlmModelMetadata;
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.beans.factory.support.BeanDefinitionRegistry;
+import org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor;
+import org.springframework.beans.factory.support.RootBeanDefinition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Binder;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ClientRequest;
@@ -29,32 +37,39 @@ import java.time.Duration;
 import java.util.*;
 
 /**
- * Dynamically creates LLM structurer beans from config.
- * Each entry under {@code enrichment.llm.providers} becomes a separate
- * {@link AddressStructurer} + {@link ConfidenceCalibrator} pair.
+ * Dynamically registers individual {@link AddressStructurer} and
+ * {@link ConfidenceCalibrator} beans for each LLM provider configured
+ * under {@code enrichment.llm.providers}.
  *
- * <p>Config-driven: add/remove YAML entries to change the model set.
- * No code changes needed to add a new LLM provider.
+ * <p>Uses {@link BeanDefinitionRegistryPostProcessor} so each provider
+ * becomes a first-class Spring bean that Spring can collect into
+ * {@code List<AddressStructurer>} for the cascade orchestrator.
  */
 @Configuration
 @ConditionalOnProperty(name = "enrichment.llm.enabled", havingValue = "true")
 @EnableConfigurationProperties(LlmProperties.class)
-public class LlmGatewayConfig {
+public class LlmGatewayConfig implements BeanDefinitionRegistryPostProcessor, EnvironmentAware {
 
     private static final Logger LOG = LoggerFactory.getLogger(LlmGatewayConfig.class);
 
-    @Bean
-    public List<AddressStructurer> llmStructurers(LlmProperties props, ObjectMapper objectMapper,
-                                                   CircuitBreakerRegistry cbRegistry) {
-        if (props.providers() == null || props.providers().isEmpty()) {
+    private Environment environment;
+
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
+
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+        var props = Binder.get(environment)
+                .bind("enrichment.llm", LlmProperties.class)
+                .orElse(null);
+        if (props == null || props.providers() == null || props.providers().isEmpty()) {
             LOG.warn("LLM enabled but no providers configured");
-            return List.of();
+            return;
         }
 
-        var structurers = new ArrayList<AddressStructurer>();
-        var allowedFields = parseAllowedFields(props);
-        var promptLoader = createPromptLoader(props, objectMapper);
-
+        var registered = new ArrayList<String>();
         for (var entry : props.providers().entrySet()) {
             var name = entry.getKey();
             var config = entry.getValue();
@@ -64,27 +79,39 @@ public class LlmGatewayConfig {
                 continue;
             }
 
-            try {
-                var client = createClient(name, config, objectMapper, cbRegistry);
-                structurers.add(new LlmAddressStructurer(name, client, promptLoader, objectMapper, allowedFields));
-                LOG.info("LLM provider '{}': type={}, model={}, endpoint={}",
-                        name, config.type(), config.model(), config.endpoint());
-            } catch (Exception e) {
-                LOG.error("Failed to create LLM provider '{}': {}", name, e.getMessage());
-            }
+            // Register AddressStructurer bean
+            var structurerDef = new RootBeanDefinition();
+            structurerDef.setBeanClass(LlmAddressStructurer.class);
+            structurerDef.setInstanceSupplier(() -> createStructurer(name, config, props));
+            registry.registerBeanDefinition("llmStructurer-" + name, structurerDef);
+
+            // Register ConfidenceCalibrator bean
+            var calibratorDef = new RootBeanDefinition();
+            calibratorDef.setBeanClass(LlmConfidenceCalibrator.class);
+            calibratorDef.setInstanceSupplier(() -> new LlmConfidenceCalibrator(name));
+            registry.registerBeanDefinition("llmCalibrator-" + name, calibratorDef);
+
+            LOG.info("LLM provider '{}': type={}, model={}, endpoint={}",
+                    name, config.type(), config.model(), config.endpoint());
+            registered.add(name);
         }
 
-        LOG.info("{} LLM structurer(s) registered: {}",
-                structurers.size(), structurers.stream().map(AddressStructurer::name).toList());
-        return structurers;
+        LOG.info("{} LLM structurer(s) registered: {}", registered.size(), registered);
     }
 
-    @Bean
-    public List<ConfidenceCalibrator> llmCalibrators(LlmProperties props) {
-        if (props.providers() == null) return List.of();
-        return props.providers().keySet().stream()
-                .map(name -> (ConfidenceCalibrator) new LlmConfidenceCalibrator(name))
-                .toList();
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        // no-op
+    }
+
+    private AddressStructurer createStructurer(String name, LlmProperties.ProviderConfig config,
+                                                LlmProperties props) {
+        var objectMapper = new ObjectMapper();
+        var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults(name + "-cb");
+        var client = createClient(name, config, objectMapper, cb);
+        var allowedFields = parseAllowedFields(props);
+        var promptLoader = createPromptLoader(props, objectMapper);
+        return new LlmAddressStructurer(name, client, promptLoader, objectMapper, allowedFields);
     }
 
     @Bean
@@ -93,8 +120,8 @@ public class LlmGatewayConfig {
     }
 
     private LlmModelClient createClient(String name, LlmProperties.ProviderConfig config,
-                                         ObjectMapper objectMapper, CircuitBreakerRegistry cbRegistry) {
-        var cb = cbRegistry.circuitBreaker(name + "-cb");
+                                         ObjectMapper objectMapper,
+                                         io.github.resilience4j.circuitbreaker.CircuitBreaker cb) {
         var model = config.model() != null ? config.model() : "default";
         var metadata = new LlmModelMetadata(config.type(), model, false, 0, 0,
                 Duration.ofMillis(config.timeoutMs()));

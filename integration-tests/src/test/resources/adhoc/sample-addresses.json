@@ -1,0 +1,7 @@
+[
+  {"fixture_id": "ADHOC-001", "country": "US", "raw": "1600 Pennsylvania Avenue NW, Washington, DC 20500", "country_hint": "US", "locale": "en-US"},
+  {"fixture_id": "ADHOC-002", "country": "GB", "raw": "10 Downing Street, London SW1A 2AA, United Kingdom", "country_hint": "GB", "locale": "en-GB"},
+  {"fixture_id": "ADHOC-003", "country": "JP", "raw": "1-1-1 Marunouchi, Chiyoda-ku, Tokyo 100-0005, Japan", "country_hint": "JP", "locale": "ja-JP"},
+  {"fixture_id": "ADHOC-004", "country": "FR", "raw": "55 Rue du Faubourg Saint-Honoré, 75008 Paris, France", "country_hint": "FR", "locale": "fr-FR"},
+  {"fixture_id": "ADHOC-005", "country": "BR", "raw": "Avenida Paulista, 1578, São Paulo, SP 01310-200, Brazil", "country_hint": "BR", "locale": "pt-BR"}
+]

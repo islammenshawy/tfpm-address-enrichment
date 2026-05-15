@@ -55,8 +55,8 @@ spring:
   rabbitmq:
     host: localhost
 
-liquibase:
-  enabled: false
+  liquibase:
+    enabled: false
 
 enrichment:
   cascade:

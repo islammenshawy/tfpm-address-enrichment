@@ -30,7 +30,7 @@ import static org.jooq.impl.DSL.*;
  * Oracle-backed persistence for enrichment results.
  */
 @ThreadSafe
-public final class OracleResultPersistence implements ResultPersistence {
+public class OracleResultPersistence implements ResultPersistence {
 
     private static final Logger LOG = LoggerFactory.getLogger(OracleResultPersistence.class);
 

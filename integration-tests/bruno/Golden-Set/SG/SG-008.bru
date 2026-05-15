@@ -1,0 +1,52 @@
+meta {
+  name: SG-008 — SG
+  type: http
+  seq: 98
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-SG-008
+}
+
+body:json {
+  {
+    "rawAddress": "Blk 298 Tiong Bahru Road, #15-03, Central Plaza, Singapore 168730",
+    "countryHint": "SG",
+    "locale": "en-SG"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("SG-008 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("sg");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("singapore");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("168730");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("tiong bahru road");
+    const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
+    expect(actual_BLDG_NB).to.eq("298");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("blk 298 tiong bahru road, #15-03");
+    const actual_BLDG_NM = (body.fields.BLDG_NM?.value || "").toLowerCase();
+    expect(actual_BLDG_NM).to.eq("central plaza");
+  });
+}

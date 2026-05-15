@@ -55,32 +55,19 @@ public class DataSourceConfig {
     @ConfigurationProperties(prefix = "spring.datasource.app-write")
     public static class AppWriteProperties extends HikariConfig {}
 
-    @Bean
-    public LegacyReadProperties legacyReadProperties() {
-        return new LegacyReadProperties();
-    }
-
-    @Bean
-    public AppWriteProperties appWriteProperties() {
-        return new AppWriteProperties();
-    }
-
     // ============================================================
     // Pools
     // ============================================================
 
-    @Bean(name = "legacyReadDataSource", destroyMethod = "close")
+    @Bean(name = "legacyReadDataSource")
     public DataSource legacyReadDataSource(LegacyReadProperties props) {
-        var hikari = new HikariDataSource(props);
-        hikari.setReadOnly(true);
-        return new LazyConnectionDataSourceProxy(hikari);
+        return new LazyConnectionDataSourceProxy(new HikariDataSource(props));
     }
 
     @Primary
-    @Bean(name = "appWriteDataSource", destroyMethod = "close")
+    @Bean(name = "appWriteDataSource")
     public DataSource appWriteDataSource(AppWriteProperties props) {
-        var hikari = new HikariDataSource(props);
-        return new LazyConnectionDataSourceProxy(hikari);
+        return new LazyConnectionDataSourceProxy(new HikariDataSource(props));
     }
 
     // ============================================================
@@ -88,21 +75,30 @@ public class DataSourceConfig {
     // ============================================================
 
     @Bean(name = "legacyReadDsl")
-    public DSLContext legacyReadDsl(@org.springframework.beans.factory.annotation.Qualifier("legacyReadDataSource") DataSource ds) {
-        return buildDsl(ds);
+    public DSLContext legacyReadDsl(
+            @org.springframework.beans.factory.annotation.Qualifier("legacyReadDataSource") DataSource ds,
+            LegacyReadProperties props) {
+        return buildDsl(ds, detectDialect(props.getJdbcUrl()));
     }
 
     @Primary
     @Bean(name = "appWriteDsl")
-    public DSLContext appWriteDsl(@org.springframework.beans.factory.annotation.Qualifier("appWriteDataSource") DataSource ds) {
-        return buildDsl(ds);
+    public DSLContext appWriteDsl(
+            @org.springframework.beans.factory.annotation.Qualifier("appWriteDataSource") DataSource ds,
+            AppWriteProperties props) {
+        return buildDsl(ds, detectDialect(props.getJdbcUrl()));
     }
 
-    private static DSLContext buildDsl(DataSource ds) {
+    private static DSLContext buildDsl(DataSource ds, SQLDialect dialect) {
         var configuration = new DefaultConfiguration()
-                .set(SQLDialect.DEFAULT)
+                .set(dialect)
                 .set(new DataSourceConnectionProvider(ds));
         return new DefaultDSLContext(configuration);
+    }
+
+    private static SQLDialect detectDialect(String jdbcUrl) {
+        if (jdbcUrl != null && jdbcUrl.startsWith("jdbc:h2:")) return SQLDialect.H2;
+        return SQLDialect.DEFAULT;
     }
 
     // ============================================================

@@ -44,11 +44,14 @@ public final class FieldNormalizer {
     private static final Pattern DIACRITICS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
 
     private final Map<String, String> streetTypeMap;
+    private final Map<String, String> countryNameToIso;
 
     public FieldNormalizer() {
-        this.streetTypeMap = loadDictionaries();
+        this.streetTypeMap = loadDictionaries("normalization/street-types/*.txt");
+        this.countryNameToIso = loadDictionaries("normalization/countries/*.txt");
         if (!streetTypeMap.isEmpty()) {
-            LOG.info("Loaded {} street type canonical mappings from libpostal dictionaries", streetTypeMap.size());
+            LOG.info("Loaded {} street type mappings, {} country name mappings",
+                    streetTypeMap.size(), countryNameToIso.size());
         }
     }
 
@@ -65,14 +68,13 @@ public final class FieldNormalizer {
                 result.latency(), result.diagnostics());
     }
 
-    /** Normalize a single field value. */
+    /** Normalize a single field value. Preserves diacritics (Zürich stays Zürich). */
     public String normalizeValue(String value, AddressField field) {
         if (value == null || value.isBlank()) return "";
         var s = value.trim();
         s = WHITESPACE.matcher(s).replaceAll(" ");
         s = TRAILING_PUNCT.matcher(s).replaceAll("");
-        s = stripDiacritics(s);
-        if (field == AddressField.CTRY && s.length() == 2) s = s.toUpperCase();
+        if (field == AddressField.CTRY) s = canonicalizeCountry(s);
         if (field == AddressField.STRT_NM) s = canonicalizeStreetType(s);
         return s.trim();
     }
@@ -106,19 +108,28 @@ public final class FieldNormalizer {
         return street;
     }
 
+    /** Convert country names to ISO 2-letter codes: "united arab emirates" → "AE". */
+    String canonicalizeCountry(String value) {
+        if (value == null || value.isBlank()) return value;
+        if (value.length() == 2) return value.toUpperCase();
+        if (value.length() == 3) return value.toUpperCase(); // ISO alpha-3
+        var iso = countryNameToIso.get(value.toLowerCase().trim());
+        return iso != null ? iso : value;
+    }
+
     static String stripDiacritics(String input) {
         return DIACRITICS.matcher(Normalizer.normalize(input, Normalizer.Form.NFKD)).replaceAll("");
     }
 
     /**
-     * Load all language dictionaries. Format: canonical|synonym1|synonym2|...
+     * Load dictionaries from classpath. Format: canonical|synonym1|synonym2|...
      * Every synonym maps to the canonical (first) form.
      */
-    private static Map<String, String> loadDictionaries() {
+    private static Map<String, String> loadDictionaries(String pattern) {
         var map = new HashMap<String, String>(2000);
         try {
             var resources = new PathMatchingResourcePatternResolver()
-                    .getResources("classpath:normalization/street-types/*.txt");
+                    .getResources("classpath:" + pattern);
             for (var res : resources) {
                 try (var reader = new BufferedReader(
                         new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8))) {

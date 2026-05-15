@@ -1,0 +1,197 @@
+# Country names → ISO 3166-1 alpha-2 codes
+# Format: ISO_CODE|name1|name2|...
+# Source: ISO 3166-1 + common aliases (libpostal, SWIFT, etc.)
+#
+AD|andorra
+AE|united arab emirates|uae
+AF|afghanistan
+AG|antigua and barbuda
+AL|albania
+AM|armenia
+AO|angola
+AR|argentina|república argentina
+AT|austria|österreich|oesterreich
+AU|australia
+AZ|azerbaijan
+BA|bosnia and herzegovina|bosnia
+BB|barbados
+BD|bangladesh
+BE|belgium|belgique|belgië
+BF|burkina faso
+BG|bulgaria
+BH|bahrain
+BI|burundi
+BJ|benin
+BN|brunei|brunei darussalam
+BO|bolivia
+BR|brazil|brasil
+BS|bahamas|the bahamas
+BT|bhutan
+BW|botswana
+BY|belarus
+BZ|belize
+CA|canada
+CD|democratic republic of the congo|dr congo|drc
+CF|central african republic
+CG|congo
+CH|switzerland|schweiz|suisse|svizzera
+CI|ivory coast|côte d'ivoire|cote d'ivoire
+CL|chile
+CM|cameroon
+CN|china|peoples republic of china|people's republic of china|p.r. china
+CO|colombia
+CR|costa rica
+CU|cuba
+CV|cape verde|cabo verde
+CY|cyprus
+CZ|czech republic|czechia
+DE|germany|deutschland|bundesrepublik deutschland
+DJ|djibouti
+DK|denmark|danmark
+DM|dominica
+DO|dominican republic
+DZ|algeria
+EC|ecuador
+EE|estonia
+EG|egypt
+ER|eritrea
+ES|spain|españa|espana
+ET|ethiopia
+FI|finland|suomi
+FJ|fiji
+FM|micronesia
+FR|france
+GA|gabon
+GB|united kingdom|uk|great britain|england|britain
+GD|grenada
+GE|georgia
+GH|ghana
+GM|gambia|the gambia
+GN|guinea
+GQ|equatorial guinea
+GR|greece|hellas
+GT|guatemala
+GW|guinea-bissau
+GY|guyana
+HK|hong kong|hong kong sar
+HN|honduras
+HR|croatia|hrvatska
+HT|haiti
+HU|hungary|magyarország
+ID|indonesia
+IE|ireland
+IL|israel
+IN|india
+IQ|iraq
+IR|iran|islamic republic of iran
+IS|iceland|ísland
+IT|italy|italia
+JM|jamaica
+JO|jordan
+JP|japan|nippon|日本
+KE|kenya
+KG|kyrgyzstan
+KH|cambodia
+KI|kiribati
+KM|comoros
+KP|north korea
+KR|south korea|republic of korea|korea
+KW|kuwait
+KZ|kazakhstan
+LA|laos
+LB|lebanon
+LI|liechtenstein
+LK|sri lanka
+LR|liberia
+LS|lesotho
+LT|lithuania
+LU|luxembourg|luxemburg
+LV|latvia
+LY|libya
+MA|morocco|maroc
+MC|monaco
+MD|moldova
+ME|montenegro
+MG|madagascar
+MH|marshall islands
+MK|north macedonia|macedonia
+ML|mali
+MM|myanmar|burma
+MN|mongolia
+MO|macau|macao
+MR|mauritania
+MT|malta
+MU|mauritius
+MV|maldives
+MW|malawi
+MX|mexico|méxico
+MY|malaysia
+MZ|mozambique
+NA|namibia
+NE|niger
+NG|nigeria
+NI|nicaragua
+NL|netherlands|the netherlands|holland|nederland
+NO|norway|norge
+NP|nepal
+NR|nauru
+NZ|new zealand
+OM|oman
+PA|panama
+PE|peru|perú
+PG|papua new guinea
+PH|philippines
+PK|pakistan
+PL|poland|polska
+PS|palestine
+PT|portugal
+PW|palau
+PY|paraguay
+QA|qatar
+RO|romania|românia
+RS|serbia
+RU|russia|russian federation
+RW|rwanda
+SA|saudi arabia
+SB|solomon islands
+SC|seychelles
+SD|sudan
+SE|sweden|sverige
+SG|singapore|republic of singapore
+SI|slovenia
+SK|slovakia
+SL|sierra leone
+SM|san marino
+SN|senegal
+SO|somalia
+SR|suriname
+ST|sao tome and principe
+SV|el salvador
+SY|syria
+SZ|eswatini|swaziland
+TD|chad
+TG|togo
+TH|thailand
+TJ|tajikistan
+TL|timor-leste|east timor
+TM|turkmenistan
+TN|tunisia
+TO|tonga
+TR|turkey|türkiye|turkiye
+TT|trinidad and tobago
+TV|tuvalu
+TW|taiwan
+TZ|tanzania
+UA|ukraine
+UG|uganda
+US|united states|united states of america|usa|u.s.a.|u.s.|america
+UY|uruguay
+UZ|uzbekistan
+VE|venezuela
+VN|vietnam|viet nam
+VU|vanuatu
+WS|samoa
+YE|yemen
+ZA|south africa
+ZM|zambia
+ZW|zimbabwe

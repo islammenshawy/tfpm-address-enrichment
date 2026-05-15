@@ -13,7 +13,7 @@ import java.util.Set;
 import static org.jooq.impl.DSL.*;
 
 @ThreadSafe
-public final class JooqAccuracySampler implements AccuracySampler {
+public class JooqAccuracySampler implements AccuracySampler {
 
     private static final Logger LOG = LoggerFactory.getLogger(JooqAccuracySampler.class);
     private static final Set<String> TIER_0 = Set.of("AE", "SG", "HK", "CN", "GB", "US", "DE", "CH");

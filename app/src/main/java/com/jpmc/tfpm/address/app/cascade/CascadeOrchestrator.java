@@ -42,6 +42,7 @@ public final class CascadeOrchestrator {
     private final MeterRegistry meterRegistry;
     private final Map<String, ConfidenceCalibrator> calibrators;
     private final ConsensusAnalyzer consensusAnalyzer;
+    private final FieldNormalizer fieldNormalizer;
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     public CascadeOrchestrator(
@@ -80,6 +81,7 @@ public final class CascadeOrchestrator {
         this.meterRegistry = meterRegistry;
         this.calibrators = fieldMerger.calibratorMap();
         this.consensusAnalyzer = new ConsensusAnalyzer(consensusWeights);
+        this.fieldNormalizer = new FieldNormalizer();
     }
 
     public Result<CascadeResult> orchestrate(RawAddress raw, String correlationId) {
@@ -107,9 +109,8 @@ public final class CascadeOrchestrator {
 
         // Normalize LLM output to match libpostal's canonical forms.
         // libpostal output is ALREADY canonical — skip normalization for it.
-        var normalizer = new FieldNormalizer();
         var normalizedTrace = trace.stream()
-                .map(t -> "libpostal".equals(t.structurerName()) ? t : normalizer.normalize(t))
+                .map(t -> "libpostal".equals(t.structurerName()) ? t : fieldNormalizer.normalize(t))
                 .toList();
 
         var merged = fieldMerger.merge(normalizedTrace, raw.countryHint());

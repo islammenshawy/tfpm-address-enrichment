@@ -17,7 +17,7 @@ import static org.jooq.impl.DSL.*;
  * don't disrupt the enrichment pipeline.
  */
 @ThreadSafe
-public final class JooqAuditLog implements AuditLog {
+public class JooqAuditLog implements AuditLog {
 
     private static final Logger LOG = LoggerFactory.getLogger(JooqAuditLog.class);
 

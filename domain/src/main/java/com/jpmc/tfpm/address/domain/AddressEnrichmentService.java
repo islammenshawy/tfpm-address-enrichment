@@ -1,6 +1,7 @@
 package com.jpmc.tfpm.address.domain;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -59,13 +60,24 @@ public interface AddressEnrichmentService {
             StructuredAddress structuredAddress,
             double overallConfidence,
             Long resultRowId,
-            Instant processedAt) {
+            Instant processedAt,
+            List<String> sources,
+            ConsensusResult consensus) {
 
         public EnrichmentResult {
             Objects.requireNonNull(correlationId, "correlationId");
             Objects.requireNonNull(outcome, "outcome");
             Objects.requireNonNull(structuredAddress, "structuredAddress");
             Objects.requireNonNull(processedAt, "processedAt");
+            sources = sources != null ? List.copyOf(sources) : List.of();
+        }
+
+        /** Backwards-compatible constructor without sources/consensus. */
+        public EnrichmentResult(String correlationId, Outcome outcome,
+                                StructuredAddress structuredAddress, double overallConfidence,
+                                Long resultRowId, Instant processedAt) {
+            this(correlationId, outcome, structuredAddress, overallConfidence,
+                    resultRowId, processedAt, List.of(), null);
         }
 
         public boolean isSuccess() {

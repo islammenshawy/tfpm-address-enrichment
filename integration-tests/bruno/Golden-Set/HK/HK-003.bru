@@ -1,0 +1,48 @@
+meta {
+  name: HK-003 — HK
+  type: http
+  seq: 78
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-HK-003
+}
+
+body:json {
+  {
+    "rawAddress": "Flat B, 23/F, Block 7, Mei Foo Sun Chuen, Lai Chi Kok, New Territories, Hong Kong",
+    "countryHint": "HK",
+    "locale": "en-HK"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("HK-003 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("hk");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("new territories");
+    const actual_BLDG_NM = (body.fields.BLDG_NM?.value || "").toLowerCase();
+    expect(actual_BLDG_NM).to.eq("mei foo sun chuen block 7");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("flat b, 23/f, block 7");
+    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
+    expect(actual_CTRY_SUB_DVSN).to.eq("lai chi kok");
+  });
+}

@@ -1,0 +1,48 @@
+meta {
+  name: AE-010 — AE
+  type: http
+  seq: 10
+}
+
+post {
+  url: {{baseUrl}}/api/v1/enrich
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-Correlation-Id: bruno-AE-010
+}
+
+body:json {
+  {
+    "rawAddress": "Gulf International Trading LLC\nOffice 1802, Level 18, Etihad Towers\nTower 3, Corniche Road\nAbu Dhabi, United Arab Emirates",
+    "countryHint": "AE",
+    "locale": "en-AE"
+  }
+}
+
+assert {
+  res.status: eq 200
+  res.body.outcome: isString
+  res.body.fields: isDefined
+  res.body.overallConfidence: isNumber
+}
+
+tests {
+  test("AE-010 — expected fields match golden set", function() {
+    const body = res.getBody();
+    expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
+    expect(actual_CTRY).to.eq("ae");
+    const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
+    expect(actual_TWN_NM).to.eq("abu dhabi");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("corniche road");
+    const actual_BLDG_NM = (body.fields.BLDG_NM?.value || "").toLowerCase();
+    expect(actual_BLDG_NM).to.eq("etihad towers tower 3");
+    const actual_ADR_LINE = (body.fields.ADR_LINE?.value || "").toLowerCase();
+    expect(actual_ADR_LINE).to.eq("office 1802, level 18, etihad towers");
+  });
+}
