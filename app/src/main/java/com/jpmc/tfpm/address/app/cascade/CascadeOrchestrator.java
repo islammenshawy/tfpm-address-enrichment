@@ -150,10 +150,13 @@ public final class CascadeOrchestrator {
                     sourcesWithResults, minSources, correlationId);
         }
 
-        // Normalize LLM output to match libpostal's canonical forms.
-        // libpostal output is ALREADY canonical — skip normalization for it.
+        // Normalize all output for consensus comparison.
+        // libpostal: only normalize CTRY (full name → ISO code). Street types are already canonical.
+        // LLMs: full normalization (whitespace, punctuation, street types, country codes).
         var normalizedTrace = trace.stream()
-                .map(t -> "libpostal".equals(t.structurerName()) ? t : fieldNormalizer.normalize(t))
+                .map(t -> "libpostal".equals(t.structurerName())
+                        ? fieldNormalizer.normalizeCountryOnly(t)
+                        : fieldNormalizer.normalize(t))
                 .toList();
 
         var merged = fieldMerger.merge(normalizedTrace, raw.countryHint());

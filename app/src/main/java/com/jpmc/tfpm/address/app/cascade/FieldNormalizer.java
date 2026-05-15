@@ -55,6 +55,23 @@ public final class FieldNormalizer {
         }
     }
 
+    /** Normalize CTRY field only — for libpostal whose street types are already canonical. */
+    public StructuringResult normalizeCountryOnly(StructuringResult result) {
+        var normalized = new EnumMap<AddressField, FieldValue>(AddressField.class);
+        for (var entry : result.fields().entrySet()) {
+            if (entry.getKey() == AddressField.CTRY) {
+                var val = canonicalizeCountry(entry.getValue().value().trim());
+                if (!val.isEmpty()) {
+                    normalized.put(entry.getKey(), new FieldValue(val, entry.getValue().confidence()));
+                }
+            } else {
+                normalized.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return new StructuringResult(result.structurerName(), normalized,
+                result.latency(), result.diagnostics());
+    }
+
     /** Normalize all fields in a structuring result. */
     public StructuringResult normalize(StructuringResult result) {
         var normalized = new EnumMap<AddressField, FieldValue>(AddressField.class);
