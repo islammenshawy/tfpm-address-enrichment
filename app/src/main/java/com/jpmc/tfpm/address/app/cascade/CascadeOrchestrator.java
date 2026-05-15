@@ -94,9 +94,12 @@ public final class CascadeOrchestrator {
                     correlationId));
         }
 
-        // Normalize all fields before merge and consensus (Unicode NFKD, whitespace, trim)
+        // Normalize LLM output to match libpostal's canonical forms.
+        // libpostal output is ALREADY canonical — skip normalization for it.
         var normalizer = new FieldNormalizer();
-        var normalizedTrace = trace.stream().map(normalizer::normalize).toList();
+        var normalizedTrace = trace.stream()
+                .map(t -> "libpostal".equals(t.structurerName()) ? t : normalizer.normalize(t))
+                .toList();
 
         var merged = fieldMerger.merge(normalizedTrace, raw.countryHint());
         double confidence = merged.overallConfidence();

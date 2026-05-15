@@ -5,106 +5,141 @@ import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AddressStructurer.StructuringResult;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.text.Normalizer;
-import java.time.Duration;
-import java.util.EnumMap;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
- * Universal field normalization applied to structurer output BEFORE
- * the FieldMerger and ConsensusAnalyzer compare values.
+ * Normalizes structurer output to canonical forms so all sources
+ * (libpostal, LLMs) use the same conventions for consensus comparison.
  *
- * <p>Only applies normalizations that are SAFE globally (all countries,
- * all languages). Country-specific normalization belongs in the LLM
- * prompt or per-country pre-processors, not here.
+ * <p>Two layers:
+ * <ol>
+ *   <li><b>Universal</b> — Unicode NFKD, whitespace, trim. Safe everywhere.</li>
+ *   <li><b>Dictionary-based</b> — libpostal's per-language street type
+ *       dictionaries. Maps LLM abbreviations to the same canonical forms
+ *       libpostal uses internally: "St"→"street", "Str."→"strasse",
+ *       "大道"→canonical Chinese form. 14 languages, 1094 entries.</li>
+ * </ol>
  *
- * <p>Safe normalizations:
- * <ul>
- *   <li>Unicode NFKD decomposition — Zürich→Zurich, Genève→Geneve</li>
- *   <li>Whitespace collapse — "New  York " → "New York"</li>
- *   <li>Trailing punctuation strip — "London," → "London"</li>
- *   <li>Leading/trailing whitespace trim</li>
- * </ul>
+ * <p>libpostal already normalizes its own output using these dictionaries.
+ * We apply the SAME dictionaries to LLM output so both sources produce
+ * matching canonical forms for consensus comparison.
  *
- * <p>NOT applied (country-specific, risk of false matches):
- * <ul>
- *   <li>Street type expansion (St→Street) — English-only</li>
- *   <li>Building number extraction (Suite 4500→4500) — Western-only</li>
- *   <li>Article stripping (Al Wasl→Wasl) — loses meaning in Arabic</li>
- *   <li>Word order normalization — too risky globally</li>
- * </ul>
+ * <p>Source: openvenues/libpostal dictionaries (MIT license).
  */
 @ThreadSafe
 public final class FieldNormalizer {
 
+    private static final Logger LOG = LoggerFactory.getLogger(FieldNormalizer.class);
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern TRAILING_PUNCT = Pattern.compile("[,;.]+$");
     private static final Pattern DIACRITICS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
 
-    /**
-     * Normalize all fields in a structuring result.
-     * Returns a new StructuringResult with normalized values.
-     */
+    private final Map<String, String> streetTypeMap;
+
+    public FieldNormalizer() {
+        this.streetTypeMap = loadDictionaries();
+        if (!streetTypeMap.isEmpty()) {
+            LOG.info("Loaded {} street type canonical mappings from libpostal dictionaries", streetTypeMap.size());
+        }
+    }
+
+    /** Normalize all fields in a structuring result. */
     public StructuringResult normalize(StructuringResult result) {
         var normalized = new EnumMap<AddressField, FieldValue>(AddressField.class);
         for (var entry : result.fields().entrySet()) {
-            var field = entry.getKey();
-            var fv = entry.getValue();
-            var normalizedValue = normalizeValue(fv.value(), field);
-            if (!normalizedValue.isEmpty()) {
-                normalized.put(field, new FieldValue(normalizedValue, fv.confidence()));
+            var val = normalizeValue(entry.getValue().value(), entry.getKey());
+            if (!val.isEmpty()) {
+                normalized.put(entry.getKey(), new FieldValue(val, entry.getValue().confidence()));
             }
         }
         return new StructuringResult(result.structurerName(), normalized,
                 result.latency(), result.diagnostics());
     }
 
-    /**
-     * Normalize a single field value. Safe for all countries/languages.
-     */
+    /** Normalize a single field value. */
     public String normalizeValue(String value, AddressField field) {
         if (value == null || value.isBlank()) return "";
-
-        var s = value;
-
-        // 1. Trim
-        s = s.trim();
-
-        // 2. Collapse whitespace
+        var s = value.trim();
         s = WHITESPACE.matcher(s).replaceAll(" ");
-
-        // 3. Strip trailing punctuation (commas, semicolons, periods)
         s = TRAILING_PUNCT.matcher(s).replaceAll("");
-
-        // 4. Unicode NFKD decomposition — removes diacritics for comparison
-        //    but preserves the base characters
         s = stripDiacritics(s);
-
-        // 5. CTRY field: force uppercase 2-letter code
-        if (field == AddressField.CTRY && s.length() == 2) {
-            s = s.toUpperCase();
-        }
-
+        if (field == AddressField.CTRY && s.length() == 2) s = s.toUpperCase();
+        if (field == AddressField.STRT_NM) s = canonicalizeStreetType(s);
         return s.trim();
     }
 
     /**
-     * Normalize for comparison only (more aggressive — used by consensus).
-     * Strips diacritics AND lowercases. The stored value keeps original form.
+     * Replace street type abbreviations with libpostal canonical forms.
+     * Checks last word (English: "Madison Ave"→"Madison avenue")
+     * and first word (French: "Rue de..."→canonical, German: "Str. 14"→canonical).
      */
-    public String normalizeForComparison(String value) {
-        if (value == null) return "";
-        var s = normalizeValue(value, null);
-        return s.toLowerCase();
+    String canonicalizeStreetType(String street) {
+        if (street == null || street.isBlank() || streetTypeMap.isEmpty()) return street;
+        var words = street.split("\\s+");
+        if (words.length == 0) return street;
+
+        // Last word (most common for English, Italian, Portuguese, Spanish)
+        var last = words[words.length - 1].toLowerCase().replaceAll("[.,]$", "");
+        var canonical = streetTypeMap.get(last);
+        if (canonical != null) {
+            words[words.length - 1] = canonical;
+            return String.join(" ", words);
+        }
+
+        // First word (French, German, Arabic)
+        var first = words[0].toLowerCase().replaceAll("[.,]$", "");
+        canonical = streetTypeMap.get(first);
+        if (canonical != null) {
+            words[0] = canonical;
+            return String.join(" ", words);
+        }
+
+        return street;
+    }
+
+    static String stripDiacritics(String input) {
+        return DIACRITICS.matcher(Normalizer.normalize(input, Normalizer.Form.NFKD)).replaceAll("");
     }
 
     /**
-     * Unicode NFKD: decomposes characters and removes combining marks.
-     * Zürich → Zurich, Genève → Geneve, São Paulo → Sao Paulo.
+     * Load all language dictionaries. Format: canonical|synonym1|synonym2|...
+     * Every synonym maps to the canonical (first) form.
      */
-    static String stripDiacritics(String input) {
-        var decomposed = Normalizer.normalize(input, Normalizer.Form.NFKD);
-        return DIACRITICS.matcher(decomposed).replaceAll("");
+    private static Map<String, String> loadDictionaries() {
+        var map = new HashMap<String, String>(2000);
+        try {
+            var resources = new PathMatchingResourcePatternResolver()
+                    .getResources("classpath:normalization/street-types/*.txt");
+            for (var res : resources) {
+                try (var reader = new BufferedReader(
+                        new InputStreamReader(res.getInputStream(), StandardCharsets.UTF_8))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        line = line.trim();
+                        if (line.isEmpty() || line.startsWith("#")) continue;
+                        var parts = line.split("\\|");
+                        if (parts.length == 0) continue;
+                        var canon = parts[0].trim();
+                        map.putIfAbsent(canon.toLowerCase(), canon);
+                        for (int i = 1; i < parts.length; i++) {
+                            var syn = parts[i].trim();
+                            if (!syn.isEmpty()) map.putIfAbsent(syn.toLowerCase(), canon);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.warn("No normalization dictionaries found (running without): {}", e.getMessage());
+        }
+        return Collections.unmodifiableMap(map);
     }
 }
