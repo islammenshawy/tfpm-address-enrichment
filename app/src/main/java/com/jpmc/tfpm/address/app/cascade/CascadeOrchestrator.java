@@ -94,13 +94,17 @@ public final class CascadeOrchestrator {
                     correlationId));
         }
 
-        var merged = fieldMerger.merge(trace, raw.countryHint());
+        // Normalize all fields before merge and consensus (Unicode NFKD, whitespace, trim)
+        var normalizer = new FieldNormalizer();
+        var normalizedTrace = trace.stream().map(normalizer::normalize).toList();
+
+        var merged = fieldMerger.merge(normalizedTrace, raw.countryHint());
         double confidence = merged.overallConfidence();
 
         // Consensus: automatic when 2+ structurers produced results
-        var activeCount = trace.stream().filter(t -> !t.fields().isEmpty()).count();
+        var activeCount = normalizedTrace.stream().filter(t -> !t.fields().isEmpty()).count();
         var consensus = activeCount >= 2
-                ? consensusAnalyzer.analyze(trace, merged)
+                ? consensusAnalyzer.analyze(normalizedTrace, merged, raw.countryHint())
                 : null;
 
         if (consensus != null && consensus.hasDisagreements()) {
