@@ -114,7 +114,16 @@ public class LlmGatewayConfig implements BeanDefinitionRegistryPostProcessor, En
     private AddressStructurer createStructurer(String name, LlmProperties.ProviderConfig config,
                                                 LlmProperties props) {
         var objectMapper = new ObjectMapper();
-        var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.ofDefaults(name + "-cb");
+        var cbConfig = io.github.resilience4j.circuitbreaker.CircuitBreakerConfig.custom()
+                .failureRateThreshold(50)
+                .slowCallRateThreshold(50)
+                .slowCallDurationThreshold(java.time.Duration.ofSeconds(20))
+                .slidingWindowSize(20)
+                .minimumNumberOfCalls(5)
+                .waitDurationInOpenState(java.time.Duration.ofSeconds(30))
+                .permittedNumberOfCallsInHalfOpenState(3)
+                .build();
+        var cb = io.github.resilience4j.circuitbreaker.CircuitBreaker.of(name + "-cb", cbConfig);
         var client = createClient(name, config, objectMapper, cb);
         var allowedFields = parseAllowedFields(props);
         var promptLoader = createPromptLoader(props, objectMapper);

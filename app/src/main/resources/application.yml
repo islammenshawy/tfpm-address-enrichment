@@ -243,6 +243,20 @@ resilience4j:
         sliding-window-size: 50
         minimum-number-of-calls: 10
         wait-duration-in-open-state: 60s
+      glm-cb:
+        failure-rate-threshold: 50
+        slow-call-duration-threshold: 20s
+        sliding-window-size: 20
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+      azure-gpt-cb:
+        failure-rate-threshold: 50
+        slow-call-duration-threshold: 15s
+        sliding-window-size: 20
+        minimum-number-of-calls: 5
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
   bulkhead:
     instances:
       libpostal-bh:
