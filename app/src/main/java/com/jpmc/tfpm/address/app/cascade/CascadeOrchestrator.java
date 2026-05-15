@@ -50,7 +50,7 @@ public final class CascadeOrchestrator {
             CountryRouter countryRouter,
             double earlyExitThreshold,
             MeterRegistry meterRegistry) {
-        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 30000L, meterRegistry);
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 30000L, meterRegistry, Map.of());
     }
 
     public CascadeOrchestrator(
@@ -60,6 +60,17 @@ public final class CascadeOrchestrator {
             double earlyExitThreshold,
             long cascadeTimeoutMs,
             MeterRegistry meterRegistry) {
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, cascadeTimeoutMs, meterRegistry, Map.of());
+    }
+
+    public CascadeOrchestrator(
+            List<AddressStructurer> structurers,
+            FieldMerger fieldMerger,
+            CountryRouter countryRouter,
+            double earlyExitThreshold,
+            long cascadeTimeoutMs,
+            MeterRegistry meterRegistry,
+            Map<String, Map<String, Double>> consensusWeights) {
         this.structurers = List.copyOf(structurers);
         this.fieldMerger = fieldMerger;
         this.countryRouter = countryRouter;
@@ -68,7 +79,7 @@ public final class CascadeOrchestrator {
         this.requiredFields = Set.of(AddressField.CTRY, AddressField.TWN_NM);
         this.meterRegistry = meterRegistry;
         this.calibrators = fieldMerger.calibratorMap();
-        this.consensusAnalyzer = new ConsensusAnalyzer();
+        this.consensusAnalyzer = new ConsensusAnalyzer(consensusWeights);
     }
 
     public Result<CascadeResult> orchestrate(RawAddress raw, String correlationId) {

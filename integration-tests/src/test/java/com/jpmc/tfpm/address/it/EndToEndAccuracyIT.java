@@ -90,8 +90,14 @@ class EndToEndAccuracyIT {
 
         structurerMode = String.join(" → ", labels);
         var merger = new FieldMerger(calibrators);
+        // Weighted consensus: libpostal strong on Western, weak everywhere else
+        var consensusWeights = Map.of(
+                "libpostal", Map.of("default", 0.3,
+                        "US", 1.0, "GB", 1.0, "DE", 1.0, "CH", 1.0, "FR", 1.0,
+                        "IT", 1.0, "NL", 1.0, "AU", 1.0, "CA", 1.0, "AT", 1.0,
+                        "BE", 1.0, "ES", 1.0, "PT", 1.0, "SE", 1.0, "NO", 1.0));
         var orchestrator = new CascadeOrchestrator(structurers, merger, CountryRouter.noOp(),
-                0.99, 60000L, new SimpleMeterRegistry());
+                0.99, 60000L, new SimpleMeterRegistry(), consensusWeights);
 
         Files.walk(GOLDEN_DIR).filter(p -> p.toString().endsWith(".json")).sorted().forEach(path -> {
             try { processFixture(MAPPER.readTree(path.toFile()), orchestrator); }

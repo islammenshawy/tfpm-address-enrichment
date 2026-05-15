@@ -54,10 +54,12 @@ public class ServiceConfig {
             CountryRouter countryRouter,
             @Value("${enrichment.cascade.early-exit-threshold:0.92}") double earlyExitThreshold,
             @Value("${enrichment.cascade.timeout-ms:500}") long cascadeTimeoutMs,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            @Value("#{${enrichment.consensus.source-weights:{}}}") Map<String, Map<String, Double>> consensusWeights) {
         return new CascadeOrchestrator(
                 structurers, fieldMerger, countryRouter,
-                earlyExitThreshold, cascadeTimeoutMs, meterRegistry);
+                earlyExitThreshold, cascadeTimeoutMs, meterRegistry,
+                consensusWeights != null ? consensusWeights : Map.of());
     }
 
     @Bean
