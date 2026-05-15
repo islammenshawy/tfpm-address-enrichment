@@ -40,7 +40,7 @@ import java.util.Map;
  * adapter implementations per CLAUDE.md.
  */
 @Configuration
-@EnableConfigurationProperties(ComplianceProperties.class)
+@EnableConfigurationProperties({ComplianceProperties.class, ConsensusProperties.class})
 public class ServiceConfig {
 
     @Bean
@@ -68,12 +68,12 @@ public class ServiceConfig {
             @Value("${enrichment.cascade.timeout-ms:500}") long cascadeTimeoutMs,
             @Value("${enrichment.cascade.min-sources:2}") int minSources,
             MeterRegistry meterRegistry,
-            @Value("#{${enrichment.consensus.source-weights:{}}}") Map<String, Map<String, Double>> consensusWeights,
+            ConsensusProperties consensusProperties,
             @Value("${enrichment.cascade.parallel-threads:4}") int parallelThreads) {
         return new CascadeOrchestrator(
                 structurers, fieldMerger, countryRouter,
                 earlyExitThreshold, cascadeTimeoutMs, minSources, meterRegistry,
-                consensusWeights != null ? consensusWeights : Map.of(),
+                consensusProperties.sourceWeights(),
                 parallelThreads);
     }
 
