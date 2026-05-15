@@ -10,6 +10,8 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -35,8 +37,15 @@ public final class FieldMerger {
 
     /**
      * Merge results from multiple structurers into a single
-     * {@link StructuredAddress} using per-field highest-calibrated-confidence
-     * voting.
+     * {@link StructuredAddress}. Strategy:
+     *
+     * <ol>
+     *   <li><b>Consensus first</b> — if 2+ sources agree on a value
+     *       (case-insensitive), use that value regardless of individual
+     *       confidence. Consensus trumps single-source confidence.</li>
+     *   <li><b>Highest confidence fallback</b> — if no consensus, pick
+     *       the value with highest calibrated confidence.</li>
+     * </ol>
      *
      * @param results     structurer results in cascade order
      * @param countryHint ISO 3166-1 alpha-2 or empty
@@ -50,27 +59,78 @@ public final class FieldMerger {
         var builder = StructuredAddress.builder();
 
         for (var field : AddressField.values()) {
-            double bestConfidence = -1.0;
-            FieldValue bestValue = null;
-
+            // Collect all values for this field with their calibrated confidence
+            var candidates = new ArrayList<CalibratedCandidate>();
             for (var result : results) {
                 var fv = result.fields().get(field);
                 if (fv == null || fv.value().isEmpty()) continue;
-
                 double calibrated = calibrate(result.structurerName(), fv.confidence(), field, countryHint);
-                if (calibrated > bestConfidence) {
-                    bestConfidence = calibrated;
-                    bestValue = new FieldValue(fv.value(), calibrated);
-                }
+                candidates.add(new CalibratedCandidate(fv.value(), calibrated, result.structurerName()));
             }
 
-            if (bestValue != null) {
-                builder.put(field, bestValue);
+            if (candidates.isEmpty()) continue;
+
+            // Step 1: Check for consensus (2+ sources agree, case-insensitive)
+            var consensusValue = findConsensusValue(candidates);
+            if (consensusValue != null) {
+                builder.put(field, consensusValue);
+                continue;
             }
+
+            // Step 2: Fallback to highest calibrated confidence
+            var best = candidates.stream()
+                    .max((a, b) -> Double.compare(a.confidence, b.confidence))
+                    .get();
+            builder.put(field, new FieldValue(best.value, best.confidence));
         }
 
         return builder.build();
     }
+
+    /**
+     * Find a value that 2+ sources agree on (case-insensitive).
+     * Returns the value with the highest confidence among the agreeing sources,
+     * with confidence boosted to reflect consensus agreement.
+     */
+    private static FieldValue findConsensusValue(List<CalibratedCandidate> candidates) {
+        if (candidates.size() < 2) return null;
+
+        // Group by normalized value (lowercase trim)
+        var groups = new LinkedHashMap<String, List<CalibratedCandidate>>();
+        for (var c : candidates) {
+            groups.computeIfAbsent(c.value.toLowerCase().trim(), k -> new ArrayList<>()).add(c);
+        }
+
+        // Find the largest group with 2+ members
+        List<CalibratedCandidate> bestGroup = null;
+        for (var group : groups.values()) {
+            if (group.size() >= 2) {
+                if (bestGroup == null || group.size() > bestGroup.size()) {
+                    bestGroup = group;
+                }
+            }
+        }
+
+        if (bestGroup == null) return null;
+
+        // Use the original (non-lowercased) value from the highest-confidence source in the group
+        var best = bestGroup.stream()
+                .max((a, b) -> Double.compare(a.confidence, b.confidence))
+                .get();
+
+        // Boost confidence: consensus of N sources is stronger than any single source
+        double boosted = Math.min(1.0, best.confidence * (1.0 + 0.1 * (bestGroup.size() - 1)));
+
+        LOG.debug("Consensus merge: '{}' agreed by {} (conf {} → {})",
+                best.value,
+                bestGroup.stream().map(c -> c.structurer).toList(),
+                String.format("%.2f", best.confidence),
+                String.format("%.2f", boosted));
+
+        return new FieldValue(best.value, boosted);
+    }
+
+    private record CalibratedCandidate(String value, double confidence, String structurer) {}
 
     /**
      * Exposes the calibrator map for use by the cascade early-exit check

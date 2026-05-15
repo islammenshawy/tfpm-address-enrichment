@@ -53,9 +53,10 @@ class FieldMergerTest {
 
         var merged = merger.merge(List.of(r1, r2), "US");
 
-        // LLM wins CTRY (0.99 > 0.80)
-        assertThat(merged.get(AddressField.CTRY).get().confidence()).isEqualTo(0.99);
-        // libpostal wins STRT_NM (0.95 > 0.70)
+        // Both agree on CTRY="US" → consensus wins, confidence boosted above 0.99
+        assertThat(merged.get(AddressField.CTRY).get().value()).isEqualTo("US");
+        assertThat(merged.get(AddressField.CTRY).get().confidence()).isGreaterThanOrEqualTo(0.99);
+        // STRT_NM: "Main St" vs "Main Street" differ → no consensus, highest confidence wins
         assertThat(merged.get(AddressField.STRT_NM).get().value()).isEqualTo("Main St");
         assertThat(merged.get(AddressField.STRT_NM).get().confidence()).isEqualTo(0.95);
     }
