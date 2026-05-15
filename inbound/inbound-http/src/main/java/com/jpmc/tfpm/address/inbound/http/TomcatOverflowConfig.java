@@ -1,5 +1,6 @@
 package com.jpmc.tfpm.address.inbound.http;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.server.WebServerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -21,29 +22,34 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Configuration
 public class TomcatOverflowConfig {
 
-    private static final int MAX_CONCURRENT_REQUESTS = 400;
-    private static final int RETRY_AFTER_SECONDS = 5;
+    @Value("${server.overflow.max-concurrent-requests:400}")
+    private int maxConcurrentRequests;
+
+    @Value("${server.overflow.retry-after-seconds:5}")
+    private int retryAfterSeconds;
 
     @Bean
     public OncePerRequestFilter overflowProtectionFilter() {
         var activeRequests = new AtomicInteger(0);
+        final int maxRequests = this.maxConcurrentRequests;
+        final int retryAfter = this.retryAfterSeconds;
 
         return new OncePerRequestFilter() {
             @Override
             protected void doFilterInternal(HttpServletRequest request,
                                             HttpServletResponse response,
                                             FilterChain filterChain) throws ServletException, IOException {
-                if (activeRequests.incrementAndGet() > MAX_CONCURRENT_REQUESTS) {
+                if (activeRequests.incrementAndGet() > maxRequests) {
                     activeRequests.decrementAndGet();
                     response.setStatus(HttpStatus.SERVICE_UNAVAILABLE.value());
-                    response.setHeader("Retry-After", String.valueOf(RETRY_AFTER_SECONDS));
+                    response.setHeader("Retry-After", String.valueOf(retryAfter));
                     response.setContentType("application/problem+json");
                     response.getWriter().write(
                             "{\"type\":\"urn:tfpm:address:error:overloaded\"," +
                             "\"title\":\"Service Unavailable\"," +
                             "\"status\":503," +
                             "\"detail\":\"Server is at capacity. Please retry after " +
-                            RETRY_AFTER_SECONDS + " seconds.\"}");
+                            retryAfter + " seconds.\"}");
                     return;
                 }
                 try {

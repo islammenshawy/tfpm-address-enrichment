@@ -43,8 +43,8 @@ public class OracleAppAdapterConfig {
     }
 
     @Bean
-    public ComplianceRoutingWriter jooqComplianceRoutingWriter(DSLContext dsl) {
-        return new JooqComplianceRoutingWriter(dsl);
+    public ComplianceRoutingWriter jooqComplianceRoutingWriter(DSLContext dsl, ObjectMapper objectMapper) {
+        return new JooqComplianceRoutingWriter(dsl, objectMapper);
     }
 
     @Bean

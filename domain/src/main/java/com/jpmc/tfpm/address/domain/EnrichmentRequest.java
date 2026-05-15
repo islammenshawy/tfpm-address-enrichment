@@ -36,6 +36,7 @@ public record EnrichmentRequest(
     public enum SourceChannel {
         HTTP,
         KAFKA,
-        RABBITMQ
+        RABBITMQ,
+        BACKFILL
     }
 }

@@ -8,7 +8,12 @@ import com.jpmc.tfpm.address.domain.ThreadSafe;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.time.Duration;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -67,6 +72,8 @@ import java.util.Set;
         havingValue = "true")
 public final class SwiftCrfAddressStructurer implements AddressStructurer {
 
+    private static final Logger LOG = LoggerFactory.getLogger(SwiftCrfAddressStructurer.class);
+
     @Override
     public String name() {
         return "swift-crf";
@@ -87,10 +94,10 @@ public final class SwiftCrfAddressStructurer implements AddressStructurer {
 
     @Override
     public StructuringResult structure(RawAddress raw) {
-        throw new UnsupportedOperationException(
-                "SwiftCrfAddressStructurer is a stub. The SWIFT model has not "
-                        + "been downloaded and IS&C-cleared yet. Set "
-                        + "enrichment.swift-crf.enabled=false (the default) until "
-                        + "the activation checklist in this class' Javadoc is complete.");
+        LOG.warn("SwiftCrfAddressStructurer is a stub — returning empty result. "
+                + "The SWIFT model has not been downloaded and IS&C-cleared yet. "
+                + "Set enrichment.swift-crf.enabled=false (the default) until "
+                + "the activation checklist in this class' Javadoc is complete.");
+        return StructuringResult.empty(name(), Duration.ZERO);
     }
 }

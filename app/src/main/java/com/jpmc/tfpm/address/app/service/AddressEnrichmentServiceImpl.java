@@ -168,10 +168,14 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var address = cascadeResult.structuredAddress();
         var confidence = cascadeResult.overallConfidence();
 
+        // Determine outcome before persisting so persistence stores the
+        // service-decided review flag rather than recomputing it independently.
+        boolean requiresReview = !address.meetsSr2026Minimum() || confidence < reviewThreshold;
+
         // Persist result and record idempotency atomically in a single transaction.
         // This prevents inconsistent state if a crash occurs between the two operations.
         long resultRowId = transactionTemplate.execute(status -> {
-            var persistResult = resultPersistence.persistResult(request, cascadeResult);
+            var persistResult = resultPersistence.persistResult(request, cascadeResult, requiresReview);
             if (persistResult.isFailure()) {
                 LOG.error("Failed to persist result [corrId={}]: {}",
                         correlationId, persistResult.toOptionalError().orElse(null));
@@ -199,7 +203,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             LOG.warn("Failed to write field attributions [corrId={}]: {}", correlationId, e.getMessage(), e);
         }
 
-        // Determine outcome
+        // Determine outcome for return value and exception queue
         EnrichmentResult.Outcome outcome;
         if (!address.meetsSr2026Minimum()) {
             outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
@@ -244,7 +248,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
 
         // Persist result and record idempotency atomically in a single transaction.
         long resultRowId = transactionTemplate.execute(status -> {
-            var persistResult = resultPersistence.persistResult(request, emptyResult);
+            var persistResult = resultPersistence.persistResult(request, emptyResult, true);
             if (persistResult.isFailure()) {
                 LOG.error("Failed to persist empty result [corrId={}]: {}",
                         correlationId, persistResult.toOptionalError().orElse(null));

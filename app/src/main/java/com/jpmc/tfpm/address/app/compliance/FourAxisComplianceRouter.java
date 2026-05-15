@@ -78,8 +78,15 @@ public final class FourAxisComplianceRouter implements ComplianceRouter {
                 reasons.add(ComplianceReason.LOW_OVERALL_CONFIDENCE);
             }
 
-            // Axis 3: Country risk
-            var country = request.address().countryHint().toUpperCase();
+            // Axis 3: Country risk — prefer structured CTRY from enrichment
+            // result over the raw countryHint, which may be inaccurate or absent.
+            var structuredCtry = result.structuredAddress()
+                    .get(AddressField.CTRY)
+                    .map(fv -> fv.value().toUpperCase())
+                    .orElse("");
+            var country = structuredCtry.isEmpty()
+                    ? request.address().countryHint().toUpperCase()
+                    : structuredCtry;
             if (!country.isEmpty() && highRiskCountries.contains(country)) {
                 reasons.add(ComplianceReason.HIGH_RISK_COUNTRY);
             }

@@ -13,8 +13,12 @@ public interface ResultPersistence {
 
     /**
      * Persist a cascade result and return the generated RESULT_ID.
+     *
+     * @param request        the enrichment request
+     * @param cascadeResult  the cascade result to persist
+     * @param requiresReview whether the service determined the result requires human review
      */
-    Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult);
+    Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult, boolean requiresReview);
 
     /**
      * Load a previously persisted result by its row id.

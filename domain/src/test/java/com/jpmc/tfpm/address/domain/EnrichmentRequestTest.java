@@ -59,6 +59,7 @@ class EnrichmentRequestTest {
                 .containsExactly(
                         EnrichmentRequest.SourceChannel.HTTP,
                         EnrichmentRequest.SourceChannel.KAFKA,
-                        EnrichmentRequest.SourceChannel.RABBITMQ);
+                        EnrichmentRequest.SourceChannel.RABBITMQ,
+                        EnrichmentRequest.SourceChannel.BACKFILL);
     }
 }

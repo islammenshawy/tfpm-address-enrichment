@@ -104,7 +104,7 @@ class AddressEnrichmentServiceImplTest {
 
         when(idempotencyStore.tryClaim(REQUEST))
                 .thenReturn(Result.success(ClaimResult.claimed("key-1")));
-        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
+        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class), anyBoolean()))
                 .thenReturn(Result.success(42L));
         when(idempotencyStore.recordResult("key-1", 42L))
                 .thenReturn(Result.success(null));
@@ -127,7 +127,7 @@ class AddressEnrichmentServiceImplTest {
 
         when(idempotencyStore.tryClaim(REQUEST))
                 .thenReturn(Result.success(ClaimResult.claimed("key-2")));
-        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
+        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class), anyBoolean()))
                 .thenReturn(Result.success(43L));
         when(idempotencyStore.recordResult("key-2", 43L))
                 .thenReturn(Result.success(null));
@@ -148,7 +148,7 @@ class AddressEnrichmentServiceImplTest {
 
         when(idempotencyStore.tryClaim(REQUEST))
                 .thenReturn(Result.success(ClaimResult.claimed("key-3")));
-        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
+        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class), anyBoolean()))
                 .thenReturn(Result.success(44L));
         when(idempotencyStore.recordResult("key-3", 44L))
                 .thenReturn(Result.success(null));
@@ -166,7 +166,7 @@ class AddressEnrichmentServiceImplTest {
 
         when(idempotencyStore.tryClaim(REQUEST))
                 .thenReturn(Result.success(ClaimResult.claimed("key-4")));
-        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
+        when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class), anyBoolean()))
                 .thenReturn(Result.success(45L));
         when(idempotencyStore.recordResult("key-4", 45L))
                 .thenReturn(Result.success(null));

@@ -12,6 +12,7 @@ import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.jooq.DSLContext;
 import org.springframework.dao.TransientDataAccessException;
@@ -46,13 +47,12 @@ public class OracleResultPersistence implements ResultPersistence {
 
     @Override
     @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
-    public Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult) {
+    public Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult, boolean requiresReview) {
         try {
             var address = cascadeResult.structuredAddress();
             var fieldsJson = serializeFields(address);
             var traceJson = serializeTrace(cascadeResult);
-            var requiresReview = !address.meetsSr2026Minimum()
-                    || cascadeResult.overallConfidence() < 0.70 ? "Y" : "N";
+            var reviewFlag = requiresReview ? "Y" : "N";
 
             var resultId = dsl.insertInto(table("STRUCTURING_RESULTS"))
                     .columns(
@@ -73,12 +73,20 @@ public class OracleResultPersistence implements ResultPersistence {
                             fieldsJson,
                             traceJson,
                             cascadeResult.overallConfidence(),
-                            requiresReview,
+                            reviewFlag,
                             LocalDateTime.now())
                     .returningResult(field("RESULT_ID"))
                     .fetchOne();
 
-            long id = resultId != null ? resultId.get(field("RESULT_ID", Long.class)) : -1L;
+            if (resultId == null) {
+                LOG.error("No generated key returned for persisted result [corrId={}]", request.correlationId());
+                return Result.failure(EnrichmentError.of(
+                        EnrichmentError.Category.UNKNOWN,
+                        "Database did not return a generated key for the persisted result",
+                        request.correlationId()));
+            }
+
+            long id = resultId.get(field("RESULT_ID", Long.class));
             LOG.debug("Persisted result id={} [corrId={}]", id, request.correlationId());
             return Result.success(id);
         } catch (Exception e) {
@@ -167,12 +175,15 @@ public class OracleResultPersistence implements ResultPersistence {
         return toJson(traces);
     }
 
+    private static final TypeReference<Map<String, Map<String, Object>>> FIELDS_TYPE_REF =
+            new TypeReference<>() {};
+
     private StructuredAddress deserializeFields(String json) {
         if (json == null || json.isBlank()) return StructuredAddress.empty();
         try {
-            var map = objectMapper.readValue(json, Map.class);
+            Map<String, Map<String, Object>> map = objectMapper.readValue(json, FIELDS_TYPE_REF);
             var builder = StructuredAddress.builder();
-            for (var entry : ((Map<String, Map<String, Object>>) map).entrySet()) {
+            for (var entry : map.entrySet()) {
                 try {
                     var field = AddressField.valueOf(entry.getKey());
                     var value = String.valueOf(entry.getValue().get("value"));

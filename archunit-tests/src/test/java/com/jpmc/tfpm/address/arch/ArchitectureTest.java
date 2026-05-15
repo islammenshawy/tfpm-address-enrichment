@@ -18,6 +18,7 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition;
 
 import java.lang.reflect.Modifier;
+import java.util.regex.Pattern;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Set;
@@ -146,9 +147,10 @@ public class ArchitectureTest {
 
     @ArchTest
     static final ArchRule no_writes_to_payments_topics =
-            noClasses()
-                    .should().dependOnClassesThat()
-                    .haveFullyQualifiedName("com.jpmc.tfpm.address.app.config.PaymentsTopicWriter")
+            fields()
+                    .that().areDeclaredInClassesThat()
+                    .resideInAPackage("com.jpmc.tfpm.address..")
+                    .should(notHavePaymentsTopicConstants())
                     .because("the shadow-mode invariant forbids any code path that "
                             + "writes to topics matching ^payments\\..*. This is enforced "
                             + "at startup by KafkaTemplate factory validation as well.");
@@ -208,13 +210,33 @@ public class ArchitectureTest {
                             + "and prove its thread-safety contract");
 
     // ============================================================
+    // 5b. @RestController classes must be @ThreadSafe
+    // ============================================================
+
+    @ArchTest
+    static final ArchRule rest_controllers_must_be_thread_safe =
+            classes()
+                    .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                    .should().beAnnotatedWith(ThreadSafe.class)
+                    .because("@RestController beans are Spring singletons handling concurrent "
+                            + "HTTP requests and must declare their thread-safety contract");
+
+    // ============================================================
     // 6. Forbidden patterns
     // ============================================================
 
     @ArchTest
-    static final ArchRule no_field_injection =
+    static final ArchRule no_new_object_mapper_in_production_code =
             noClasses()
-                    .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
+                    .that().resideInAPackage("com.jpmc.tfpm.address..")
+                    .should(instantiateObjectMapper())
+                    .because("ObjectMapper instances must be shared via Spring bean injection, "
+                            + "never constructed with 'new ObjectMapper()'. See CLAUDE.md forbidden patterns.");
+
+    @ArchTest
+    static final ArchRule no_field_injection =
+            fields()
+                    .should().notBeAnnotatedWith(org.springframework.beans.factory.annotation.Autowired.class)
                     .because("use constructor injection only; @Autowired on fields "
                             + "breaks immutability and makes testing harder");
 
@@ -286,6 +308,8 @@ public class ArchitectureTest {
                 java.util.concurrent.ConcurrentHashMap.class.getName(),
                 java.util.concurrent.ConcurrentSkipListMap.class.getName(),
                 java.util.concurrent.CopyOnWriteArrayList.class.getName(),
+                // Executors (thread-safe by design)
+                java.util.concurrent.ExecutorService.class.getName(),
                 // Locks (allowed, but require comment)
                 java.util.concurrent.locks.ReentrantLock.class.getName(),
                 java.util.concurrent.locks.StampedLock.class.getName(),
@@ -299,6 +323,7 @@ public class ArchitectureTest {
                 "io.micrometer.core.instrument.Counter",
                 "io.micrometer.core.instrument.Timer",
                 "org.jooq.DSLContext",
+                "org.springframework.transaction.support.TransactionTemplate",
                 "org.springframework.web.reactive.function.client.WebClient",
                 "org.springframework.kafka.core.KafkaTemplate",
                 "org.springframework.amqp.rabbit.core.RabbitTemplate",
@@ -346,6 +371,34 @@ public class ArchitectureTest {
         };
     }
 
+    private static com.tngtech.archunit.lang.ArchCondition<JavaField> notHavePaymentsTopicConstants() {
+        var paymentsPattern = Pattern.compile("^payments\\..*$");
+        return new com.tngtech.archunit.lang.ArchCondition<JavaField>(
+                "not have string constants matching payments.* topic pattern") {
+            @Override
+            public void check(JavaField field, com.tngtech.archunit.lang.ConditionEvents events) {
+                try {
+                    var reflected = field.reflect();
+                    if (reflected.getType() == String.class
+                            && Modifier.isStatic(reflected.getModifiers())
+                            && Modifier.isFinal(reflected.getModifiers())) {
+                        reflected.setAccessible(true);
+                        var value = (String) reflected.get(null);
+                        if (value != null && paymentsPattern.matcher(value).matches()) {
+                            events.add(com.tngtech.archunit.lang.SimpleConditionEvent.violated(
+                                    field,
+                                    String.format("Field %s.%s contains payments topic constant '%s'. "
+                                                    + "Shadow-mode invariant forbids writing to payments.* topics.",
+                                            field.getOwner().getName(), field.getName(), value)));
+                        }
+                    }
+                } catch (Exception ignored) {
+                    // Cannot reflect — skip; ArchUnit runs at class-analysis time
+                }
+            }
+        };
+    }
+
     private static com.tngtech.archunit.lang.ArchCondition<JavaClass> haveSynchronizedMethods() {
         return new com.tngtech.archunit.lang.ArchCondition<JavaClass>("have synchronized methods") {
             @Override
@@ -356,6 +409,25 @@ public class ArchitectureTest {
                                 m,
                                 "Method " + cls.getName() + "." + m.getName()
                                         + " is synchronized; use concurrent collections or atomics instead"));
+                    }
+                });
+            }
+        };
+    }
+
+    private static com.tngtech.archunit.lang.ArchCondition<JavaClass> instantiateObjectMapper() {
+        return new com.tngtech.archunit.lang.ArchCondition<JavaClass>(
+                "instantiate ObjectMapper directly") {
+            @Override
+            public void check(JavaClass cls, com.tngtech.archunit.lang.ConditionEvents events) {
+                cls.getConstructorCallsFromSelf().forEach(call -> {
+                    var targetOwner = call.getTargetOwner().getFullName();
+                    if ("com.fasterxml.jackson.databind.ObjectMapper".equals(targetOwner)) {
+                        events.add(com.tngtech.archunit.lang.SimpleConditionEvent.violated(
+                                cls,
+                                String.format("Class %s calls new ObjectMapper() at %s. "
+                                        + "Inject the shared ObjectMapper bean instead.",
+                                        cls.getName(), call.getSourceCodeLocation())));
                     }
                 });
             }

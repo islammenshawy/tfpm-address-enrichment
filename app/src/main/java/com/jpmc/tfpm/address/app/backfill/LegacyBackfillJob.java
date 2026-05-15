@@ -50,7 +50,7 @@ public final class LegacyBackfillJob {
             try {
                 var request = new EnrichmentRequest(
                         "backfill-" + addr.partyId(),
-                        EnrichmentRequest.SourceChannel.HTTP,
+                        EnrichmentRequest.SourceChannel.BACKFILL,
                         new RawAddress(addr.raw(), addr.countryHint(), ""));
 
                 var result = enrichmentService.enrich(request);

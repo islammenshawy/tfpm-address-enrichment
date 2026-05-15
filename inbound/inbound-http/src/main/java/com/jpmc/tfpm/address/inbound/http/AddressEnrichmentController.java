@@ -9,11 +9,15 @@ import com.jpmc.tfpm.address.domain.ResultPersistence;
 
 import com.jpmc.tfpm.address.domain.ThreadSafe;
 
+import jakarta.validation.Valid;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -41,7 +45,7 @@ public class AddressEnrichmentController {
 
     @PostMapping("/enrich")
     public ResponseEntity<EnrichmentHttpResponse> enrich(
-            @RequestBody EnrichmentHttpRequest body,
+            @Valid @RequestBody EnrichmentHttpRequest body,
             @RequestHeader(value = "X-Correlation-Id", required = false) String correlationId) {
 
         if (correlationId == null || correlationId.isBlank()) {
@@ -61,9 +65,15 @@ public class AddressEnrichmentController {
         };
     }
 
+    // TODO [P2-10]: Batch processing is sequential and can exceed the 500ms pipeline
+    // budget when the batch approaches the 100-item maximum. A future iteration should
+    // either parallelize enrichment calls (e.g., via a bounded virtual-thread executor)
+    // or assign the batch endpoint a separate, longer SLA distinct from the single-address
+    // pipeline budget. Do not change behavior without revisiting backpressure and
+    // thread-safety implications.
     @PostMapping("/enrich/batch")
     public ResponseEntity<List<EnrichmentHttpResponse>> enrichBatch(
-            @RequestBody List<EnrichmentHttpRequest> batch,
+            @Valid @RequestBody List<EnrichmentHttpRequest> batch,
             @RequestHeader(value = "X-Correlation-Id", required = false) String batchCorrelationId) {
 
         if (batch.size() > 100) {
@@ -132,5 +142,22 @@ public class AddressEnrichmentController {
                 "exceptionId", exceptionId,
                 "status", "RESOLVED",
                 "resolvedBy", resolvedBy));
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
+        var errors = new ArrayList<Map<String, String>>();
+        for (var fieldError : ex.getBindingResult().getFieldErrors()) {
+            var errorDetail = new LinkedHashMap<String, String>();
+            errorDetail.put("field", fieldError.getField());
+            errorDetail.put("message", fieldError.getDefaultMessage());
+            errors.add(errorDetail);
+        }
+        var body = new LinkedHashMap<String, Object>();
+        body.put("type", "urn:tfpm:address:error:validation");
+        body.put("title", "Bad Request");
+        body.put("status", 400);
+        body.put("errors", errors);
+        return ResponseEntity.badRequest().body(body);
     }
 }
