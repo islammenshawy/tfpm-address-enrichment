@@ -150,22 +150,24 @@ public final class CascadeOrchestrator {
                     sourcesWithResults, minSources, correlationId);
         }
 
-        // Normalize all output for consensus comparison.
-        // libpostal: only normalize CTRY (full name → ISO code). Street types are already canonical.
-        // LLMs: full normalization (whitespace, punctuation, street types, country codes).
-        var normalizedTrace = trace.stream()
-                .map(t -> "libpostal".equals(t.structurerName())
-                        ? fieldNormalizer.normalizeCountryOnly(t)
-                        : fieldNormalizer.normalize(t))
+        // Merge from ORIGINAL trace — preserves LLM output as-is (abbreviations, diacritics).
+        // Only CTRY gets normalized on all sources (full country name → ISO code).
+        var traceWithNormalizedCtry = trace.stream()
+                .map(fieldNormalizer::normalizeCountryOnly)
                 .toList();
 
-        var merged = fieldMerger.merge(normalizedTrace, raw.countryHint());
+        var merged = fieldMerger.merge(traceWithNormalizedCtry, raw.countryHint());
         double confidence = merged.overallConfidence();
 
-        // Consensus: automatic when 2+ structurers produced results
-        var activeCount = normalizedTrace.stream().filter(t -> !t.fields().isEmpty()).count();
+        // For consensus comparison, apply full normalization (street types, whitespace)
+        // so "Ave" and "avenue" don't trigger false disagreements.
+        var consensusTrace = traceWithNormalizedCtry.stream()
+                .map(t -> "libpostal".equals(t.structurerName()) ? t : fieldNormalizer.normalize(t))
+                .toList();
+
+        var activeCount = consensusTrace.stream().filter(t -> !t.fields().isEmpty()).count();
         var consensus = activeCount >= 2
-                ? consensusAnalyzer.analyze(normalizedTrace, merged, raw.countryHint())
+                ? consensusAnalyzer.analyze(consensusTrace, merged, raw.countryHint())
                 : null;
 
         if (consensus != null && consensus.hasDisagreements()) {
