@@ -107,6 +107,67 @@ final class CsvReportWriter implements Closeable {
         writer.flush();
     }
 
+    /**
+     * Write summary stats at the end of the CSV. Call after all rows are written.
+     * Uses running counters — no need to hold all results in memory.
+     */
+    synchronized void writeSummary(java.util.List<AccuracyTestBase.FixtureResult> results) throws IOException {
+        if (results == null || results.isEmpty()) return;
+
+        writer.newLine();
+        writer.write("--- SUMMARY ---");
+        writer.newLine();
+
+        int total = results.size();
+        var scored = results.stream().filter(r -> r.accuracy() >= 0).toList();
+        double avgAcc = scored.isEmpty() ? -1 : scored.stream().mapToDouble(r -> r.accuracy()).average().orElse(0);
+        long perfect = results.stream().filter(r -> r.accuracy() == 1.0).count();
+        long avgMs = (long) results.stream().mapToLong(r -> r.latencyMs()).average().orElse(0);
+        long success = results.stream().filter(r -> "SUCCESS".equals(r.outcome())).count();
+        long review = results.stream().filter(r -> "REQUIRES_REVIEW".equals(r.outcome())).count();
+        long unstructurable = results.stream().filter(r -> "UNSTRUCTURABLE".equals(r.outcome())).count();
+        long consensusRuns = results.stream().filter(r -> r.consensus() != null).count();
+        long disagreements = results.stream().filter(r -> r.consensus() != null && r.consensus().disagreements() > 0).count();
+
+        writer.write("Total Fixtures," + total); writer.newLine();
+        if (avgAcc >= 0) {
+            writer.write("Accuracy," + String.format("%.0f%%", avgAcc * 100)); writer.newLine();
+            writer.write("Perfect Matches," + perfect); writer.newLine();
+        }
+        writer.write("Avg Latency (ms)," + avgMs); writer.newLine();
+        writer.write("SUCCESS," + success); writer.newLine();
+        writer.write("REQUIRES_REVIEW," + review); writer.newLine();
+        writer.write("UNSTRUCTURABLE," + unstructurable); writer.newLine();
+        writer.write("Consensus Runs," + consensusRuns); writer.newLine();
+        writer.write("Disagreements," + disagreements); writer.newLine();
+
+        // Per-country breakdown
+        writer.newLine();
+        writer.write("--- PER COUNTRY ---"); writer.newLine();
+        writer.write("Country,Fixtures,Accuracy,Perfect,Avg Latency (ms),SUCCESS,REVIEW,Disagreements"); writer.newLine();
+
+        var byCountry = new java.util.TreeMap<String, java.util.List<AccuracyTestBase.FixtureResult>>();
+        results.forEach(r -> byCountry.computeIfAbsent(r.country(), k -> new java.util.ArrayList<>()).add(r));
+
+        for (var entry : byCountry.entrySet()) {
+            var cr = entry.getValue();
+            var cScored = cr.stream().filter(r -> r.accuracy() >= 0).toList();
+            var ca = cScored.isEmpty() ? -1 : cScored.stream().mapToDouble(r -> r.accuracy()).average().orElse(0);
+            var cp = cr.stream().filter(r -> r.accuracy() == 1.0).count();
+            var cl = (long) cr.stream().mapToLong(r -> r.latencyMs()).average().orElse(0);
+            var ok = cr.stream().filter(r -> "SUCCESS".equals(r.outcome())).count();
+            var rev = cr.stream().filter(r -> "REQUIRES_REVIEW".equals(r.outcome())).count();
+            var cd = cr.stream().filter(r -> r.consensus() != null && r.consensus().disagreements() > 0).count();
+            writer.write(String.format("%s,%d,%s,%d,%d,%d,%d,%d",
+                    entry.getKey(), cr.size(),
+                    ca >= 0 ? String.format("%.0f%%", ca * 100) : "n/a",
+                    cp, cl, ok, rev, cd));
+            writer.newLine();
+        }
+
+        writer.flush();
+    }
+
     @Override
     public synchronized void close() throws IOException {
         writer.close();

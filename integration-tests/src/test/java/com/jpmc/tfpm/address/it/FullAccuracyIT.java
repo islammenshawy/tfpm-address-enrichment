@@ -65,6 +65,7 @@ class FullAccuracyIT extends AccuracyTestBase {
         // Stream to CSV while also collecting in memory (for HTML if small enough)
         try (var csvWriter = new CsvReportWriter(CSV_PATH)) {
             collectedResults = processFixturesParallel(fixtures, client, parallelism, csvWriter::writeRow);
+            csvWriter.writeSummary(collectedResults);
         }
 
         System.out.printf("Processed %d results → CSV: %s%n",

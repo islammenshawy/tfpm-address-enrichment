@@ -52,6 +52,7 @@ class EndToEndAccuracyIT extends AccuracyTestBase {
 
         System.out.printf("Smoke test: %d sampled fixtures (1 per country), port %d%n", fixtures.size(), port);
         results = processFixturesSequential(fixtures, client, csvWriter::writeRow);
+        csvWriter.writeSummary(results);
         csvWriter.close();
 
         assertThat(results).as("Should have processed at least one fixture").isNotEmpty();
