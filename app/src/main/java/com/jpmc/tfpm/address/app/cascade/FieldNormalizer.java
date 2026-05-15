@@ -23,15 +23,15 @@ import java.util.regex.Pattern;
  * <p>Two layers:
  * <ol>
  *   <li><b>Universal</b> — Unicode NFKD, whitespace, trim. Safe everywhere.</li>
- *   <li><b>Dictionary-based</b> — libpostal's per-language street type
- *       dictionaries. Maps LLM abbreviations to the same canonical forms
- *       libpostal uses internally: "St"→"street", "Str."→"strasse",
- *       "大道"→canonical Chinese form. 14 languages, 1094 entries.</li>
+ *   <li><b>Dictionary-based</b> — per-field dictionaries loaded from classpath.
+ *       Maps abbreviations to canonical forms: "St"→"street", "Str."→"strasse",
+ *       "大道"→canonical Chinese form, country names→ISO codes.</li>
  * </ol>
  *
- * <p>libpostal already normalizes its own output using these dictionaries.
- * We apply the SAME dictionaries to LLM output so both sources produce
- * matching canonical forms for consensus comparison.
+ * <p>The mapping from {@link AddressField} to dictionary classpath pattern is
+ * defined in {@link #FIELD_DICTIONARY_PATTERNS}. Adding normalization for a new
+ * field requires only a new entry in that map and dropping dictionary files on
+ * the classpath — no code changes.
  *
  * <p>Source: openvenues/libpostal dictionaries (MIT license).
  */
@@ -43,24 +43,64 @@ public final class FieldNormalizer {
     private static final Pattern TRAILING_PUNCT = Pattern.compile("[,;.]+$");
     private static final Pattern DIACRITICS = Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
 
-    private final Map<String, String> streetTypeMap;
-    private final Map<String, String> countryNameToIso;
+    /**
+     * Canonicalization strategy for a dictionary-backed field.
+     * <ul>
+     *   <li>{@link #FULL_VALUE} — the entire trimmed value is looked up (e.g. country names).</li>
+     *   <li>{@link #FIRST_LAST_WORD} — only the first or last word is looked up
+     *       (e.g. street type abbreviations that appear at the start or end of a street name).</li>
+     * </ul>
+     */
+    enum NormalizationStrategy { FULL_VALUE, FIRST_LAST_WORD }
+
+    /**
+     * The ONLY place that knows which fields get which dictionaries.
+     * Adding a new normalization (e.g. building types, directionals) is just
+     * adding a new entry here and dropping dictionary files on the classpath.
+     */
+    private static final Map<AddressField, String> FIELD_DICTIONARY_PATTERNS = Map.of(
+            AddressField.CTRY, "normalization/countries/*.txt",
+            AddressField.STRT_NM, "normalization/street-types/*.txt"
+    );
+
+    /**
+     * Per-field canonicalization strategy. Fields not listed here default to
+     * {@link NormalizationStrategy#FULL_VALUE}.
+     */
+    private static final Map<AddressField, NormalizationStrategy> FIELD_STRATEGIES = Map.of(
+            AddressField.STRT_NM, NormalizationStrategy.FIRST_LAST_WORD
+    );
+
+    /** Loaded dictionaries keyed by AddressField. Each value is an unmodifiable synonym→canonical map. */
+    private final Map<AddressField, Map<String, String>> fieldDictionaries;
 
     public FieldNormalizer() {
-        this.streetTypeMap = loadDictionaries("normalization/street-types/*.txt");
-        this.countryNameToIso = loadDictionaries("normalization/countries/*.txt");
-        if (!streetTypeMap.isEmpty()) {
-            LOG.info("Loaded {} street type mappings, {} country name mappings",
-                    streetTypeMap.size(), countryNameToIso.size());
+        var dictionaries = new EnumMap<AddressField, Map<String, String>>(AddressField.class);
+        for (var entry : FIELD_DICTIONARY_PATTERNS.entrySet()) {
+            var dict = loadDictionaries(entry.getValue());
+            if (!dict.isEmpty()) {
+                dictionaries.put(entry.getKey(), dict);
+            }
+        }
+        this.fieldDictionaries = Collections.unmodifiableMap(dictionaries);
+        if (!fieldDictionaries.isEmpty()) {
+            var sb = new StringBuilder("Loaded normalization dictionaries:");
+            fieldDictionaries.forEach((field, dict) ->
+                    sb.append(" ").append(field).append("=").append(dict.size()));
+            LOG.info("{}", sb);
         }
     }
 
     /** Normalize CTRY field only — for libpostal whose street types are already canonical. */
     public StructuringResult normalizeCountryOnly(StructuringResult result) {
+        var ctryDict = fieldDictionaries.get(AddressField.CTRY);
+        if (ctryDict == null || ctryDict.isEmpty()) {
+            return result;
+        }
         var normalized = new EnumMap<AddressField, FieldValue>(AddressField.class);
         for (var entry : result.fields().entrySet()) {
             if (entry.getKey() == AddressField.CTRY) {
-                var val = canonicalizeCountry(entry.getValue().value().trim());
+                var val = canonicalize(entry.getValue().value().trim(), ctryDict, AddressField.CTRY);
                 if (!val.isEmpty()) {
                     normalized.put(entry.getKey(), new FieldValue(val, entry.getValue().confidence()));
                 }
@@ -91,24 +131,55 @@ public final class FieldNormalizer {
         var s = value.trim();
         s = WHITESPACE.matcher(s).replaceAll(" ");
         s = TRAILING_PUNCT.matcher(s).replaceAll("");
-        if (field == AddressField.CTRY) s = canonicalizeCountry(s);
-        if (field == AddressField.STRT_NM) s = canonicalizeStreetType(s);
+        var dict = fieldDictionaries.get(field);
+        if (dict != null && !dict.isEmpty()) {
+            s = canonicalize(s, dict, field);
+        }
         return s.trim();
     }
 
     /**
-     * Replace street type abbreviations with libpostal canonical forms.
-     * Checks last word (English: "Madison Ave"→"Madison avenue")
-     * and first word (French: "Rue de..."→canonical, German: "Str. 14"→canonical).
+     * Apply dictionary-based canonicalization to a value.
+     *
+     * <p>The strategy is determined by {@link #FIELD_STRATEGIES}:
+     * <ul>
+     *   <li>{@link NormalizationStrategy#FULL_VALUE} — look up the entire value
+     *       (with short-value uppercase pass-through for 2/3-char country codes).</li>
+     *   <li>{@link NormalizationStrategy#FIRST_LAST_WORD} — try last word then first word
+     *       (street type at start or end of a street name).</li>
+     * </ul>
      */
-    String canonicalizeStreetType(String street) {
-        if (street == null || street.isBlank() || streetTypeMap.isEmpty()) return street;
-        var words = street.split("\\s+");
-        if (words.length == 0) return street;
+    String canonicalize(String value, Map<String, String> dictionary, AddressField field) {
+        if (value == null || value.isBlank() || dictionary.isEmpty()) return value;
+        var strategy = FIELD_STRATEGIES.getOrDefault(field, NormalizationStrategy.FULL_VALUE);
+        return switch (strategy) {
+            case FULL_VALUE -> canonicalizeFullValue(value, dictionary);
+            case FIRST_LAST_WORD -> canonicalizeFirstLastWord(value, dictionary);
+        };
+    }
+
+    /**
+     * Full-value lookup: the entire string is the key.
+     * Short values (2-3 chars) are uppercased as-is (ISO country code pass-through).
+     */
+    private static String canonicalizeFullValue(String value, Map<String, String> dictionary) {
+        if (value.length() <= 3) return value.toUpperCase();
+        var canonical = dictionary.get(value.toLowerCase().trim());
+        return canonical != null ? canonical : value;
+    }
+
+    /**
+     * First/last word lookup for street-type-style fields.
+     * Checks last word first (English: "Madison Ave"→"Madison avenue"),
+     * then first word (French: "Rue de..."→canonical, German: "Str. 14"→canonical).
+     */
+    private static String canonicalizeFirstLastWord(String value, Map<String, String> dictionary) {
+        var words = value.split("\\s+");
+        if (words.length == 0) return value;
 
         // Last word (most common for English, Italian, Portuguese, Spanish)
         var last = words[words.length - 1].toLowerCase().replaceAll("[.,]$", "");
-        var canonical = streetTypeMap.get(last);
+        var canonical = dictionary.get(last);
         if (canonical != null) {
             words[words.length - 1] = canonical;
             return String.join(" ", words);
@@ -116,22 +187,13 @@ public final class FieldNormalizer {
 
         // First word (French, German, Arabic)
         var first = words[0].toLowerCase().replaceAll("[.,]$", "");
-        canonical = streetTypeMap.get(first);
+        canonical = dictionary.get(first);
         if (canonical != null) {
             words[0] = canonical;
             return String.join(" ", words);
         }
 
-        return street;
-    }
-
-    /** Convert country names to ISO 2-letter codes: "united arab emirates" → "AE". */
-    String canonicalizeCountry(String value) {
-        if (value == null || value.isBlank()) return value;
-        if (value.length() == 2) return value.toUpperCase();
-        if (value.length() == 3) return value.toUpperCase(); // ISO alpha-3
-        var iso = countryNameToIso.get(value.toLowerCase().trim());
-        return iso != null ? iso : value;
+        return value;
     }
 
     static String stripDiacritics(String input) {
