@@ -37,7 +37,8 @@ abstract class AccuracyTestBase {
                          int expectedCount, int matchedCount,
                          double accuracy, long latencyMs) {}
 
-    record FieldDetail(String expected, String actual, double confidence, boolean match) {}
+    record FieldDetail(String expected, String actual, double confidence, boolean match, String mergeStrategy) {}
+
 
     record ConsensusInfo(int sourceCount, int agreements, int disagreements,
                          double overall, Map<String, Double> sourceWeights,
@@ -327,9 +328,10 @@ abstract class AccuracyTestBase {
                 var actualNode = respFields.path(fn);
                 var actVal = actualNode.path("value").asText("");
                 var actConf = actualNode.path("confidence").asDouble(0);
+                var strategy = actualNode.path("mergeStrategy").asText("");
                 var match = expVal.equalsIgnoreCase(actVal);
                 if (match) matched++;
-                fields.put(fn, new FieldDetail(expVal, actVal, actConf, match));
+                fields.put(fn, new FieldDetail(expVal, actVal, actConf, match, strategy));
             }
         } else {
             // Output-only mode: just capture all actual fields
@@ -337,8 +339,9 @@ abstract class AccuracyTestBase {
                 var actualNode = respFields.path(fn);
                 var actVal = actualNode.path("value").asText("");
                 var actConf = actualNode.path("confidence").asDouble(0);
+                var strategy = actualNode.path("mergeStrategy").asText("");
                 if (!actVal.isEmpty()) {
-                    fields.put(fn, new FieldDetail("", actVal, actConf, false));
+                    fields.put(fn, new FieldDetail("", actVal, actConf, false, strategy));
                 }
             });
         }
@@ -473,18 +476,20 @@ abstract class AccuracyTestBase {
                     expHtml.append("<div class='expected'><span class='field-label'>")
                             .append(label(f.getKey())).append(":</span> ").append(d.expected).append("</div>");
                     var icon = d.match ? "<span class='match'>✓</span>" : "<span class='miss'>✗</span>";
+                    var stratBadge = strategyBadge(d.mergeStrategy);
                     actHtml.append("<div class='actual'>").append(icon)
                             .append(" <span class='field-label'>").append(label(f.getKey())).append(":</span> <b>")
                             .append(d.actual.isEmpty() ? "<i>empty</i>" : d.actual)
                             .append("</b> <small>(").append(String.format("%.0f%%", d.confidence * 100))
-                            .append(")</small></div>");
+                            .append(")</small> ").append(stratBadge).append("</div>");
                 } else {
                     // Output-only: just show actual fields
+                    var stratBadge = strategyBadge(d.mergeStrategy);
                     actHtml.append("<div class='actual'>")
                             .append("<span class='field-label'>").append(label(f.getKey())).append(":</span> <b>")
                             .append(d.actual.isEmpty() ? "<i>empty</i>" : d.actual)
                             .append("</b> <small>(").append(String.format("%.0f%%", d.confidence * 100))
-                            .append(")</small></div>");
+                            .append(")</small> ").append(stratBadge).append("</div>");
                 }
             }
 
@@ -564,6 +569,16 @@ abstract class AccuracyTestBase {
     private static String card(Object v, String l, String cls) {
         return "<div class='card'><div class='v'><span class='badge " + cls + "' style='font-size:20px;padding:4px 14px'>" + v + "</span></div><div class='l'>" + l + "</div></div>";
     }
+    private static String strategyBadge(String strategy) {
+        if (strategy == null || strategy.isEmpty()) return "";
+        return switch (strategy) {
+            case "CONSENSUS" -> "<span class='badge b-ok' style='font-size:8px'>consensus</span>";
+            case "HIGHEST_CONFIDENCE" -> "<span class='badge b-review' style='font-size:8px'>best-conf</span>";
+            case "SINGLE_SOURCE" -> "<span class='badge b-src' style='font-size:8px'>single</span>";
+            default -> "";
+        };
+    }
+
     private static String label(String f) {
         return switch (f) {
             case "CTRY" -> "Country"; case "TWN_NM" -> "City"; case "CTRY_SUB_DVSN" -> "State";

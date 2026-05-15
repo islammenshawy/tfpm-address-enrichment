@@ -112,9 +112,17 @@ public interface AddressStructurer {
      *                   depends on the implementation (log-likelihood,
      *                   probability, etc.). Calibrator normalises to 0..1.
      */
-    record FieldValue(String value, double confidence) {
+    enum MergeStrategy { CONSENSUS, HIGHEST_CONFIDENCE, SINGLE_SOURCE }
+
+    record FieldValue(String value, double confidence, MergeStrategy mergeStrategy) {
         public FieldValue {
             Objects.requireNonNull(value, "value");
+            if (mergeStrategy == null) mergeStrategy = MergeStrategy.SINGLE_SOURCE;
+        }
+
+        /** Backwards-compatible constructor — defaults to SINGLE_SOURCE. */
+        public FieldValue(String value, double confidence) {
+            this(value, confidence, MergeStrategy.SINGLE_SOURCE);
         }
     }
 

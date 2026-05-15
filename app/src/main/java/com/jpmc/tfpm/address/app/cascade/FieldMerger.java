@@ -2,6 +2,7 @@ package com.jpmc.tfpm.address.app.cascade;
 
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
 import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
+import com.jpmc.tfpm.address.domain.AddressStructurer.MergeStrategy;
 import com.jpmc.tfpm.address.domain.AddressStructurer.StructuringResult;
 import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
@@ -81,7 +82,10 @@ public final class FieldMerger {
             var best = candidates.stream()
                     .max((a, b) -> Double.compare(a.confidence, b.confidence))
                     .get();
-            builder.put(field, new FieldValue(best.value, best.confidence));
+            var strategy = candidates.size() == 1
+                    ? MergeStrategy.SINGLE_SOURCE
+                    : MergeStrategy.HIGHEST_CONFIDENCE;
+            builder.put(field, new FieldValue(best.value, best.confidence, strategy));
         }
 
         return builder.build();
@@ -127,7 +131,7 @@ public final class FieldMerger {
                 String.format("%.2f", best.confidence),
                 String.format("%.2f", boosted));
 
-        return new FieldValue(best.value, boosted);
+        return new FieldValue(best.value, boosted, MergeStrategy.CONSENSUS);
     }
 
     private record CalibratedCandidate(String value, double confidence, String structurer) {}

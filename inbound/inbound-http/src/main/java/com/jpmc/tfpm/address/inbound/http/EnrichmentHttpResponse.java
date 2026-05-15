@@ -22,7 +22,7 @@ public record EnrichmentHttpResponse(
         Long resultRowId,
         Instant processedAt) {
 
-    public record FieldResponse(String value, double confidence) {}
+    public record FieldResponse(String value, double confidence, String mergeStrategy) {}
 
     public record ConsensusResponse(
             int sourceCount,
@@ -41,7 +41,8 @@ public record EnrichmentHttpResponse(
         var fields = new LinkedHashMap<String, FieldResponse>();
         for (var entry : result.structuredAddress().fields().entrySet()) {
             fields.put(entry.getKey().name(),
-                    new FieldResponse(entry.getValue().value(), entry.getValue().confidence()));
+                    new FieldResponse(entry.getValue().value(), entry.getValue().confidence(),
+                            entry.getValue().mergeStrategy().name()));
         }
 
         ConsensusResponse consensusResp = null;
