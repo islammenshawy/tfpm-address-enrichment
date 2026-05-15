@@ -10,7 +10,7 @@ day until the build is green.
 - [ ] Raise the data-access ticket for representative legacy Oracle sample
 - [ ] Raise the SWIFT model download ticket (parallel; not blocking)
 - [ ] Confirm engineer is 100% dedicated for the duration
-- [ ] Confirm IBM MQ test instance is available (or plan to run via Testcontainers)
+- [ ] Confirm RabbitMQ test instance is available (or plan to run via Testcontainers)
 
 ---
 
@@ -300,21 +300,21 @@ Part B: inbound/inbound-kafka
 
 Part C: inbound/inbound-mq
 
-1. EnrichmentJmsListener:
+1. EnrichmentRabbitListener:
    - @Component, @ThreadSafe
-   - @JmsListener with concurrency=10-25 set in application.yml
-   - constructor-injects: AddressEnrichmentService, JmsMessageMapper,
-     JmsTemplate("output")
-   - JMS auto-ack after successful return; exception triggers redelivery
+   - @RabbitListener with concurrency=10-25 set in application.yml
+   - constructor-injects: AddressEnrichmentService, RabbitMessageMapper,
+     RabbitTemplate
+   - Manual ack after successful return; exception triggers nack/redelivery
    - Idempotency table makes this exactly-once
 
-2. MqConfig:
-   - @Bean MQConnectionFactory with IBM MQ properties
-   - JmsListenerContainerFactory with concurrency limits
-   - DLQ configuration
+2. RabbitMqConfig:
+   - @Bean ConnectionFactory with RabbitMQ properties
+   - SimpleRabbitListenerContainerFactory with concurrency limits
+   - DLQ via dead-letter exchange configuration
 
 3. Tests:
-   - Testcontainers IBM MQ (icr.io/ibm-messaging/mq image)
+   - Testcontainers RabbitMQ
    - Send-then-receive happy path
    - Redelivery: throw on first attempt, succeed on second, assert
      idempotency table prevents double-write

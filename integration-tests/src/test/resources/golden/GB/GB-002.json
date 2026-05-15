@@ -1,7 +1,7 @@
 {
   "fixture_id": "GB-002",
   "country": "GB",
-  "source": "ibm_mq",
+  "source": "rabbitmq",
   "raw": "Flat 4B, Mansion House, 28 Queen Victoria Street, London EC4N 4SL",
   "country_hint": "GB",
   "locale": "en-GB",

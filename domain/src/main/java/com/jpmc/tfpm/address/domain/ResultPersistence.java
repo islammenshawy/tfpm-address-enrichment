@@ -14,12 +14,12 @@ public interface ResultPersistence {
     /**
      * Persist a cascade result and return the generated RESULT_ID.
      */
-    long persistResult(EnrichmentRequest request, CascadeResult cascadeResult);
+    Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult);
 
     /**
      * Load a previously persisted result by its row id.
      */
-    Optional<EnrichmentResult> loadResult(long resultRowId, String correlationId);
+    Result<Optional<EnrichmentResult>> loadResult(long resultRowId, String correlationId);
 
     /**
      * Write a row to the EXCEPTION_QUEUE for human review.

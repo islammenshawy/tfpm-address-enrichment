@@ -9,7 +9,7 @@ the repo root.
 ## TL;DR
 
 ```bash
-make up              # start Oracle, Kafka, IBM MQ, WireMock LLM stub
+make up              # start Oracle, Kafka, RabbitMQ, WireMock LLM stub
 make wait            # block until all health checks pass (~90s on first run)
 make migrate         # apply all Liquibase changelogs
 make verify          # mvn clean verify (unit + ArchUnit tests)
@@ -36,7 +36,7 @@ mvn -pl app spring-boot:run -Dspring-boot.run.arguments="--spring.profiles.activ
 |---|---|---|---|
 | `tfpm-oracle` | `gvenzl/oracle-free:23-slim-faststart` | 1521 | Both pools (legacy-read + app-write) point here |
 | `tfpm-kafka` | `confluentinc/cp-kafka:7.7.0` | 9092 / 29092 | KRaft mode (no ZooKeeper) |
-| `tfpm-mq` | `icr.io/ibm-messaging/mq:9.4.1.0-r2` | 1414 / 9443 | IBM MQ + web console |
+| `tfpm-rabbitmq` | `rabbitmq:3-management` | 5672 / 15672 | RabbitMQ + management console |
 | `tfpm-llm-gateway` | `wiremock/wiremock:3.9.2` | 8089 | Stubs the JPMC internal LLM gateway |
 
 Sidecars (libpostal, swift-crf gRPC services) are **not** started by
@@ -95,7 +95,7 @@ What it checks:
   every 3 seconds for up to 5 minutes (Oracle Free first-boot is slow).
 - **Kafka**: `kafka-broker-api-versions --bootstrap-server localhost:29092`
   returns OK.
-- **IBM MQ**: TCP connect to port 1414 + curl to web console on 9443.
+- **RabbitMQ**: TCP connect to port 5672.
 - **WireMock**: `GET http://localhost:8089/__admin/health` returns 200.
 
 Exit code 0 means all four are ready. Anything else means investigate
@@ -121,7 +121,7 @@ docker-compose service names with their host-mapped ports. Verify with:
 
 ```bash
 curl http://localhost:8080/actuator/health
-# {"status":"UP","components":{"db":{...},"kafka":{...},"jms":{...}}}
+# {"status":"UP","components":{"db":{...},"kafka":{...},"rabbit":{...}}}
 ```
 
 Send a test address:
@@ -214,11 +214,11 @@ host-to-container, advertised as `localhost:29092`). The app's `local`
 profile uses `localhost:29092`. If you're running the app inside a
 container, switch to `kafka:9092`.
 
-### IBM MQ container exits immediately
+### RabbitMQ container exits immediately
 
-It's the LICENSE env var. Verify the compose file has `LICENSE: accept`.
-On some corporate Docker setups the IBM image needs `--platform=linux/amd64`
-on Apple Silicon — uncomment that line in the compose file if so.
+Check `docker logs tfpm-rabbitmq` for errors. Ensure no other process is
+already bound to port 5672. The management console is available at
+http://localhost:15672 (guest/guest).
 
 ### WireMock returns 404 for the LLM call
 

@@ -21,7 +21,7 @@ arbitrary.
        ┌────────────────────────────────────────────────────────────┐
        │  Inbound channels (each replica handles all three)         │
        │   ┌─────────┐    ┌──────────┐    ┌───────────┐            │
-       │   │ HTTP    │    │ Kafka    │    │ IBM MQ    │            │
+       │   │ HTTP    │    │ Kafka    │    │ RabbitMQ  │            │
        │   └────┬────┘    └────┬─────┘    └─────┬─────┘            │
        │        └──────────────┼──────────────────┘                 │
        │                       ▼                                    │
@@ -126,7 +126,7 @@ arbitrary.
 | `adapters/adapter-oracle-app` | `JooqIdempotencyStore`, `JooqExceptionQueue`, `JooqResultsRepository`, generated jOOQ for `TFPM_ADDR_ENRICH` | Legacy schema tables, inbound |
 | `inbound/inbound-http` | `EnrichmentController`, DTOs, exception mappers | Other inbound modules, adapters |
 | `inbound/inbound-kafka` | `EnrichmentKafkaListener`, error handler | Other inbound modules, adapters |
-| `inbound/inbound-mq` | `EnrichmentJmsListener`, MQ connection factory | Other inbound modules, adapters |
+| `inbound/inbound-rabbitmq` | `EnrichmentRabbitListener`, RabbitMQ connection factory | Other inbound modules, adapters |
 | `app` | `CascadeOrchestrator`, `FieldMerger`, `AddressEnrichmentServiceImpl`, `Application.java`, all `@Configuration` | Concrete adapter classes (only via interface) |
 
 ---
@@ -221,13 +221,12 @@ public void onMessage(ConsumerRecord<String, AddressMessage> rec, Acknowledgment
     ack.acknowledge();
 }
 
-// IBM MQ via JMS
-@JmsListener(destination = "${enrichment.mq.input-queue}")
-public void onMessage(Message message) throws JMSException {
-    var req = JmsMessageMapper.toRequest(message);
+// RabbitMQ via AMQP
+@RabbitListener(queues = "${enrichment.rabbitmq.input-queue}")
+public void onMessage(Message message, Channel channel) throws IOException {
+    var req = RabbitMessageMapper.toRequest(message);
     var result = service.enrich(req);
-    jmsTemplate.convertAndSend(outputQueue, result);
-    // No explicit ack: JMS auto-ack after successful return
+    channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
 }
 ```
 
@@ -254,7 +253,7 @@ The service runs as N replicas. Within each replica, multiple threads
 process concurrently:
 - HTTP: Tomcat worker threads (default 200, bounded)
 - Kafka: one thread per consumer in the consumer group, partitioned work
-- JMS: pool of `MessageListener` threads (typically 10-25)
+- RabbitMQ: pool of `SimpleMessageListenerContainer` threads (typically 10-25)
 
 This means at any moment, dozens of threads in one replica may be
 inside `service.enrich(...)` simultaneously. Singletons must be safe.
@@ -298,7 +297,7 @@ concurrent collection wouldn't work. (Almost always: it would.)
 | `JooqExceptionQueue` | Stateless. Uses `FOR UPDATE SKIP LOCKED` for concurrent claim. |
 | `EnrichmentController` | Stateless. Final reference to service. |
 | Spring Kafka `Listener` | Stateless. Listener container manages threads. |
-| Spring JMS `Listener` | Stateless. Container manages thread pool. |
+| Spring RabbitMQ `Listener` | Stateless. Container manages thread pool. |
 | `JAXBContext` | Thread-safe singleton (`@Bean`). |
 | `Marshaller` | NOT thread-safe — created per-call inside mapper methods. |
 | `ObjectMapper` | Thread-safe singleton (`@Bean`); never reconfigured after startup. |
@@ -434,7 +433,7 @@ sub-millisecond; the bounded retry keeps the worst case under 100ms.
 
 Every stage emits:
 - `traceId`: propagated end-to-end via OpenTelemetry through gRPC,
-  HTTP, Kafka headers, JMS properties.
+  HTTP, Kafka headers, RabbitMQ message properties.
 - Structured JSON log: `{"timestamp", "level", "logger", "traceId",
   "channel", "stage", "message", "fields"}`.
 - Micrometer metric: a counter or histogram, tagged by structurer,
@@ -511,8 +510,8 @@ These have been considered and rejected for v1:
   copies are simpler than any cache.
 - **Oracle Advanced Queueing.** `FOR UPDATE SKIP LOCKED` on a regular
   table is sufficient and portable.
-- **XA transactions across MQ + Oracle.** XA at JPMC is operationally
-  expensive. Idempotency table + JMS auto-ack provides exactly-once
+- **XA transactions across RabbitMQ + Oracle.** XA is operationally
+  expensive. Idempotency table + manual ack provides exactly-once
   semantics without XA.
 - **Auto-correction back to source systems.** Out of scope. We write
   to a separate schema; closing the loop to TPS/legacy is a

@@ -13,6 +13,9 @@ import com.jpmc.tfpm.address.domain.IdempotencyStore.ClaimResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.SimpleTransactionStatus;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -66,6 +69,16 @@ class AddressEnrichmentServiceImplTest {
         resultPersistence = mock(ResultPersistence.class);
     }
 
+    private static PlatformTransactionManager noOpTransactionManager() {
+        return new PlatformTransactionManager() {
+            @Override public TransactionStatus getTransaction(org.springframework.transaction.TransactionDefinition definition) {
+                return new SimpleTransactionStatus();
+            }
+            @Override public void commit(TransactionStatus status) { }
+            @Override public void rollback(TransactionStatus status) { }
+        };
+    }
+
     private AddressEnrichmentServiceImpl makeService(CascadeOrchestrator orchestrator) {
         return new AddressEnrichmentServiceImpl(
                 idempotencyStore,
@@ -74,7 +87,8 @@ class AddressEnrichmentServiceImplTest {
                 ComplianceRouter.alwaysBypass(),
                 event -> {},
                 0.70,
-                meterRegistry);
+                meterRegistry,
+                noOpTransactionManager());
     }
 
     @Test
@@ -86,9 +100,11 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.claimed("key-1"));
+                .thenReturn(Result.success(ClaimResult.claimed("key-1")));
         when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
-                .thenReturn(42L);
+                .thenReturn(Result.success(42L));
+        when(idempotencyStore.recordResult("key-1", 42L))
+                .thenReturn(Result.success(null));
 
         var result = service.enrich(REQUEST);
 
@@ -107,9 +123,11 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.claimed("key-2"));
+                .thenReturn(Result.success(ClaimResult.claimed("key-2")));
         when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
-                .thenReturn(43L);
+                .thenReturn(Result.success(43L));
+        when(idempotencyStore.recordResult("key-2", 43L))
+                .thenReturn(Result.success(null));
 
         var result = service.enrich(REQUEST);
 
@@ -126,9 +144,11 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.claimed("key-3"));
+                .thenReturn(Result.success(ClaimResult.claimed("key-3")));
         when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
-                .thenReturn(44L);
+                .thenReturn(Result.success(44L));
+        when(idempotencyStore.recordResult("key-3", 44L))
+                .thenReturn(Result.success(null));
 
         var result = service.enrich(REQUEST);
 
@@ -142,9 +162,11 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.claimed("key-4"));
+                .thenReturn(Result.success(ClaimResult.claimed("key-4")));
         when(resultPersistence.persistResult(eq(REQUEST), any(CascadeResult.class)))
-                .thenReturn(45L);
+                .thenReturn(Result.success(45L));
+        when(idempotencyStore.recordResult("key-4", 45L))
+                .thenReturn(Result.success(null));
 
         var result = service.enrich(REQUEST);
 
@@ -158,7 +180,7 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.duplicate("key-5"));
+                .thenReturn(Result.success(ClaimResult.duplicate("key-5")));
         when(idempotencyStore.findCachedResultRowId("key-5"))
                 .thenReturn(Optional.of(99L));
 
@@ -166,7 +188,7 @@ class AddressEnrichmentServiceImplTest {
                 "corr-1", EnrichmentResult.Outcome.SUCCESS,
                 StructuredAddress.empty(), 0.95, 99L, Instant.now());
         when(resultPersistence.loadResult(99L, "corr-1"))
-                .thenReturn(Optional.of(cachedResult));
+                .thenReturn(Result.success(Optional.of(cachedResult)));
 
         var result = service.enrich(REQUEST);
 
@@ -180,7 +202,7 @@ class AddressEnrichmentServiceImplTest {
         service = makeService(orchestrator);
 
         when(idempotencyStore.tryClaim(REQUEST))
-                .thenReturn(ClaimResult.duplicate("key-6"));
+                .thenReturn(Result.success(ClaimResult.duplicate("key-6")));
         when(idempotencyStore.findCachedResultRowId("key-6"))
                 .thenReturn(Optional.empty());
 

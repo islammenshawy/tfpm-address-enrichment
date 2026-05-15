@@ -237,7 +237,7 @@ make it              # Integration tests (golden set: 135 fixtures)
 ## Key Design Decisions
 
 - **No @Transactional on cascade** — LLM calls can take >500ms; holding a DB transaction open during HTTP calls wastes connections. Each persistence method is independently `@Retryable`.
-- **RabbitMQ instead of IBM MQ** — simpler setup, same semantics, configurable on/off.
+- **RabbitMQ** — simpler setup, configurable on/off via `RABBITMQ_ENABLED`.
 - **Cascade timeout (500ms)** — if early structurers consume the budget, later ones are skipped.
 - **SourceChannel.RABBITMQ** — not MQ. Intentional design decision.
 - **Result<T> at cascade level, not service level** — the service absorbs failures and always returns a meaningful `EnrichmentResult`.

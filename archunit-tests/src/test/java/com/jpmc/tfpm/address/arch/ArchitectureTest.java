@@ -301,7 +301,7 @@ public class ArchitectureTest {
                 "org.jooq.DSLContext",
                 "org.springframework.web.reactive.function.client.WebClient",
                 "org.springframework.kafka.core.KafkaTemplate",
-                "org.springframework.jms.core.JmsTemplate",
+                "org.springframework.amqp.rabbit.core.RabbitTemplate",
                 "io.grpc.ManagedChannel",
                 "com.fasterxml.jackson.databind.ObjectMapper",
                 "jakarta.xml.bind.JAXBContext",

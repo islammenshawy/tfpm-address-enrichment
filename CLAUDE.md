@@ -53,13 +53,13 @@ These are non-negotiable. Every change must satisfy all of them.
    (typically 3-4). Every singleton bean must be thread-safe; ArchUnit
    verifies this.
 4. **Multi-channel input.** Three inbound channels — HTTP (sync), Kafka
-   (async cooperative-sticky), IBM MQ (transactional JMS). All three
+   (async cooperative-sticky), RabbitMQ (async AMQP). All three
    normalize to the same `AddressEnrichmentService.enrich(EnrichmentRequest)`.
 5. **Plugin extensibility.** Adding a new structurer (vendor product,
    future SWIFT model variant, in-house model) requires zero changes to
    any existing module. New module + new bean + config flag = done.
 6. **No introducing new infrastructure.** Reuse existing JPMC TFPM stack:
-   Oracle, Kafka, IBM MQ, internal LLM gateway, existing Helm chart
+   Oracle, Kafka, RabbitMQ, internal LLM gateway, existing Helm chart
    templates, existing observability stack.
 
 ## Stack (pinned in parent pom.xml)
@@ -71,12 +71,12 @@ These are non-negotiable. Every change must satisfy all of them.
 - jOOQ 3.19.x with `ojdbc11` for Oracle
 - Liquibase for schema migrations
 - Spring Kafka with cooperative-sticky assignor
-- Spring JMS + IBM MQ JMS classes (`com.ibm.mq:com.ibm.mq.allclient`)
+- Spring AMQP + RabbitMQ (`org.springframework.boot:spring-boot-starter-amqp`)
 - Resilience4j 2.2.x (circuit breaker + bulkhead + retry)
 - gRPC for sidecar communication (`io.grpc:grpc-netty-shaded`)
 - WebClient for the LLM gateway (HTTP)
 - Micrometer + OpenTelemetry, Logback JSON
-- JUnit 5, AssertJ, Testcontainers (`gvenzl/oracle-free`, Kafka, IBM MQ),
+- JUnit 5, AssertJ, Testcontainers (`gvenzl/oracle-free`, Kafka, RabbitMQ),
   WireMock, jqwik for property-based tests, ArchUnit
 
 ## Architectural rules (enforced by ArchUnit)
@@ -170,9 +170,9 @@ Any class implementing AddressStructurer MUST be annotated @Calibrated.
   bulkhead) but bound the entire pipeline to ≤ 500ms total.
 - Kafka: `max.poll.records=100`, `max.poll.interval.ms=300000`,
   manual ack only after Oracle commit. Cooperative-sticky assignor.
-- IBM MQ: prefetch=50, transaction batch=25. **No XA** — single-resource
-  Oracle commit + JMS ack with the idempotency table providing
-  exactly-once semantics.
+- RabbitMQ: prefetch=50. Manual ack after Oracle commit with the
+  idempotency table providing exactly-once semantics. Dead-letter
+  queue for unprocessable messages.
 - Cascade structurer calls: Resilience4j bulkhead per structurer,
   max concurrent calls configured per-channel via properties.
 - gRPC sidecar calls: 500ms timeout, circuit breaker named per sidecar.
@@ -188,7 +188,7 @@ All beans implementing the following MUST be `@ThreadSafe`:
 - `AddressEnrichmentService`
 - `LegacyAddressReader`
 - All `*Mapper` (MapStruct generates safe ones, but mark for clarity)
-- All `@RestController`, `@KafkaListener`, `@JmsListener`-bearing classes
+- All `@RestController`, `@KafkaListener`, `@RabbitListener`-bearing classes
 
 Where shared state is genuinely needed (caches, counters, calibration
 tables loaded from Oracle), the only acceptable types are:
@@ -218,7 +218,6 @@ tables loaded from Oracle), the only acceptable types are:
     <resilience4j.version>2.2.0</resilience4j.version>
     <grpc.version>1.68.1</grpc.version>
     <protobuf.version>3.25.5</protobuf.version>
-    <ibm-mq.version>9.4.1.0</ibm-mq.version>
     <liquibase.version>4.30.0</liquibase.version>
     <archunit.version>1.3.0</archunit.version>
     <jqwik.version>1.9.1</jqwik.version>
@@ -275,7 +274,7 @@ Each `AddressStructurer` implementation:
 End-to-end (`integration-tests` module, `verify -Pit`):
 - Real Oracle Testcontainer with full Liquibase migration
 - Real Kafka Testcontainer with real producer/consumer
-- Real IBM MQ Testcontainer with JMS listener
+- Real RabbitMQ Testcontainer with AMQP listener
 - Stub gRPC sidecars with deterministic responses
 - The critical multi-container test (3 replicas, same message via 3 channels,
   exactly 1 row in Oracle) — see `MultiContainerIdempotencyTest`
@@ -314,7 +313,7 @@ End-to-end (`integration-tests` module, `verify -Pit`):
 - Annotate beans with `@ThreadSafe` per the rules above
 - Externalize config to `application.yml` with sensible defaults
 - Add a Micrometer counter or histogram for any new pipeline stage
-- Propagate `traceId` through every layer (gRPC, HTTP, Kafka, JMS)
+- Propagate `traceId` through every layer (gRPC, HTTP, Kafka, RabbitMQ)
 - Write the test before or alongside the implementation
 - When in doubt about thread safety, make the class stateless
 - **Return `Result<T>` from any operation that can fail in ways the caller
@@ -371,7 +370,7 @@ return switch (structurer.structure(raw)) {
 ### Pattern 2: Five retry layers, each with one job
 
 ```
-Layer 5: Channel-native (Kafka rewind, JMS redeliver, HTTP client retry)
+Layer 5: Channel-native (Kafka rewind, RabbitMQ nack/redeliver, HTTP client retry)
 Layer 4: Service-level (idempotency-race result-load retry, max 3, ≤260ms)
 Layer 3: Persistence (Spring @Retryable on Oracle deadlock, max 3)
 Layer 2: Per-structurer (Resilience4j @Retry, max 2, fallback to empty result)

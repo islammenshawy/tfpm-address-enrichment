@@ -23,7 +23,7 @@ public interface IdempotencyStore {
      * Attempt to claim processing of this request.
      *
      * <p>Computes the idempotency key as
-     * {@code SHA-256(request.address.canonical() || request.sourceChannel)},
+     * {@code SHA-256(request.address.canonical() || request.address.countryHint)},
      * then attempts to INSERT into {@code IDEMPOTENCY_KEYS}.
      *
      * @return {@link ClaimResult#claimed(String)} if this caller now owns
@@ -33,7 +33,7 @@ public interface IdempotencyStore {
      *         present — call {@link #findCachedResultRowId(String)} to get
      *         the prior result.
      */
-    ClaimResult tryClaim(EnrichmentRequest request);
+    Result<ClaimResult> tryClaim(EnrichmentRequest request);
 
     /**
      * Persist the result row id against the idempotency key.
@@ -42,7 +42,7 @@ public interface IdempotencyStore {
      * @param idempotencyKey from {@link ClaimResult#idempotencyKey()}
      * @param resultRowId    primary key in {@code STRUCTURING_RESULTS}
      */
-    void recordResult(String idempotencyKey, long resultRowId);
+    Result<Void> recordResult(String idempotencyKey, long resultRowId);
 
     /**
      * For a duplicate claim, fetch the result id of the prior processing.

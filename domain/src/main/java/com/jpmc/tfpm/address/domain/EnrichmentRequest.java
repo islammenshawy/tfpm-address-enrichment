@@ -15,7 +15,7 @@ import java.util.Objects;
  *                      all logs, metrics, OpenTelemetry traces, and Oracle
  *                      audit rows. The channel adapter is responsible for
  *                      providing one (HTTP: header or generated UUID;
- *                      Kafka: header; MQ: JMS message id). Never null.
+ *                      Kafka: header; RabbitMQ: message id). Never null.
  * @param sourceChannel which inbound channel produced this request. Used
  *                      for metrics tagging and the idempotency key.
  * @param address       the raw address to structure. Never null.

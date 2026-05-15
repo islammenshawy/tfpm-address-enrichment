@@ -4,6 +4,7 @@ import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService.EnrichmentResult;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
 import com.jpmc.tfpm.address.domain.ExceptionQueue;
+import com.jpmc.tfpm.address.domain.Result;
 import com.jpmc.tfpm.address.domain.ResultPersistence;
 import com.jpmc.tfpm.address.domain.StructuredAddress;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
@@ -142,7 +143,7 @@ class AddressEnrichmentControllerTest {
                 0.95, 42L, Instant.now());
 
         when(resultPersistence.loadResult(eq(42L), anyString()))
-                .thenReturn(Optional.of(result));
+                .thenReturn(Result.success(Optional.of(result)));
 
         mockMvc.perform(get("/api/v1/results/42"))
                 .andExpect(status().isOk())
@@ -152,7 +153,7 @@ class AddressEnrichmentControllerTest {
     @Test
     void get_result_returns_404_when_not_found() throws Exception {
         when(resultPersistence.loadResult(eq(999L), anyString()))
-                .thenReturn(Optional.empty());
+                .thenReturn(Result.success(Optional.empty()));
 
         mockMvc.perform(get("/api/v1/results/999"))
                 .andExpect(status().isNotFound());

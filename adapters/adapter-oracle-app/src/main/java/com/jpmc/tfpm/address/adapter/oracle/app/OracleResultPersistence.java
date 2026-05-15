@@ -1,7 +1,9 @@
 package com.jpmc.tfpm.address.adapter.oracle.app;
 
 import com.jpmc.tfpm.address.domain.CascadeResult;
+import com.jpmc.tfpm.address.domain.EnrichmentError;
 import com.jpmc.tfpm.address.domain.ResultPersistence;
+import com.jpmc.tfpm.address.domain.Result;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService.EnrichmentResult;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
 import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
@@ -44,69 +46,85 @@ public class OracleResultPersistence implements ResultPersistence {
 
     @Override
     @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
-    public long persistResult(EnrichmentRequest request, CascadeResult cascadeResult) {
-        var address = cascadeResult.structuredAddress();
-        var fieldsJson = serializeFields(address);
-        var traceJson = serializeTrace(cascadeResult);
-        var requiresReview = !address.meetsSr2026Minimum()
-                || cascadeResult.overallConfidence() < 0.70 ? "Y" : "N";
+    public Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult) {
+        try {
+            var address = cascadeResult.structuredAddress();
+            var fieldsJson = serializeFields(address);
+            var traceJson = serializeTrace(cascadeResult);
+            var requiresReview = !address.meetsSr2026Minimum()
+                    || cascadeResult.overallConfidence() < 0.70 ? "Y" : "N";
 
-        var resultId = dsl.insertInto(table("STRUCTURING_RESULTS"))
-                .columns(
-                        field("CORRELATION_ID"),
-                        field("SOURCE_CHANNEL"),
-                        field("RAW_ADDRESS"),
-                        field("COUNTRY_HINT"),
-                        field("FIELDS_JSON"),
-                        field("STRUCTURER_TRACE"),
-                        field("OVERALL_CONFIDENCE"),
-                        field("REQUIRES_REVIEW"),
-                        field("CREATED_AT"))
-                .values(
-                        request.correlationId(),
-                        request.sourceChannel().name(),
-                        request.address().raw(),
-                        request.address().countryHint(),
-                        fieldsJson,
-                        traceJson,
-                        cascadeResult.overallConfidence(),
-                        requiresReview,
-                        LocalDateTime.now())
-                .returningResult(field("RESULT_ID"))
-                .fetchOne();
+            var resultId = dsl.insertInto(table("STRUCTURING_RESULTS"))
+                    .columns(
+                            field("CORRELATION_ID"),
+                            field("SOURCE_CHANNEL"),
+                            field("RAW_ADDRESS"),
+                            field("COUNTRY_HINT"),
+                            field("FIELDS_JSON"),
+                            field("STRUCTURER_TRACE"),
+                            field("OVERALL_CONFIDENCE"),
+                            field("REQUIRES_REVIEW"),
+                            field("CREATED_AT"))
+                    .values(
+                            request.correlationId(),
+                            request.sourceChannel().name(),
+                            request.address().raw(),
+                            request.address().countryHint(),
+                            fieldsJson,
+                            traceJson,
+                            cascadeResult.overallConfidence(),
+                            requiresReview,
+                            LocalDateTime.now())
+                    .returningResult(field("RESULT_ID"))
+                    .fetchOne();
 
-        long id = resultId != null ? resultId.get(field("RESULT_ID", Long.class)) : -1L;
-        LOG.debug("Persisted result id={} [corrId={}]", id, request.correlationId());
-        return id;
+            long id = resultId != null ? resultId.get(field("RESULT_ID", Long.class)) : -1L;
+            LOG.debug("Persisted result id={} [corrId={}]", id, request.correlationId());
+            return Result.success(id);
+        } catch (Exception e) {
+            LOG.error("Failed to persist result [corrId={}]", request.correlationId(), e);
+            return Result.failure(EnrichmentError.of(
+                    EnrichmentError.Category.DATABASE_CONNECTION,
+                    "Failed to persist enrichment result: " + e.getMessage(),
+                    request.correlationId(), e));
+        }
     }
 
     @Override
-    public Optional<EnrichmentResult> loadResult(long resultRowId, String correlationId) {
-        var row = dsl.select(
-                        field("CORRELATION_ID"),
-                        field("FIELDS_JSON"),
-                        field("OVERALL_CONFIDENCE"),
-                        field("REQUIRES_REVIEW"),
-                        field("CREATED_AT"))
-                .from(table("STRUCTURING_RESULTS"))
-                .where(field("RESULT_ID").eq(resultRowId))
-                .fetchOne();
+    public Result<Optional<EnrichmentResult>> loadResult(long resultRowId, String correlationId) {
+        try {
+            var row = dsl.select(
+                            field("CORRELATION_ID"),
+                            field("FIELDS_JSON"),
+                            field("OVERALL_CONFIDENCE"),
+                            field("REQUIRES_REVIEW"),
+                            field("CREATED_AT"))
+                    .from(table("STRUCTURING_RESULTS"))
+                    .where(field("RESULT_ID").eq(resultRowId))
+                    .fetchOne();
 
-        if (row == null) return Optional.empty();
+            if (row == null) return Result.success(Optional.empty());
 
-        var fieldsJson = row.get(field("FIELDS_JSON"), String.class);
-        var address = deserializeFields(fieldsJson);
-        var confidence = row.get(field("OVERALL_CONFIDENCE"), Double.class);
-        var requiresReview = "Y".equals(row.get(field("REQUIRES_REVIEW"), String.class));
+            var fieldsJson = row.get(field("FIELDS_JSON"), String.class);
+            var address = deserializeFields(fieldsJson);
+            var confidence = row.get(field("OVERALL_CONFIDENCE"), Double.class);
+            var requiresReview = "Y".equals(row.get(field("REQUIRES_REVIEW"), String.class));
 
-        var outcome = requiresReview
-                ? EnrichmentResult.Outcome.REQUIRES_REVIEW
-                : EnrichmentResult.Outcome.SUCCESS;
+            var outcome = requiresReview
+                    ? EnrichmentResult.Outcome.REQUIRES_REVIEW
+                    : EnrichmentResult.Outcome.SUCCESS;
 
-        return Optional.of(new EnrichmentResult(
-                correlationId, outcome, address,
-                confidence != null ? confidence : 0.0,
-                resultRowId, Instant.now()));
+            return Result.success(Optional.of(new EnrichmentResult(
+                    correlationId, outcome, address,
+                    confidence != null ? confidence : 0.0,
+                    resultRowId, Instant.now())));
+        } catch (Exception e) {
+            LOG.error("Failed to load result id={} [corrId={}]", resultRowId, correlationId, e);
+            return Result.failure(EnrichmentError.of(
+                    EnrichmentError.Category.DATABASE_CONNECTION,
+                    "Failed to load enrichment result: " + e.getMessage(),
+                    correlationId, e));
+        }
     }
 
     @Override

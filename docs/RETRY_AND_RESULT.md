@@ -132,7 +132,7 @@ a clear scope, a clear policy, and a clear interaction with the others.
 ```
                    ┌──────────────────────────────┐
                    │ 5. Channel-native redelivery │
-                   │    (Kafka rewind, JMS retry, │
+                   │    (Kafka rewind, RabbitMQ    │
                    │     HTTP client retry)       │
                    └──────────────┬───────────────┘
                                   │
@@ -240,7 +240,7 @@ yet by the winning replica:
 **Result on exhaustion:** `Result.failure(IDEMPOTENCY_DUPLICATE)` with
 context indicating the cache load timed out. The caller (channel
 adapter) can decide: HTTP returns 409 with retry advice, Kafka NACKs
-to trigger redelivery, MQ rolls back the JMS transaction.
+to trigger redelivery, RabbitMQ nacks for redelivery.
 
 ### Layer 5: Channel-native redelivery (highest)
 
@@ -397,16 +397,17 @@ Result.Failure(*) non-retryable          → ack() + send to DLT topic with reas
 After 3 retries (Spring `DefaultErrorHandler` config), the record auto-routes
 to the DLT.
 
-### MQ (JMS)
+### RabbitMQ (AMQP)
 
 ```
-Result.Success                           → return normally (auto-commit), publish output
-Result.Failure(IDEMPOTENCY_DUPLICATE)    → return normally (already processed)
-Result.Failure(*) retryable              → throw to roll back; broker redelivers
-Result.Failure(*) non-retryable          → log, return normally; do NOT redeliver
+Result.Success                           → basicAck, publish output
+Result.Failure(IDEMPOTENCY_DUPLICATE)    → basicAck (already processed)
+Result.Failure(*) retryable              → basicNack(requeue=true); broker redelivers
+Result.Failure(*) non-retryable          → basicNack(requeue=false); routes to DLQ
 ```
 
-After 3 redeliveries (`BackoutCount`), MQ auto-routes to the DLQ.
+After 3 redeliveries (x-delivery-count header), RabbitMQ routes to the DLQ
+via the dead-letter exchange.
 
 ---
 
@@ -414,12 +415,12 @@ After 3 redeliveries (`BackoutCount`), MQ auto-routes to the DLQ.
 
 ### Why no XA transactions
 
-XA across MQ + Oracle would give exactly-once at the cost of:
-- Coordinator JNDI binding setup
+XA across RabbitMQ + Oracle would give exactly-once at the cost of:
+- Coordinator setup complexity
 - Two-phase commit overhead per message
 - Recovery complexity when coordinator state is lost
 
-Instead, idempotency table + JMS auto-ack gives exactly-once *processing*
+Instead, idempotency table + manual ack gives exactly-once *processing*
 (which is what we actually need) without the operational cost.
 
 ### Why retries are bounded so low

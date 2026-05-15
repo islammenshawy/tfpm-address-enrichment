@@ -32,13 +32,14 @@ class OracleIdempotencyStoreTest {
     }
 
     @Test
-    void computeKey_different_channels_produce_different_keys() {
+    void computeKey_same_address_different_channels_produce_same_key() {
         var addr = RawAddress.of("123 Main St");
         var http = new EnrichmentRequest("corr", EnrichmentRequest.SourceChannel.HTTP, addr);
         var kafka = new EnrichmentRequest("corr", EnrichmentRequest.SourceChannel.KAFKA, addr);
 
+        // P0-2: key is channel-agnostic — same address = same key regardless of channel
         assertThat(OracleIdempotencyStore.computeKey(http))
-                .isNotEqualTo(OracleIdempotencyStore.computeKey(kafka));
+                .isEqualTo(OracleIdempotencyStore.computeKey(kafka));
     }
 
     @Test

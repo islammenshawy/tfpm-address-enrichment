@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
 
 import java.util.List;
 import java.util.Map;
@@ -78,10 +79,12 @@ public class ServiceConfig {
             ComplianceRouter complianceRouter,
             AuditLog auditLog,
             @Value("${enrichment.review-threshold:0.70}") double reviewThreshold,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            PlatformTransactionManager transactionManager) {
         return new AddressEnrichmentServiceImpl(
                 idempotencyStore, cascadeOrchestrator, resultPersistence,
-                complianceRouter, auditLog, reviewThreshold, meterRegistry);
+                complianceRouter, auditLog, reviewThreshold, meterRegistry,
+                transactionManager);
     }
 
     @Bean

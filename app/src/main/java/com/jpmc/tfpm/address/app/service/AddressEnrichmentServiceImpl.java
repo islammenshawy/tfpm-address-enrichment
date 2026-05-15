@@ -20,8 +20,12 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
+import java.util.Optional;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -40,6 +44,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final AuditLog auditLog;
     private final double reviewThreshold;
     private final MeterRegistry meterRegistry;
+    private final TransactionTemplate transactionTemplate;
     private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
@@ -50,7 +55,8 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             ComplianceRouter complianceRouter,
             AuditLog auditLog,
             double reviewThreshold,
-            MeterRegistry meterRegistry) {
+            MeterRegistry meterRegistry,
+            PlatformTransactionManager transactionManager) {
         this.idempotencyStore = idempotencyStore;
         this.cascadeOrchestrator = cascadeOrchestrator;
         this.resultPersistence = resultPersistence;
@@ -58,6 +64,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         this.auditLog = auditLog;
         this.reviewThreshold = reviewThreshold;
         this.meterRegistry = meterRegistry;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
 
     @Override
@@ -66,7 +73,19 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var sample = Timer.start(meterRegistry);
 
         // Step 1: Idempotency claim
-        var claim = idempotencyStore.tryClaim(request);
+        var claimResult = idempotencyStore.tryClaim(request);
+
+        if (claimResult.isFailure()) {
+            LOG.error("Idempotency claim failed [corrId={}]: {}",
+                    correlationId, claimResult.toOptionalError().orElse(null));
+            sample.stop(timer("address.enrichment.latency.total",
+                    "channel", request.sourceChannel().name(),
+                    "outcome", "ERROR"));
+            throw new IllegalStateException("Idempotency claim failed: "
+                    + claimResult.toOptionalError().map(Object::toString).orElse("unknown"));
+        }
+
+        var claim = claimResult.getOrThrow();
 
         if (!claim.isClaimed()) {
             counter("address.enrichment.idempotency.duplicate",
@@ -113,8 +132,9 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
 
         var cachedRowId = idempotencyStore.findCachedResultRowId(claim.idempotencyKey());
         if (cachedRowId.isPresent()) {
-            var cached = resultPersistence.loadResult(cachedRowId.get(), correlationId);
-            if (cached.isPresent()) {
+            var loadResult = resultPersistence.loadResult(cachedRowId.get(), correlationId);
+            if (loadResult instanceof Result.Success<Optional<EnrichmentResult>>(var cached)
+                    && cached.isPresent()) {
                 return cached.get();
             }
         }
@@ -137,9 +157,28 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         var address = cascadeResult.structuredAddress();
         var confidence = cascadeResult.overallConfidence();
 
-        // Persist result
-        long resultRowId = resultPersistence.persistResult(request, cascadeResult);
-        idempotencyStore.recordResult(claim.idempotencyKey(), resultRowId);
+        // Persist result and record idempotency atomically in a single transaction.
+        // This prevents inconsistent state if a crash occurs between the two operations.
+        long resultRowId = transactionTemplate.execute(status -> {
+            var persistResult = resultPersistence.persistResult(request, cascadeResult);
+            if (persistResult.isFailure()) {
+                LOG.error("Failed to persist result [corrId={}]: {}",
+                        correlationId, persistResult.toOptionalError().orElse(null));
+                throw new IllegalStateException("Persist failed: "
+                        + persistResult.toOptionalError().map(Object::toString).orElse("unknown"));
+            }
+            long rowId = persistResult.getOrThrow();
+
+            var recordResult = idempotencyStore.recordResult(claim.idempotencyKey(), rowId);
+            if (recordResult.isFailure()) {
+                LOG.error("Failed to record idempotency [corrId={}]: {}",
+                        correlationId, recordResult.toOptionalError().orElse(null));
+                throw new IllegalStateException("Idempotency record failed: "
+                        + recordResult.toOptionalError().map(Object::toString).orElse("unknown"));
+            }
+
+            return rowId;
+        });
 
         // Determine outcome
         EnrichmentResult.Outcome outcome;
@@ -183,8 +222,29 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
 
         var emptyResult = new CascadeResult(
                 StructuredAddress.empty(), java.util.List.of(), 0.0);
-        long resultRowId = resultPersistence.persistResult(request, emptyResult);
-        idempotencyStore.recordResult(claim.idempotencyKey(), resultRowId);
+
+        // Persist result and record idempotency atomically in a single transaction.
+        long resultRowId = transactionTemplate.execute(status -> {
+            var persistResult = resultPersistence.persistResult(request, emptyResult);
+            if (persistResult.isFailure()) {
+                LOG.error("Failed to persist empty result [corrId={}]: {}",
+                        correlationId, persistResult.toOptionalError().orElse(null));
+                throw new IllegalStateException("Persist failed: "
+                        + persistResult.toOptionalError().map(Object::toString).orElse("unknown"));
+            }
+            long rowId = persistResult.getOrThrow();
+
+            var recordResult = idempotencyStore.recordResult(claim.idempotencyKey(), rowId);
+            if (recordResult.isFailure()) {
+                LOG.error("Failed to record idempotency [corrId={}]: {}",
+                        correlationId, recordResult.toOptionalError().orElse(null));
+                throw new IllegalStateException("Idempotency record failed: "
+                        + recordResult.toOptionalError().map(Object::toString).orElse("unknown"));
+            }
+
+            return rowId;
+        });
+
         resultPersistence.writeToExceptionQueue(resultRowId, "UNSTRUCTURABLE");
 
         counter("address.enrichment.exceptions",

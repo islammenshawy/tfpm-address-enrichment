@@ -18,10 +18,10 @@ Four sources, three runtime channels, one batch backfill path.
 |---|---|---|---|---|
 | Legacy Oracle TPS | (batch) | streaming cursor | 50–200M rows total, run once | hours, offline |
 | Kafka payment events | KAFKA | streaming | 100–500 msg/sec | < 500ms p99 |
-| IBM MQ corporate ingestion | MQ | streaming | 10–50 msg/sec | < 1s p99 |
+| RabbitMQ corporate ingestion | RABBITMQ | streaming | 10–50 msg/sec | < 1s p99 |
 | HTTP REST (replay, ad-hoc, maker UI) | HTTP | request/response | < 10 req/sec | < 500ms p99 |
 
-The Kafka and MQ paths are the **shadow-mode tee**: they read events that
+The Kafka and RabbitMQ paths are the **shadow-mode tee**: they read events that
 the production payment path has already processed. The legacy Oracle TPS
 path is the **historical backfill**: it processes addresses that exist
 today and have never been structured. The HTTP path is **operational**:
@@ -191,11 +191,11 @@ deduplication = exactly-once processing guarantee.
 
 ---
 
-## 4. Source 3: IBM MQ corporate ingestion (legacy MT)
+## 4. Source 3: RabbitMQ corporate ingestion (legacy MT)
 
 ### What's there
 
-Queue `TFPM.PAYMENT.IN` on `QM1`. Messages are SWIFT MT format (legacy,
+Queue `tfpm.payment.in` on RabbitMQ. Messages are SWIFT MT format (legacy,
 not MX). Typical types: MT 103 (single customer credit transfer),
 MT 202 (general financial institution transfer), MT 700 (issue of LC).
 
@@ -226,13 +226,13 @@ For each address-bearing field:
    present, the related Field 57 (account-with bank) BIC.
 4. The `correlationId` is the MT message reference (Field 20) + field tag.
 
-### MQ-specific config
+### RabbitMQ-specific config
 
-- Connection: IBM MQ JMS classes (no native MQI)
+- Connection: Spring AMQP
 - Listener concurrency: 10–25
-- Acknowledge mode: `client` (commit after Oracle write)
-- DLQ: `TFPM.PAYMENT.IN.DLQ` (poison messages after 3 redeliveries)
-- **No XA**: idempotency table provides exactly-once
+- Acknowledge mode: `manual` (ack after Oracle write)
+- DLQ: `tfpm.payment.in.dlq` (poison messages after 3 redeliveries via dead-letter exchange)
+- Idempotency table provides exactly-once processing
 
 ### Why no XA
 
@@ -307,7 +307,7 @@ Regardless of source, the channel adapter does exactly four things:
 The adapter does NOT do any structuring, calibration, or persistence.
 Those are service responsibilities. The adapter does NOT swallow errors:
 infrastructure failures bubble up so the channel-native retry mechanism
-(JMS redelivery, Kafka rewind) can take over.
+(RabbitMQ nack/redelivery, Kafka rewind) can take over.
 
 ---
 

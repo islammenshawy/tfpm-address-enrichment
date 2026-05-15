@@ -53,18 +53,18 @@ wait_kafka() {
 }
 
 # ----------------------------------------
-# IBM MQ: TCP connect to 1414
+# RabbitMQ: TCP connect to 5672
 # ----------------------------------------
-wait_mq() {
-  log "waiting for IBM MQ..."
+wait_rabbitmq() {
+  log "waiting for RabbitMQ..."
   while (( $(date +%s) < deadline )); do
-    if (echo > /dev/tcp/localhost/1414) > /dev/null 2>&1 ; then
-      log "IBM MQ ✓"
+    if (echo > /dev/tcp/localhost/5672) > /dev/null 2>&1 ; then
+      log "RabbitMQ ✓"
       return 0
     fi
     sleep "$SLEEP_SECS"
   done
-  log "IBM MQ ✗ (timed out)"
+  log "RabbitMQ ✗ (timed out)"
   return 1
 }
 
@@ -86,7 +86,7 @@ wait_wiremock() {
 
 wait_oracle
 wait_kafka
-wait_mq
+wait_rabbitmq
 wait_wiremock
 
 log "All services ready. Run 'make migrate' next."

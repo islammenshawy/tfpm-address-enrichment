@@ -277,7 +277,7 @@ or permissive.
 - The `COMPLIANCE_ROUTING` row is written with `STATUS='PENDING'` and
   `ROUTED_TO='unreachable'`
 - The source channel ack is held back; for Kafka, no manual ack means
-  consumer rewind on next poll; for MQ, the JMS transaction rolls back
+  consumer rewind on next poll; for RabbitMQ, the message is nack'd for redelivery
 - Effect: the source message is held until compliance is back,
   preventing the payment from proceeding without compliance review
 

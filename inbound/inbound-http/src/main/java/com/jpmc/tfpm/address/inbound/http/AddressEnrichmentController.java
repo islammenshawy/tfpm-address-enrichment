@@ -96,7 +96,11 @@ public class AddressEnrichmentController {
             correlationId = UUID.randomUUID().toString();
         }
 
-        var result = resultPersistence.loadResult(resultId, correlationId);
+        var loadResult = resultPersistence.loadResult(resultId, correlationId);
+        if (loadResult.isFailure()) {
+            return ResponseEntity.internalServerError().build();
+        }
+        var result = loadResult.getOrThrow();
         if (result.isEmpty()) {
             return ResponseEntity.notFound().build();
         }

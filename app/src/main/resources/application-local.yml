@@ -76,7 +76,7 @@ enrichment:
       glm:
         type: openai-compatible
         endpoint: ${GLM_ENDPOINT:https://api.z.ai/api/coding/paas/v4}
-        api-key: ${GLM_API_KEY:104ba3df06ca456dae4ea964d36cd44c.uVg6BlJ3SbvyXoY1}
+        api-key: ${GLM_API_KEY:}
         model: ${GLM_MODEL:glm-4.5}
         timeout-ms: 30000
       azure-gpt:
