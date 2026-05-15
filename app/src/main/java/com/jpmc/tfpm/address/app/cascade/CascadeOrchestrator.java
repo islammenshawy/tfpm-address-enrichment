@@ -17,6 +17,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.Instant;
 import java.util.*;
@@ -36,13 +37,19 @@ public final class CascadeOrchestrator {
     private final List<AddressStructurer> structurers;
     private final FieldMerger fieldMerger;
     private final CountryRouter countryRouter;
+    // earlyExitThreshold is configured via enrichment.cascade.early-exit-threshold.
+    // Currently unused because all structurers run in parallel. In a future sequential
+    // mode, this threshold would allow short-circuiting the cascade when cumulative
+    // confidence on all required fields exceeds this value.
     private final double earlyExitThreshold;
     private final long cascadeTimeoutMs;
+    private final int minSources;
     private final Set<AddressField> requiredFields;
     private final MeterRegistry meterRegistry;
     private final Map<String, ConfidenceCalibrator> calibrators;
     private final ConsensusAnalyzer consensusAnalyzer;
     private final FieldNormalizer fieldNormalizer;
+    private final ExecutorService executor;
     private final ConcurrentHashMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     public CascadeOrchestrator(
@@ -51,7 +58,7 @@ public final class CascadeOrchestrator {
             CountryRouter countryRouter,
             double earlyExitThreshold,
             MeterRegistry meterRegistry) {
-        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 30000L, meterRegistry, Map.of());
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, 30000L, 2, meterRegistry, Map.of(), 4);
     }
 
     public CascadeOrchestrator(
@@ -61,7 +68,7 @@ public final class CascadeOrchestrator {
             double earlyExitThreshold,
             long cascadeTimeoutMs,
             MeterRegistry meterRegistry) {
-        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, cascadeTimeoutMs, meterRegistry, Map.of());
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, cascadeTimeoutMs, 2, meterRegistry, Map.of(), 4);
     }
 
     public CascadeOrchestrator(
@@ -72,16 +79,43 @@ public final class CascadeOrchestrator {
             long cascadeTimeoutMs,
             MeterRegistry meterRegistry,
             Map<String, Map<String, Double>> consensusWeights) {
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, cascadeTimeoutMs, 2, meterRegistry, consensusWeights, 4);
+    }
+
+    public CascadeOrchestrator(
+            List<AddressStructurer> structurers,
+            FieldMerger fieldMerger,
+            CountryRouter countryRouter,
+            double earlyExitThreshold,
+            long cascadeTimeoutMs,
+            int minSources,
+            MeterRegistry meterRegistry,
+            Map<String, Map<String, Double>> consensusWeights) {
+        this(structurers, fieldMerger, countryRouter, earlyExitThreshold, cascadeTimeoutMs, minSources, meterRegistry, consensusWeights, 4);
+    }
+
+    public CascadeOrchestrator(
+            List<AddressStructurer> structurers,
+            FieldMerger fieldMerger,
+            CountryRouter countryRouter,
+            double earlyExitThreshold,
+            long cascadeTimeoutMs,
+            int minSources,
+            MeterRegistry meterRegistry,
+            Map<String, Map<String, Double>> consensusWeights,
+            int parallelThreads) {
         this.structurers = List.copyOf(structurers);
         this.fieldMerger = fieldMerger;
         this.countryRouter = countryRouter;
         this.earlyExitThreshold = earlyExitThreshold;
         this.cascadeTimeoutMs = cascadeTimeoutMs;
+        this.minSources = minSources;
         this.requiredFields = Set.of(AddressField.CTRY, AddressField.TWN_NM);
         this.meterRegistry = meterRegistry;
         this.calibrators = fieldMerger.calibratorMap();
         this.consensusAnalyzer = new ConsensusAnalyzer(consensusWeights);
         this.fieldNormalizer = new FieldNormalizer();
+        this.executor = Executors.newFixedThreadPool(parallelThreads);
     }
 
     public Result<CascadeResult> orchestrate(RawAddress raw, String correlationId) {
@@ -105,6 +139,15 @@ public final class CascadeOrchestrator {
                     EnrichmentError.Category.CASCADE_NO_RESULT,
                     "All structurers failed or returned no results",
                     correlationId));
+        }
+
+        // min-sources check: warn if fewer structurers returned results than configured minimum.
+        // This does not fail the request — consensus quality may be degraded but a result is still returned.
+        long sourcesWithResults = trace.stream().filter(t -> !t.fields().isEmpty()).count();
+        if (sourcesWithResults < minSources) {
+            LOG.warn("Only {} of {} required min-sources returned results [corrId={}]. "
+                            + "Consensus quality may be degraded.",
+                    sourcesWithResults, minSources, correlationId);
         }
 
         // Normalize LLM output to match libpostal's canonical forms.
@@ -135,9 +178,13 @@ public final class CascadeOrchestrator {
                                                  RawAddress raw, String correlationId) {
         var results = new ConcurrentLinkedQueue<StructuringResult>();
         var latch = new CountDownLatch(structurers.size());
+        var mdcContext = MDC.getCopyOfContextMap();
 
         for (var structurer : structurers) {
             CompletableFuture.runAsync(() -> {
+                if (mdcContext != null) {
+                    MDC.setContextMap(mdcContext);
+                }
                 try {
                     var sample = Timer.start(meterRegistry);
                     var result = structurer.structure(raw);
@@ -150,9 +197,10 @@ public final class CascadeOrchestrator {
                     LOG.warn("Structurer '{}' threw unexpectedly [corrId={}]: {}",
                             structurer.name(), correlationId, e.getMessage());
                 } finally {
+                    MDC.clear();
                     latch.countDown();
                 }
-            });
+            }, executor);
         }
 
         try {

@@ -85,8 +85,11 @@ class AddressEnrichmentServiceImplTest {
                 orchestrator,
                 resultPersistence,
                 ComplianceRouter.alwaysBypass(),
+                (rowId, trace, addr, hint) -> {},
+                (rowId, hint, decision, corrId) -> {},
                 event -> {},
                 0.70,
+                true,
                 meterRegistry,
                 noOpTransactionManager());
     }

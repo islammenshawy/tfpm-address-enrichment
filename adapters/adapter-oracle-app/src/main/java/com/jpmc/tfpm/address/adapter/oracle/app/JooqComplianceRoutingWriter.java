@@ -28,7 +28,7 @@ public class JooqComplianceRoutingWriter implements ComplianceRoutingWriter {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void record(long resultId, String countryHint, ComplianceDecision decision, String correlationId) {
         try {
             String decisionType;

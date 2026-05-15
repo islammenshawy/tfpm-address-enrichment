@@ -68,9 +68,23 @@ public class AddressEnrichmentKafkaListener {
                     result.outcome(), correlationId);
 
             ack.acknowledge();
+        } catch (IllegalArgumentException | com.fasterxml.jackson.core.JsonProcessingException e) {
+            // Known bad input — message is permanently unprocessable.
+            // Ack to prevent infinite redelivery; Spring Kafka's DefaultErrorHandler/DLT
+            // cannot help with malformed payloads.
+            LOG.warn("Permanently unprocessable Kafka message [corrId={}]: {}", correlationId, e.getMessage(), e);
+            ack.acknowledge();
+        } catch (RuntimeException e) {
+            // Unexpected/transient failure (DB errors, timeouts, etc.).
+            // Rethrow so Spring Kafka's DefaultErrorHandler can retry and/or route to DLT.
+            LOG.error("Transient failure processing Kafka message, rethrowing for retry/DLT [corrId={}]",
+                    correlationId, e);
+            throw e;
         } catch (Exception e) {
-            LOG.error("Failed to process Kafka message [corrId={}]", correlationId, e);
-            // Don't ack — message will be redelivered by Kafka
+            // Checked exception from an unexpected source — wrap and rethrow for DLT.
+            LOG.error("Checked exception processing Kafka message, wrapping for retry/DLT [corrId={}]",
+                    correlationId, e);
+            throw new RuntimeException("Failed to process Kafka message [corrId=" + correlationId + "]", e);
         } finally {
             MDC.remove("traceId");
         }

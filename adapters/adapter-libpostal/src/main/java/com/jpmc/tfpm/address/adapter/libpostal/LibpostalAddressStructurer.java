@@ -11,6 +11,7 @@ import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -58,11 +59,17 @@ public final class LibpostalAddressStructurer implements AddressStructurer {
             var stub = AddressStructurerServiceGrpc.newBlockingStub(channel)
                     .withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
 
-            var request = StructureRequest.newBuilder()
+            var requestBuilder = StructureRequest.newBuilder()
                     .setRawAddress(raw.raw())
                     .setCountryHint(raw.countryHint())
-                    .setLocale(raw.locale())
-                    .build();
+                    .setLocale(raw.locale());
+
+            var traceId = MDC.get("traceId");
+            if (traceId != null) {
+                requestBuilder.setTraceId(traceId);
+            }
+
+            var request = requestBuilder.build();
 
             var response = stub.structure(request);
             var latency = Duration.between(start, Instant.now());

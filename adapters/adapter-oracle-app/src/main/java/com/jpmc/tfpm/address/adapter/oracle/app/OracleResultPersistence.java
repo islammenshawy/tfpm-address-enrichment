@@ -45,7 +45,7 @@ public class OracleResultPersistence implements ResultPersistence {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public Result<Long> persistResult(EnrichmentRequest request, CascadeResult cascadeResult) {
         try {
             var address = cascadeResult.structuredAddress();
@@ -128,7 +128,7 @@ public class OracleResultPersistence implements ResultPersistence {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void writeToExceptionQueue(long resultRowId, String reason) {
         dsl.insertInto(table("EXCEPTION_QUEUE"))
                 .columns(

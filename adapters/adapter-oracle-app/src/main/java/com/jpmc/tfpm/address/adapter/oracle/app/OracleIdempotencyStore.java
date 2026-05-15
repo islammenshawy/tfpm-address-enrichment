@@ -48,7 +48,7 @@ public class OracleIdempotencyStore implements IdempotencyStore {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public Result<ClaimResult> tryClaim(EnrichmentRequest request) {
         var key = computeKey(request);
         try {
@@ -80,7 +80,7 @@ public class OracleIdempotencyStore implements IdempotencyStore {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public Result<Void> recordResult(String idempotencyKey, long resultRowId) {
         try {
             dsl.update(table("IDEMPOTENCY_KEYS"))

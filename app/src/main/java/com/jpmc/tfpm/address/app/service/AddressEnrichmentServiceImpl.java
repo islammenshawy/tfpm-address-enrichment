@@ -7,7 +7,9 @@ import com.jpmc.tfpm.address.domain.AuditLog;
 import com.jpmc.tfpm.address.domain.AuditLog.AuditEvent;
 import com.jpmc.tfpm.address.domain.ComplianceDecision;
 import com.jpmc.tfpm.address.domain.ComplianceRouter;
+import com.jpmc.tfpm.address.domain.ComplianceRoutingWriter;
 import com.jpmc.tfpm.address.domain.EnrichmentRequest;
+import com.jpmc.tfpm.address.domain.FieldAttributionWriter;
 import com.jpmc.tfpm.address.domain.IdempotencyStore;
 import com.jpmc.tfpm.address.domain.IdempotencyStore.ClaimResult;
 import com.jpmc.tfpm.address.domain.Result;
@@ -41,8 +43,11 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final CascadeOrchestrator cascadeOrchestrator;
     private final ResultPersistence resultPersistence;
     private final ComplianceRouter complianceRouter;
+    private final FieldAttributionWriter fieldAttributionWriter;
+    private final ComplianceRoutingWriter complianceRoutingWriter;
     private final AuditLog auditLog;
     private final double reviewThreshold;
+    private final boolean complianceShadowMode;
     private final MeterRegistry meterRegistry;
     private final TransactionTemplate transactionTemplate;
     private final ConcurrentHashMap<String, Counter> counterCache = new ConcurrentHashMap<>();
@@ -53,16 +58,22 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             CascadeOrchestrator cascadeOrchestrator,
             ResultPersistence resultPersistence,
             ComplianceRouter complianceRouter,
+            FieldAttributionWriter fieldAttributionWriter,
+            ComplianceRoutingWriter complianceRoutingWriter,
             AuditLog auditLog,
             double reviewThreshold,
+            boolean complianceShadowMode,
             MeterRegistry meterRegistry,
             PlatformTransactionManager transactionManager) {
         this.idempotencyStore = idempotencyStore;
         this.cascadeOrchestrator = cascadeOrchestrator;
         this.resultPersistence = resultPersistence;
         this.complianceRouter = complianceRouter;
+        this.fieldAttributionWriter = fieldAttributionWriter;
+        this.complianceRoutingWriter = complianceRoutingWriter;
         this.auditLog = auditLog;
         this.reviewThreshold = reviewThreshold;
+        this.complianceShadowMode = complianceShadowMode;
         this.meterRegistry = meterRegistry;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
     }
@@ -180,6 +191,14 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             return rowId;
         });
 
+        // Best-effort: write per-field attributions
+        try {
+            fieldAttributionWriter.writeAttributions(resultRowId, cascadeResult.structurerTrace(),
+                    cascadeResult.structuredAddress(), request.address().countryHint());
+        } catch (Exception e) {
+            LOG.warn("Failed to write field attributions [corrId={}]: {}", correlationId, e.getMessage(), e);
+        }
+
         // Determine outcome
         EnrichmentResult.Outcome outcome;
         if (!address.meetsSr2026Minimum()) {
@@ -266,12 +285,31 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             switch (decision) {
                 case ComplianceDecision.Bypass b ->
                         LOG.debug("Compliance bypass [corrId={}]", request.correlationId());
-                case ComplianceDecision.RouteToCompliance r ->
-                        LOG.info("Compliance route: {} [corrId={}]",
-                                r.primaryReason(), request.correlationId());
-                case ComplianceDecision.Block b ->
-                        LOG.warn("Compliance block: {} [corrId={}]",
-                                b.reason(), request.correlationId());
+                case ComplianceDecision.RouteToCompliance r -> {
+                    LOG.info("Compliance route: {} [corrId={}]",
+                            r.primaryReason(), request.correlationId());
+                    if (!complianceShadowMode) {
+                        LOG.warn("Non-shadow compliance dispatch is not yet implemented [corrId={}]",
+                                request.correlationId());
+                    }
+                }
+                case ComplianceDecision.Block b -> {
+                    LOG.warn("Compliance block: {} [corrId={}]",
+                            b.reason(), request.correlationId());
+                    if (!complianceShadowMode) {
+                        LOG.warn("Non-shadow compliance dispatch is not yet implemented [corrId={}]",
+                                request.correlationId());
+                    }
+                }
+            }
+
+            // Best-effort: persist the compliance routing decision
+            try {
+                complianceRoutingWriter.record(result.resultRowId(),
+                        request.address().countryHint(), decision, request.correlationId());
+            } catch (Exception e) {
+                LOG.warn("Failed to write compliance routing decision [corrId={}]: {}",
+                        request.correlationId(), e.getMessage(), e);
             }
         } catch (Exception e) {
             LOG.error("Compliance evaluation failed [corrId={}]", request.correlationId(), e);

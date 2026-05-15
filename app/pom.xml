@@ -30,8 +30,10 @@
         <dependency><groupId>io.opentelemetry.instrumentation</groupId><artifactId>opentelemetry-spring-boot-starter</artifactId><version>${opentelemetry-instrumentation.version}</version></dependency>
         <dependency><groupId>org.liquibase</groupId><artifactId>liquibase-core</artifactId></dependency>
         <dependency><groupId>net.logstash.logback</groupId><artifactId>logstash-logback-encoder</artifactId><version>8.0</version></dependency>
-        <!-- H2 for local/in-memory profile (no Docker needed) -->
-        <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>runtime</scope></dependency>
+        <!-- H2 for local/in-memory profile (no Docker needed) — test scope only;
+             production uses Oracle exclusively. For local dev with spring-boot:run,
+             use the 'local' Maven profile which promotes H2 to runtime scope. -->
+        <dependency><groupId>com.h2database</groupId><artifactId>h2</artifactId><scope>test</scope></dependency>
         <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
     </dependencies>
@@ -55,4 +57,18 @@
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <!-- Local development profile: promotes H2 to runtime so spring-boot:run works
+             without a Docker Oracle instance. Usage: mvn spring-boot:run -Plocal -->
+        <profile>
+            <id>local</id>
+            <dependencies>
+                <dependency>
+                    <groupId>com.h2database</groupId>
+                    <artifactId>h2</artifactId>
+                    <scope>runtime</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>

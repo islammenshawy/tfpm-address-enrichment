@@ -42,7 +42,7 @@ public class JooqFieldAttributionWriter implements FieldAttributionWriter {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public void writeAttributions(long resultId, List<StructuringResult> trace,
                                   StructuredAddress merged, String countryHint) {
         try {

@@ -27,6 +27,7 @@ import java.util.UUID;
 public class AddressEnrichmentRabbitListener {
 
     private static final Logger LOG = LoggerFactory.getLogger(AddressEnrichmentRabbitListener.class);
+    private static final int MAX_REDELIVERY_COUNT = 3;
 
     private final AddressEnrichmentService service;
     private final ObjectMapper objectMapper;
@@ -74,13 +75,43 @@ public class AddressEnrichmentRabbitListener {
                     result.outcome(), correlationId);
 
             channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
-        } catch (Exception e) {
-            LOG.error("Failed to process RabbitMQ message [corrId={}]", correlationId, e);
-            // Nack with requeue=true for retry, requeue=false for DLQ
+        } catch (IllegalArgumentException | com.fasterxml.jackson.core.JsonProcessingException e) {
+            // Permanent failure — bad input, parse errors. Send to DLQ (requeue=false).
+            LOG.warn("Permanently unprocessable RabbitMQ message, sending to DLQ [corrId={}]: {}",
+                    correlationId, e.getMessage(), e);
             channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+        } catch (Exception e) {
+            // Transient failure (DB errors, timeouts, etc.).
+            // Check redelivery count — if exceeded max retries, send to DLQ to avoid infinite loop.
+            long redeliveryCount = getRedeliveryCount(message);
+            if (redeliveryCount >= MAX_REDELIVERY_COUNT) {
+                LOG.error("Max redelivery count ({}) exceeded for RabbitMQ message, sending to DLQ [corrId={}]",
+                        MAX_REDELIVERY_COUNT, correlationId, e);
+                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, false);
+            } else {
+                LOG.warn("Transient failure processing RabbitMQ message (redelivery {}), requeueing for retry [corrId={}]",
+                        redeliveryCount, correlationId, e);
+                channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);
+            }
         } finally {
             MDC.remove("traceId");
         }
+    }
+
+    private long getRedeliveryCount(Message message) {
+        var props = message.getMessageProperties();
+        // x-death header is set by RabbitMQ when a message is dead-lettered and requeued.
+        // Each cycle increments the count. If not present, fall back to isRedelivered().
+        var xDeath = props.getXDeathHeader();
+        if (xDeath != null && !xDeath.isEmpty()) {
+            var firstEntry = xDeath.get(0);
+            var count = firstEntry.get("count");
+            if (count instanceof Number n) {
+                return n.longValue();
+            }
+        }
+        // Fallback: if the message has been redelivered at all, count as 1
+        return Boolean.TRUE.equals(props.isRedelivered()) ? 1 : 0;
     }
 
     private String extractCorrelationId(Message message) {

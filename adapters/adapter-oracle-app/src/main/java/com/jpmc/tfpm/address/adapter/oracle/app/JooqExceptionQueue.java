@@ -32,7 +32,7 @@ public class JooqExceptionQueue implements ExceptionQueue {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public List<ExceptionItem> claim(int batchSize, String claimedBy) {
         return dsl.transactionResult(config -> {
             var ctx = config.dsl();
@@ -82,7 +82,7 @@ public class JooqExceptionQueue implements ExceptionQueue {
     }
 
     @Override
-    @Retryable(retryFor = TransientDataAccessException.class, maxAttempts = 3, backoff = @Backoff(delay = 100))
+    @Retryable(retryFor = {TransientDataAccessException.class, org.jooq.exception.DataAccessException.class}, maxAttempts = 3, backoff = @Backoff(delay = 100))
     public boolean resolve(long exceptionId, String resolvedBy, String resolutionJson, int expectedVersion) {
         var updated = dsl.update(table("EXCEPTION_QUEUE"))
                 .set(field("STATUS"), "RESOLVED")

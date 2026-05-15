@@ -9,7 +9,18 @@ import com.jpmc.tfpm.address.app.compliance.ComplianceProperties;
 import com.jpmc.tfpm.address.app.compliance.FourAxisComplianceRouter;
 import com.jpmc.tfpm.address.app.routing.ConfigDrivenCountryRouter;
 import com.jpmc.tfpm.address.app.service.AddressEnrichmentServiceImpl;
-import com.jpmc.tfpm.address.domain.*;
+import com.jpmc.tfpm.address.domain.AccuracySampler;
+import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
+import com.jpmc.tfpm.address.domain.AddressStructurer;
+import com.jpmc.tfpm.address.domain.AuditLog;
+import com.jpmc.tfpm.address.domain.ComplianceRouter;
+import com.jpmc.tfpm.address.domain.ComplianceRoutingWriter;
+import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
+import com.jpmc.tfpm.address.domain.CountryRouter;
+import com.jpmc.tfpm.address.domain.FieldAttributionWriter;
+import com.jpmc.tfpm.address.domain.IdempotencyStore;
+import com.jpmc.tfpm.address.domain.LegacyAddressCursor;
+import com.jpmc.tfpm.address.domain.ResultPersistence;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,12 +66,15 @@ public class ServiceConfig {
             CountryRouter countryRouter,
             @Value("${enrichment.cascade.early-exit-threshold:0.92}") double earlyExitThreshold,
             @Value("${enrichment.cascade.timeout-ms:500}") long cascadeTimeoutMs,
+            @Value("${enrichment.cascade.min-sources:2}") int minSources,
             MeterRegistry meterRegistry,
-            @Value("#{${enrichment.consensus.source-weights:{}}}") Map<String, Map<String, Double>> consensusWeights) {
+            @Value("#{${enrichment.consensus.source-weights:{}}}") Map<String, Map<String, Double>> consensusWeights,
+            @Value("${enrichment.cascade.parallel-threads:4}") int parallelThreads) {
         return new CascadeOrchestrator(
                 structurers, fieldMerger, countryRouter,
-                earlyExitThreshold, cascadeTimeoutMs, meterRegistry,
-                consensusWeights != null ? consensusWeights : Map.of());
+                earlyExitThreshold, cascadeTimeoutMs, minSources, meterRegistry,
+                consensusWeights != null ? consensusWeights : Map.of(),
+                parallelThreads);
     }
 
     @Bean
@@ -77,14 +91,18 @@ public class ServiceConfig {
             CascadeOrchestrator cascadeOrchestrator,
             ResultPersistence resultPersistence,
             ComplianceRouter complianceRouter,
+            FieldAttributionWriter fieldAttributionWriter,
+            ComplianceRoutingWriter complianceRoutingWriter,
             AuditLog auditLog,
             @Value("${enrichment.review-threshold:0.70}") double reviewThreshold,
+            ComplianceProperties complianceProperties,
             MeterRegistry meterRegistry,
             PlatformTransactionManager transactionManager) {
         return new AddressEnrichmentServiceImpl(
                 idempotencyStore, cascadeOrchestrator, resultPersistence,
-                complianceRouter, auditLog, reviewThreshold, meterRegistry,
-                transactionManager);
+                complianceRouter, fieldAttributionWriter, complianceRoutingWriter,
+                auditLog, reviewThreshold, complianceProperties.shadowMode(),
+                meterRegistry, transactionManager);
     }
 
     @Bean
