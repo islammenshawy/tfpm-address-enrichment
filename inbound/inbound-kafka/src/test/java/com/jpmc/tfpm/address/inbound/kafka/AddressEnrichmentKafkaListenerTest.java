@@ -14,6 +14,7 @@ import org.springframework.kafka.support.Acknowledgment;
 
 import java.time.Instant;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -63,22 +64,26 @@ class AddressEnrichmentKafkaListenerTest {
     }
 
     @Test
-    void does_not_ack_on_service_exception() {
+    void rethrows_service_exception_for_dlt() {
         when(service.enrich(any(EnrichmentRequest.class)))
                 .thenThrow(new RuntimeException("db down"));
 
-        listener.onMessage(record("""
+        // Transient errors are rethrown so Spring Kafka's error handler can retry/DLT
+        assertThatThrownBy(() -> listener.onMessage(record("""
                 {"rawAddress": "test address"}
-                """), ack);
+                """), ack))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("db down");
 
         verify(ack, never()).acknowledge();
     }
 
     @Test
-    void handles_malformed_json() {
+    void acks_malformed_json_to_prevent_redelivery() {
+        // Bad input is permanently unprocessable — ack it so it doesn't loop
         listener.onMessage(record("not json at all"), ack);
 
         verify(service, never()).enrich(any());
-        verify(ack, never()).acknowledge();
+        verify(ack).acknowledge();
     }
 }
