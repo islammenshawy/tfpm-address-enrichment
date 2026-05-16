@@ -1,0 +1,17 @@
+{
+  "fixture_id": "MT-011",
+  "country": "US",
+  "source": "rabbitmq",
+  "raw": "JOHN P SMITH 383 MADISON AVENUE FL 45, NEW YORK NY 10179 US",
+  "country_hint": "US",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "STRT_NM": "Madison Avenue",
+    "BLDG_NB": "383",
+    "PST_CD": "10179",
+    "CTRY_SUB_DVSN": "NY"
+  },
+  "notes": "Person name 'JOHN P SMITH' concatenated with address in SWIFT MT field 59. LLM should detect ENTITY_NM."
+}
