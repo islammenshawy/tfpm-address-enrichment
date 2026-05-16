@@ -15,14 +15,18 @@ import java.util.Set;
 public record EnrichmentHttpResponse(
         String correlationId,
         String outcome,
+        String recommendation,
         Map<String, FieldResponse> fields,
         double overallConfidence,
         List<String> sources,
         ConsensusResponse consensus,
+        List<ReviewReasonResponse> reviewReasons,
         Long resultRowId,
         Instant processedAt) {
 
     public record FieldResponse(String value, double confidence, String mergeStrategy) {}
+
+    public record ReviewReasonResponse(String rule, String description, String details) {}
 
     public record ConsensusResponse(
             int sourceCount,
@@ -59,13 +63,21 @@ public record EnrichmentHttpResponse(
                     cr.overallConsensus(), cr.sourceWeights(), fieldConsensus);
         }
 
+        var reviewReasons = result.reviewReasons().stream()
+                .map(r -> new ReviewReasonResponse(r.rule(), r.description(), r.details()))
+                .toList();
+
+        var recommendation = reviewReasons.isEmpty() ? "AutoApproved" : "ManualReview";
+
         return new EnrichmentHttpResponse(
                 result.correlationId(),
                 result.outcome().name(),
+                recommendation,
                 fields,
                 result.overallConfidence(),
                 result.sources(),
                 consensusResp,
+                reviewReasons,
                 result.resultRowId(),
                 result.processedAt());
     }

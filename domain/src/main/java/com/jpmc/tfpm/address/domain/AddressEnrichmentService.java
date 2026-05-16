@@ -54,6 +54,8 @@ public interface AddressEnrichmentService {
      *                            and no row was written
      * @param processedAt         server-side timestamp
      */
+    record ReviewReason(String rule, String description, String details) {}
+
     record EnrichmentResult(
             String correlationId,
             Outcome outcome,
@@ -62,7 +64,8 @@ public interface AddressEnrichmentService {
             Long resultRowId,
             Instant processedAt,
             List<String> sources,
-            ConsensusResult consensus) {
+            ConsensusResult consensus,
+            List<ReviewReason> reviewReasons) {
 
         public EnrichmentResult {
             Objects.requireNonNull(correlationId, "correlationId");
@@ -70,14 +73,24 @@ public interface AddressEnrichmentService {
             Objects.requireNonNull(structuredAddress, "structuredAddress");
             Objects.requireNonNull(processedAt, "processedAt");
             sources = sources != null ? List.copyOf(sources) : List.of();
+            reviewReasons = reviewReasons != null ? List.copyOf(reviewReasons) : List.of();
         }
 
-        /** Backwards-compatible constructor without sources/consensus. */
+        /** Backwards-compatible constructor without sources/consensus/reviewReasons. */
         public EnrichmentResult(String correlationId, Outcome outcome,
                                 StructuredAddress structuredAddress, double overallConfidence,
                                 Long resultRowId, Instant processedAt) {
             this(correlationId, outcome, structuredAddress, overallConfidence,
-                    resultRowId, processedAt, List.of(), null);
+                    resultRowId, processedAt, List.of(), null, List.of());
+        }
+
+        /** Backwards-compatible constructor without reviewReasons. */
+        public EnrichmentResult(String correlationId, Outcome outcome,
+                                StructuredAddress structuredAddress, double overallConfidence,
+                                Long resultRowId, Instant processedAt,
+                                List<String> sources, ConsensusResult consensus) {
+            this(correlationId, outcome, structuredAddress, overallConfidence,
+                    resultRowId, processedAt, sources, consensus, List.of());
         }
 
         public boolean isSuccess() {

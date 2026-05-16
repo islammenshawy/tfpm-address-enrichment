@@ -35,12 +35,14 @@ final class CsvReportWriter implements Closeable {
     synchronized void writeRow(FixtureResult r) throws IOException {
         if (headerWritten.compareAndSet(false, true)) {
             writer.write(String.join(",",
-                    "Fixture ID", "Country", "Outcome", "Overall Confidence",
+                    "Fixture ID", "Country", "Outcome", "Recommendation",
+                    "Overall Confidence",
                     "Sources", "Raw Address",
                     "Fields (name=value)", "Fields (expected)",
                     "Accuracy", "Expected Count", "Matched Count",
                     "Consensus Sources", "Consensus Agreements", "Consensus Disagreements",
                     "Consensus Overall", "Consensus Details",
+                    "Review Reasons",
                     "Latency (ms)"));
             writer.newLine();
         }
@@ -49,6 +51,7 @@ final class CsvReportWriter implements Closeable {
         row.add(csv(r.id()));
         row.add(csv(r.country()));
         row.add(csv(r.outcome()));
+        row.add(csv(r.recommendation()));
         row.add(String.format("%.2f", r.overallConfidence()));
         row.add(csv(String.join(" | ", r.sources())));
         row.add(csv(r.raw()));
@@ -99,6 +102,9 @@ final class CsvReportWriter implements Closeable {
             row.add(""); // overall
             row.add("single source");
         }
+
+        // Review reasons
+        row.add(csv(String.join(" | ", r.reviewReasons())));
 
         row.add(String.valueOf(r.latencyMs()));
 

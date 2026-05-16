@@ -7,6 +7,7 @@ import com.jpmc.tfpm.address.app.cascade.FieldMerger;
 import com.jpmc.tfpm.address.app.cascade.IdentityConfidenceCalibrator;
 import com.jpmc.tfpm.address.app.compliance.ComplianceProperties;
 import com.jpmc.tfpm.address.app.compliance.FourAxisComplianceRouter;
+import com.jpmc.tfpm.address.app.review.ReviewRulesEngine;
 import com.jpmc.tfpm.address.app.routing.ConfigDrivenCountryRouter;
 import com.jpmc.tfpm.address.app.service.AddressEnrichmentServiceImpl;
 import com.jpmc.tfpm.address.domain.AccuracySampler;
@@ -40,7 +41,7 @@ import java.util.Map;
  * adapter implementations per CLAUDE.md.
  */
 @Configuration
-@EnableConfigurationProperties({ComplianceProperties.class, ConsensusProperties.class})
+@EnableConfigurationProperties({ComplianceProperties.class, ConsensusProperties.class, ReviewRulesProperties.class})
 public class ServiceConfig {
 
     @Bean
@@ -78,6 +79,11 @@ public class ServiceConfig {
     }
 
     @Bean
+    public ReviewRulesEngine reviewRulesEngine(ReviewRulesProperties reviewRulesProperties) {
+        return new ReviewRulesEngine(reviewRulesProperties);
+    }
+
+    @Bean
     public ComplianceRouter complianceRouter(ComplianceProperties props) {
         if (!props.enabled()) {
             return ComplianceRouter.alwaysBypass();
@@ -97,12 +103,13 @@ public class ServiceConfig {
             @Value("${enrichment.review-threshold:0.70}") double reviewThreshold,
             ComplianceProperties complianceProperties,
             MeterRegistry meterRegistry,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            ReviewRulesEngine reviewRulesEngine) {
         return new AddressEnrichmentServiceImpl(
                 idempotencyStore, cascadeOrchestrator, resultPersistence,
                 complianceRouter, fieldAttributionWriter, complianceRoutingWriter,
                 auditLog, reviewThreshold, complianceProperties.shadowMode(),
-                meterRegistry, transactionManager);
+                meterRegistry, transactionManager, reviewRulesEngine);
     }
 
     @Bean

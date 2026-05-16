@@ -32,6 +32,7 @@ abstract class AccuracyTestBase {
 
     record FixtureResult(String id, String country, String source, String raw,
                          Map<String, FieldDetail> fields, String outcome,
+                         String recommendation, List<String> reviewReasons,
                          double overallConfidence, List<String> sources,
                          ConsensusInfo consensus,
                          int expectedCount, int matchedCount,
@@ -273,12 +274,18 @@ abstract class AccuracyTestBase {
         if (respBody == null) return null;
 
         var outcome = respBody.path("outcome").asText("");
+        var recommendation = respBody.path("recommendation").asText("AutoApproved");
         var overallConf = respBody.path("overallConfidence").asDouble(0);
         var respFields = respBody.path("fields");
         var sourcesNode = respBody.path("sources");
         var sources = new ArrayList<String>();
         if (sourcesNode.isArray()) {
             sourcesNode.forEach(n -> sources.add(n.asText()));
+        }
+        var reviewReasonsNode = respBody.path("reviewReasons");
+        var reviewReasons = new ArrayList<String>();
+        if (reviewReasonsNode.isArray()) {
+            reviewReasonsNode.forEach(n -> reviewReasons.add(n.path("rule").asText() + ": " + n.path("details").asText()));
         }
 
         // Parse consensus
@@ -348,6 +355,7 @@ abstract class AccuracyTestBase {
 
         double acc = expCount > 0 ? (double) matched / expCount : -1;
         return new FixtureResult(id, country, source, raw, fields, outcome,
+                recommendation, reviewReasons,
                 overallConf, sources, consensus, expCount, matched, acc, latencyMs);
     }
 

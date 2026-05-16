@@ -149,6 +149,52 @@ enrichment:
   # for human review. Calibrated, not raw.
   review-threshold: 0.70
 
+  # ----- Review rules engine (configurable triggers for REQUIRES_REVIEW) -----
+  review-rules:
+    rules:
+      - name: low-confidence
+        enabled: true
+        type: LOW_CONFIDENCE
+        description: "Overall confidence below threshold"
+        params:
+          threshold: 0.70
+      - name: missing-mandatory
+        enabled: true
+        type: MISSING_FIELDS
+        description: "SR2026 mandatory fields missing"
+        params:
+          fields: CTRY,TWN_NM
+      - name: consensus-disagreement
+        enabled: true
+        type: CONSENSUS_DISAGREEMENT
+        description: "Strong sources disagree on 2+ fields"
+        params:
+          min-disagreements: 2
+      - name: single-source
+        enabled: true
+        type: SINGLE_SOURCE
+        description: "Fewer than required sources returned results"
+        params:
+          min-sources: 2
+      - name: high-risk-country
+        enabled: true
+        type: HIGH_RISK_COUNTRY
+        description: "Address in high-risk jurisdiction"
+        params:
+          countries: IR,KP,SY,CU,AF,YE,VE,MM,RU,BY
+      - name: field-confidence-floor
+        enabled: true
+        type: FIELD_CONFIDENCE_FLOOR
+        description: "Critical field below 50% confidence"
+        params:
+          threshold: 0.50
+          fields: CTRY,TWN_NM,STRT_NM
+      - name: entity-in-address
+        enabled: true
+        type: ENTITY_DETECTED
+        description: "Person/business name detected in address input"
+        params: {}
+
   # ----- Compliance routing (four-axis decision) -----
   compliance:
     enabled: ${COMPLIANCE_ENABLED:true}

@@ -1,6 +1,8 @@
 package com.jpmc.tfpm.address.app.service;
 
 import com.jpmc.tfpm.address.app.cascade.CascadeOrchestrator;
+import com.jpmc.tfpm.address.app.config.ReviewRulesProperties;
+import com.jpmc.tfpm.address.app.review.ReviewRulesEngine;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.app.cascade.FieldMerger;
 import com.jpmc.tfpm.address.app.cascade.IdentityConfidenceCalibrator;
@@ -80,6 +82,7 @@ class AddressEnrichmentServiceImplTest {
     }
 
     private AddressEnrichmentServiceImpl makeService(CascadeOrchestrator orchestrator) {
+        var reviewRulesEngine = new ReviewRulesEngine(new ReviewRulesProperties(List.of()));
         return new AddressEnrichmentServiceImpl(
                 idempotencyStore,
                 orchestrator,
@@ -91,7 +94,8 @@ class AddressEnrichmentServiceImplTest {
                 0.70,
                 true,
                 meterRegistry,
-                noOpTransactionManager());
+                noOpTransactionManager(),
+                reviewRulesEngine);
     }
 
     @Test

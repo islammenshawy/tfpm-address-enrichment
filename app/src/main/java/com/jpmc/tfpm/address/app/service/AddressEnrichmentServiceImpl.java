@@ -1,8 +1,11 @@
 package com.jpmc.tfpm.address.app.service;
 
 import com.jpmc.tfpm.address.app.cascade.CascadeOrchestrator;
+import com.jpmc.tfpm.address.app.review.ReviewRulesEngine;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
+import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
+import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AuditLog;
 import com.jpmc.tfpm.address.domain.AuditLog.AuditEvent;
 import com.jpmc.tfpm.address.domain.ComplianceDecision;
@@ -26,6 +29,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -46,6 +50,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
     private final FieldAttributionWriter fieldAttributionWriter;
     private final ComplianceRoutingWriter complianceRoutingWriter;
     private final AuditLog auditLog;
+    private final ReviewRulesEngine reviewRulesEngine;
     private final double reviewThreshold;
     private final boolean complianceShadowMode;
     private final MeterRegistry meterRegistry;
@@ -64,7 +69,8 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             double reviewThreshold,
             boolean complianceShadowMode,
             MeterRegistry meterRegistry,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            ReviewRulesEngine reviewRulesEngine) {
         this.idempotencyStore = idempotencyStore;
         this.cascadeOrchestrator = cascadeOrchestrator;
         this.resultPersistence = resultPersistence;
@@ -72,6 +78,7 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         this.fieldAttributionWriter = fieldAttributionWriter;
         this.complianceRoutingWriter = complianceRoutingWriter;
         this.auditLog = auditLog;
+        this.reviewRulesEngine = reviewRulesEngine;
         this.reviewThreshold = reviewThreshold;
         this.complianceShadowMode = complianceShadowMode;
         this.meterRegistry = meterRegistry;
@@ -224,12 +231,26 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
             outcome = EnrichmentResult.Outcome.SUCCESS;
         }
 
+        // Evaluate review rules
+        boolean entityDetected = cascadeResult.structurerTrace().stream()
+                .anyMatch(t -> !t.fields().getOrDefault(AddressField.ENTITY_NM, new FieldValue("", 0)).value().isEmpty());
+        var reviewReasons = reviewRulesEngine.evaluate(
+                address, confidence, cascadeResult.consensus(),
+                request.address().countryHint(), entityDetected);
+
+        // If rules fire and current outcome is SUCCESS, upgrade to REQUIRES_REVIEW
+        if (!reviewReasons.isEmpty() && outcome == EnrichmentResult.Outcome.SUCCESS) {
+            outcome = EnrichmentResult.Outcome.REQUIRES_REVIEW;
+            LOG.info("Review rules triggered — upgrading outcome to REQUIRES_REVIEW [corrId={}]: {}",
+                    correlationId, reviewReasons.stream().map(r -> r.rule()).toList());
+        }
+
         var sources = cascadeResult.structurerTrace().stream()
                 .map(t -> t.structurerName())
                 .toList();
         var enrichmentResult = new EnrichmentResult(
                 correlationId, outcome, address, confidence, resultRowId, Instant.now(),
-                sources, cascadeResult.consensus());
+                sources, cascadeResult.consensus(), reviewReasons);
 
         evaluateCompliance(enrichmentResult, request);
 

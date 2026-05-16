@@ -156,6 +156,17 @@ public final class CascadeOrchestrator {
                 .map(fieldNormalizer::normalizeCountryOnly)
                 .toList();
 
+        // If any structurer detected an entity name, exclude libpostal from merge
+        // (libpostal misparses person/business names as address components).
+        boolean entityDetected = traceWithNormalizedCtry.stream()
+                .anyMatch(t -> !t.fields().getOrDefault(AddressField.ENTITY_NM, new FieldValue("", 0)).value().isEmpty());
+        if (entityDetected) {
+            LOG.info("Entity name detected — excluding libpostal from merge [corrId={}]", correlationId);
+            traceWithNormalizedCtry = traceWithNormalizedCtry.stream()
+                    .filter(t -> !"libpostal".equals(t.structurerName()))
+                    .toList();
+        }
+
         var merged = fieldMerger.merge(traceWithNormalizedCtry, raw.countryHint());
         double confidence = merged.overallConfidence();
 
@@ -164,6 +175,13 @@ public final class CascadeOrchestrator {
         var consensusTrace = traceWithNormalizedCtry.stream()
                 .map(t -> "libpostal".equals(t.structurerName()) ? t : fieldNormalizer.normalize(t))
                 .toList();
+
+        // Also exclude libpostal from consensus if entity detected
+        if (entityDetected) {
+            consensusTrace = consensusTrace.stream()
+                    .filter(t -> !"libpostal".equals(t.structurerName()))
+                    .toList();
+        }
 
         var activeCount = consensusTrace.stream().filter(t -> !t.fields().isEmpty()).count();
         var consensus = activeCount >= 2
