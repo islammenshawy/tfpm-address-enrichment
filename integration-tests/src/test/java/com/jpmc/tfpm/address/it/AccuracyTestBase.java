@@ -461,7 +461,7 @@ abstract class AccuracyTestBase {
         html.append("</table>");
 
         // Detail
-        html.append("<h2>Detailed Results</h2><table><tr><th>ID</th><th>Country</th><th>Sources</th><th>Outcome</th><th>Raw</th>");
+        html.append("<h2>Detailed Results</h2><table><tr><th>ID</th><th>Country</th><th>Sources</th><th>Outcome</th><th>Recommendation</th><th>Raw</th>");
         if (hasGolden) html.append("<th>Expected</th>");
         html.append("<th>Structured Output</th><th>Consensus</th>");
         if (hasGolden) html.append("<th>Accuracy</th>");
@@ -545,12 +545,17 @@ abstract class AccuracyTestBase {
                 consensusHtml.append("<span style='color:#aaa;font-size:11px'>single source</span>");
             }
 
+            var recBadge = "AutoApproved".equals(r.recommendation) ? "b-ok" : "b-review";
+            var recLabel = "AutoApproved".equals(r.recommendation) ? "✓ Auto" : "⚠ Review";
             html.append(String.format("<tr><td><b>%s</b></td><td>%s</td>" +
                     "<td>%s</td>" +
                     "<td><span class='badge %s'>%s</span></td>" +
+                    "<td><span class='badge %s'>%s</span></td>" +
                     "<td class='raw-addr'>%s</td>",
                     r.id, r.country, sourceBadges,
-                    outBadge, r.outcome, r.raw));
+                    outBadge, r.outcome,
+                    recBadge, recLabel,
+                    r.raw));
             if (hasGolden) html.append("<td>").append(expHtml).append("</td>");
             html.append("<td>").append(actHtml).append("</td>");
             html.append("<td>").append(consensusHtml).append("</td>");
