@@ -13,5 +13,5 @@
     "PST_CD": "10179",
     "CTRY_SUB_DVSN": "NY"
   },
-  "notes": "Person name 'JOHN P SMITH' concatenated with address in SWIFT MT field 59. LLM should detect ENTITY_NM."
+  "notes": "Person name 'JOHN P SMITH' concatenated with address in SWIFT MT field 59. LLM should ignore the name and parse address components."
 }

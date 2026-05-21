@@ -246,11 +246,9 @@ abstract class AccuracyTestBase {
         var country = fixture.path("country").asText("");
         var source = fixture.path("source").asText("");
         var raw = fixture.path("raw").asText("");
-        var hint = fixture.path("country_hint").asText("");
-        var locale = fixture.path("locale").asText("");
         var expected = fixture.path("expected_fields");
 
-        var body = Map.of("rawAddress", raw, "countryHint", hint, "locale", locale);
+        var body = Map.of("rawAddress", raw);
         var start = System.currentTimeMillis();
 
         JsonNode respBody;

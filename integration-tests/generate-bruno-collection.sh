@@ -65,6 +65,9 @@ for root, dirs, files in sorted(os.walk(golden_dir)):
   test("{fid} — expected fields match golden set", function() {{
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
 {chr(10).join(test_lines)}
   }});
 }}'''
@@ -73,7 +76,9 @@ for root, dirs, files in sorted(os.walk(golden_dir)):
   test("{fid} — returns structured response", function() {{
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
     expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
   }});
 }}'''
 
@@ -96,9 +101,7 @@ headers {{
 
 body:json {{
   {{
-    "rawAddress": {raw_json},
-    "countryHint": "{hint}",
-    "locale": "{locale}"
+    "rawAddress": {raw_json}
   }}
 }}
 

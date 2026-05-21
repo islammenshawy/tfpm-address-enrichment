@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "Siemens AG, Werner-von-Siemens-Stra\u00dfe 1, Industriegebiet S\u00fcd, 91052 Erlangen",
-    "countryHint": "DE",
-    "locale": "de-DE"
+    "rawAddress": "Siemens AG, Werner-von-Siemens-Stra\u00dfe 1, Industriegebiet S\u00fcd, 91052 Erlangen"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("DE-009 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("de");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();

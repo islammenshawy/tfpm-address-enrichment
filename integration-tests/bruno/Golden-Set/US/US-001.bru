@@ -1,7 +1,7 @@
 meta {
   name: US-001 — US
   type: http
-  seq: 116
+  seq: 118
 }
 
 post {
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "383 Madison Avenue, Suite 4500, New York, NY 10179, United States",
-    "countryHint": "US",
-    "locale": "en-US"
+    "rawAddress": "383 Madison Avenue, Suite 4500, New York, NY 10179, United States"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("US-001 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("us");
     const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();

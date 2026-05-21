@@ -1,7 +1,7 @@
 meta {
   name: US-018 — US
   type: http
-  seq: 133
+  seq: 135
 }
 
 post {
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "Bismarck Loop ND 58504 US Southport 932 932",
-    "countryHint": "US",
-    "locale": ""
+    "rawAddress": "Bismarck Loop ND 58504 US Southport 932 932"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("US-018 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
     expect(actual_BLDG_NB).to.eq("932");
     const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();

@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "Schweizerische Nationalbank, Bundesplatz 1, 3003 Bern",
-    "countryHint": "CH",
-    "locale": "de-CH"
+    "rawAddress": "Schweizerische Nationalbank, Bundesplatz 1, 3003 Bern"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("CH-003 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("ch");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();

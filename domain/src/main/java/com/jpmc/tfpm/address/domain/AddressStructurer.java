@@ -147,8 +147,6 @@ public interface AddressStructurer {
         /** ISO 20022 {@code <BldgNm>}. */
         BLDG_NM,
         /** ISO 20022 {@code <AdrLine>}. Hybrid-mode fallback only. */
-        ADR_LINE,
-        /** Extracted entity name (person, business, department). Not an ISO 20022 field — used as a signal to filter libpostal. */
-        ENTITY_NM
+        ADR_LINE
     }
 }

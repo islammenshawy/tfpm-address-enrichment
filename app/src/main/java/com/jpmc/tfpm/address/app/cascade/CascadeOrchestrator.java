@@ -3,7 +3,6 @@ package com.jpmc.tfpm.address.app.cascade;
 import com.jpmc.tfpm.address.domain.AddressStructurer;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
-import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AddressStructurer.StructuringResult;
 import com.jpmc.tfpm.address.domain.ConfidenceCalibrator;
 import com.jpmc.tfpm.address.domain.CountryRouter;
@@ -156,35 +155,21 @@ public final class CascadeOrchestrator {
                 .map(fieldNormalizer::normalizeCountryOnly)
                 .toList();
 
-        // If any structurer detected an entity name, exclude libpostal from merge
-        // (libpostal misparses person/business names as address components).
-        boolean entityDetected = traceWithNormalizedCtry.stream()
-                .anyMatch(t -> !t.fields().getOrDefault(AddressField.ENTITY_NM, new FieldValue("", 0)).value().isEmpty());
-        if (entityDetected) {
-            LOG.info("Entity name detected — excluding libpostal from merge [corrId={}]", correlationId);
-            traceWithNormalizedCtry = traceWithNormalizedCtry.stream()
-                    .filter(t -> !"libpostal".equals(t.structurerName()))
-                    .toList();
-        }
-
         var merged = fieldMerger.merge(traceWithNormalizedCtry, raw.countryHint());
         double confidence = merged.overallConfidence();
 
-        // For consensus comparison, apply full normalization (street types, whitespace)
-        // so "Ave" and "avenue" don't trigger false disagreements.
+        // For consensus comparison, apply full normalization on ALL sources
+        // (street types, whitespace) so "str." and "street", "Ave" and "avenue"
+        // don't trigger false disagreements.
         var consensusTrace = traceWithNormalizedCtry.stream()
-                .map(t -> "libpostal".equals(t.structurerName()) ? t : fieldNormalizer.normalize(t))
+                .map(fieldNormalizer::normalize)
                 .toList();
 
-        // Also exclude libpostal from consensus if entity detected
-        if (entityDetected) {
-            consensusTrace = consensusTrace.stream()
-                    .filter(t -> !"libpostal".equals(t.structurerName()))
-                    .toList();
-        }
-
-        var activeCount = consensusTrace.stream().filter(t -> !t.fields().isEmpty()).count();
-        var consensus = activeCount >= 2
+        // Run consensus whenever we have 2+ sources that returned ANY fields.
+        // ConsensusAnalyzer handles per-field voting — a field with only 1 source
+        // is marked as single-source, while fields with 2+ sources get proper consensus.
+        var activeSources = consensusTrace.stream().filter(t -> !t.fields().isEmpty()).count();
+        var consensus = activeSources >= 1
                 ? consensusAnalyzer.analyze(consensusTrace, merged, raw.countryHint())
                 : null;
 

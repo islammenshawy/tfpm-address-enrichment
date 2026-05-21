@@ -1,7 +1,7 @@
 meta {
   name: US-002 — US
   type: http
-  seq: 117
+  seq: 119
 }
 
 post {
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "1600 Pennsylvania Avenue NW, Washington, DC 20500",
-    "countryHint": "US",
-    "locale": "en-US"
+    "rawAddress": "1600 Pennsylvania Avenue NW, Washington, DC 20500"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("US-002 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("us");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();

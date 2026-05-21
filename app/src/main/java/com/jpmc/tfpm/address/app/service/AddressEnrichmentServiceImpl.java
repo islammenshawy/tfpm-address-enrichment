@@ -4,8 +4,6 @@ import com.jpmc.tfpm.address.app.cascade.CascadeOrchestrator;
 import com.jpmc.tfpm.address.app.review.ReviewRulesEngine;
 import com.jpmc.tfpm.address.domain.CascadeResult;
 import com.jpmc.tfpm.address.domain.AddressEnrichmentService;
-import com.jpmc.tfpm.address.domain.AddressStructurer.AddressField;
-import com.jpmc.tfpm.address.domain.AddressStructurer.FieldValue;
 import com.jpmc.tfpm.address.domain.AuditLog;
 import com.jpmc.tfpm.address.domain.AuditLog.AuditEvent;
 import com.jpmc.tfpm.address.domain.ComplianceDecision;
@@ -232,11 +230,9 @@ public final class AddressEnrichmentServiceImpl implements AddressEnrichmentServ
         }
 
         // Evaluate review rules
-        boolean entityDetected = cascadeResult.structurerTrace().stream()
-                .anyMatch(t -> !t.fields().getOrDefault(AddressField.ENTITY_NM, new FieldValue("", 0)).value().isEmpty());
         var reviewReasons = reviewRulesEngine.evaluate(
                 address, confidence, cascadeResult.consensus(),
-                request.address().countryHint(), entityDetected);
+                request.address().countryHint());
 
         // If rules fire and current outcome is SUCCESS, upgrade to REQUIRES_REVIEW
         if (!reviewReasons.isEmpty() && outcome == EnrichmentResult.Outcome.SUCCESS) {

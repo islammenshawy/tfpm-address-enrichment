@@ -12,5 +12,5 @@
     "BLDG_NB": "1",
     "PST_CD": "E14 5HP"
   },
-  "notes": "Business name 'BARCLAYS WEALTH MANAGEMENT DIV' in address line. ENTITY_NM should be extracted, libpostal filtered."
+  "notes": "Business name 'BARCLAYS WEALTH MANAGEMENT DIV' in address line. LLM should ignore the name and parse address components."
 }

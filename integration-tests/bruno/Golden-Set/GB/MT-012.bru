@@ -1,7 +1,7 @@
 meta {
-  name: US-006 — US
+  name: MT-012 — GB
   type: http
-  seq: 123
+  seq: 117
 }
 
 post {
@@ -12,12 +12,12 @@ post {
 
 headers {
   Content-Type: application/json
-  X-Correlation-Id: bruno-US-006
+  X-Correlation-Id: bruno-MT-012
 }
 
 body:json {
   {
-    "rawAddress": "PO Box 4587, Midland, TX 79704"
+    "rawAddress": "BARCLAYS WEALTH MANAGEMENT DIV 1 CHURCHILL PLACE CANARY WHARF LONDON E14 5HP"
   }
 }
 
@@ -29,21 +29,21 @@ assert {
 }
 
 tests {
-  test("US-006 — expected fields match golden set", function() {
+  test("MT-012 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
     expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
     expect(body.overallConfidence).to.be.a("number");
     expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
-    expect(actual_CTRY).to.eq("us");
+    expect(actual_CTRY).to.eq("gb");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();
-    expect(actual_TWN_NM).to.eq("midland");
-    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
-    expect(actual_PST_CD).to.eq("79704");
-    const actual_CTRY_SUB_DVSN = (body.fields.CTRY_SUB_DVSN?.value || "").toLowerCase();
-    expect(actual_CTRY_SUB_DVSN).to.eq("tx");
+    expect(actual_TWN_NM).to.eq("london");
+    const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();
+    expect(actual_STRT_NM).to.eq("churchill place");
     const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
-    expect(actual_BLDG_NB).to.eq("4587");
+    expect(actual_BLDG_NB).to.eq("1");
+    const actual_PST_CD = (body.fields.PST_CD?.value || "").toLowerCase();
+    expect(actual_PST_CD).to.eq("e14 5hp");
   });
 }

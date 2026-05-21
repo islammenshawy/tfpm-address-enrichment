@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "Office 2301, Floor 23, Al Shatha Tower, Dubai Internet City, Dubai, United Arab Emirates",
-    "countryHint": "AE",
-    "locale": "en-AE"
+    "rawAddress": "Office 2301, Floor 23, Al Shatha Tower, Dubai Internet City, Dubai, United Arab Emirates"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("AE-006 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("ae");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();

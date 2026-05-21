@@ -81,7 +81,7 @@ enrichment:
         timeout-ms: 30000
       azure-gpt:
         type: azure-openai
-        endpoint: ${AZURE_OPENAI_ENDPOINT:https://azuretest123.openai.azure.com/openai/deployments/gpt-4.1-mini}
+        endpoint: ${AZURE_OPENAI_ENDPOINT:https://azuretest123.openai.azure.com}/openai/deployments/${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}
         api-key: ${AZURE_OPENAI_API_KEY:}
         model: ${AZURE_OPENAI_DEPLOYMENT_NAME:gpt-4.1-mini}
         api-version: ${AZURE_OPENAI_API_VERSION:2024-02-15-preview}

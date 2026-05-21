@@ -1,6 +1,5 @@
 package com.jpmc.tfpm.address.adapter.llm;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jpmc.tfpm.address.domain.RawAddress;
 import com.jpmc.tfpm.address.domain.ThreadSafe;
@@ -10,7 +9,6 @@ import org.springframework.core.io.Resource;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,6 +16,11 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Loads and renders address-structuring prompts from a JSON template resource.
  * Supports per-country prompt supplements loaded from the classpath.
+ *
+ * <p>When a country hint is provided, the matching country supplement is
+ * injected into the system prompt to give the LLM country-specific guidance.
+ * When no hint is given, the base prompt is used and the LLM infers
+ * the country from the address text.
  */
 @ThreadSafe
 public final class PromptTemplateLoader {
@@ -47,11 +50,11 @@ public final class PromptTemplateLoader {
         }
 
         this.countrySupplements = new ConcurrentHashMap<>();
-        // Country supplements are loaded lazily on first use
     }
 
     public RenderedPrompt render(RawAddress raw) {
         var countryHint = raw.countryHint();
+
         var supplement = "";
         if (countryHint != null && !countryHint.isBlank()) {
             supplement = countrySupplements.getOrDefault(countryHint.toUpperCase(), "");
@@ -59,11 +62,11 @@ public final class PromptTemplateLoader {
 
         var fullSystemPrompt = supplement.isEmpty()
                 ? systemPrompt
-                : systemPrompt + "\n\nCountry-specific guidance for " + countryHint + ":\n" + supplement;
+                : systemPrompt + "\n\nCountry-specific guidance for " + countryHint.toUpperCase() + ":\n" + supplement;
 
         var userMessage = userMessageTemplate
                 .replace("{{rawAddress}}", raw.raw() != null ? raw.raw() : "")
-                .replace("{{countryHint}}", raw.countryHint() != null ? raw.countryHint() : "")
+                .replace("{{countryHint}}", countryHint != null ? countryHint : "")
                 .replace("{{locale}}", raw.locale() != null ? raw.locale() : "");
 
         return new RenderedPrompt(fullSystemPrompt, userMessage, outputSchema, maxTokens, temperature);

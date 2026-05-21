@@ -1,7 +1,7 @@
 meta {
   name: US-020 — US
   type: http
-  seq: 135
+  seq: 137
 }
 
 post {
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "2120 2120 Sherman Dr Bis,arck ND 5850j4 US",
-    "countryHint": "US",
-    "locale": ""
+    "rawAddress": "2120 2120 Sherman Dr Bis,arck ND 5850j4 US"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("US-020 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_BLDG_NB = (body.fields.BLDG_NB?.value || "").toLowerCase();
     expect(actual_BLDG_NB).to.eq("2120");
     const actual_STRT_NM = (body.fields.STRT_NM?.value || "").toLowerCase();

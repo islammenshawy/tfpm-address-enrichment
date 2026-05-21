@@ -1,7 +1,7 @@
 meta {
   name: US-007 — US
   type: http
-  seq: 122
+  seq: 124
 }
 
 post {
@@ -17,9 +17,7 @@ headers {
 
 body:json {
   {
-    "rawAddress": "Morgan Stanley Wealth Management, 1585 Broadway, Suite 200, New York, NY 10036",
-    "countryHint": "US",
-    "locale": "en-US"
+    "rawAddress": "Morgan Stanley Wealth Management, 1585 Broadway, Suite 200, New York, NY 10036"
   }
 }
 
@@ -34,6 +32,9 @@ tests {
   test("US-007 — expected fields match golden set", function() {
     const body = res.getBody();
     expect(body.outcome).to.be.oneOf(["SUCCESS", "REQUIRES_REVIEW", "UNSTRUCTURABLE"]);
+    expect(body.recommendation).to.be.oneOf(["AutoApproved", "ManualReview"]);
+    expect(body.overallConfidence).to.be.a("number");
+    expect(body.sources).to.be.an("array");
     const actual_CTRY = (body.fields.CTRY?.value || "").toLowerCase();
     expect(actual_CTRY).to.eq("us");
     const actual_TWN_NM = (body.fields.TWN_NM?.value || "").toLowerCase();

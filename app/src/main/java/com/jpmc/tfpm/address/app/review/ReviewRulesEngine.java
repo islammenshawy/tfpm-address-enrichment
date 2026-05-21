@@ -38,16 +38,14 @@ public final class ReviewRulesEngine {
      * @param overallConfidence calibrated overall confidence
      * @param consensus         consensus result (may be null if single-source)
      * @param countryHint       country hint from input
-     * @param entityDetected    whether an entity name was detected in the input
      * @return list of triggered review reasons; empty if no rules fired
      */
     public List<ReviewReason> evaluate(StructuredAddress address, double overallConfidence,
-                                       ConsensusResult consensus, String countryHint,
-                                       boolean entityDetected) {
+                                       ConsensusResult consensus, String countryHint) {
         var reasons = new ArrayList<ReviewReason>();
 
         for (var rule : enabledRules) {
-            var reason = evaluateRule(rule, address, overallConfidence, consensus, countryHint, entityDetected);
+            var reason = evaluateRule(rule, address, overallConfidence, consensus, countryHint);
             if (reason != null) {
                 reasons.add(reason);
             }
@@ -58,7 +56,7 @@ public final class ReviewRulesEngine {
 
     private ReviewReason evaluateRule(ReviewRule rule, StructuredAddress address,
                                       double overallConfidence, ConsensusResult consensus,
-                                      String countryHint, boolean entityDetected) {
+                                      String countryHint) {
         return switch (rule.type()) {
             case "LOW_CONFIDENCE" -> evaluateLowConfidence(rule, overallConfidence);
             case "MISSING_FIELDS" -> evaluateMissingFields(rule, address);
@@ -66,7 +64,6 @@ public final class ReviewRulesEngine {
             case "SINGLE_SOURCE" -> evaluateSingleSource(rule, consensus);
             case "HIGH_RISK_COUNTRY" -> evaluateHighRiskCountry(rule, countryHint);
             case "FIELD_CONFIDENCE_FLOOR" -> evaluateFieldConfidenceFloor(rule, address);
-            case "ENTITY_DETECTED" -> evaluateEntityDetected(rule, entityDetected);
             default -> null;
         };
     }
@@ -164,13 +161,6 @@ public final class ReviewRulesEngine {
         if (!belowFloor.isEmpty()) {
             return new ReviewReason(rule.name(), rule.description(),
                     "below floor: " + String.join(", ", belowFloor));
-        }
-        return null;
-    }
-
-    private ReviewReason evaluateEntityDetected(ReviewRule rule, boolean entityDetected) {
-        if (entityDetected) {
-            return new ReviewReason(rule.name(), rule.description(), "entity name found in address input");
         }
         return null;
     }

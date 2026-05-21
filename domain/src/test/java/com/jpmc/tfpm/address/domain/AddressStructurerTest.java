@@ -26,8 +26,7 @@ class AddressStructurerTest {
                 AddressField.STRT_NM,
                 AddressField.BLDG_NB,
                 AddressField.BLDG_NM,
-                AddressField.ADR_LINE,
-                AddressField.ENTITY_NM);
+                AddressField.ADR_LINE);
     }
 
     @Test
