@@ -1,0 +1,32 @@
+BW
+Baden-Württemberg|Baden Württemberg|Baden-Wuerttemberg
+BY
+Bayern|Bavaria
+BE
+Berlin
+BB
+Brandenburg
+HB
+Bremen
+HH
+Hamburg
+HE
+Hessen|Hesse
+MV
+Mecklenburg-Vorpommern|Mecklenburg Vorpommern
+NI
+Niedersachsen|Lower Saxony
+NW
+Nordrhein-Westfalen|North Rhine-Westphalia|NRW
+RP
+Rheinland-Pfalz|Rhineland-Palatinate
+SL
+Saarland
+SN
+Sachsen|Saxony
+ST
+Sachsen-Anhalt|Saxony-Anhalt
+SH
+Schleswig-Holstein
+TH
+Thüringen|Thuringia|Thueringen

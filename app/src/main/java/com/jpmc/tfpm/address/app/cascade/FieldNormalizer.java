@@ -61,7 +61,8 @@ public final class FieldNormalizer {
     private static final Map<AddressField, String> FIELD_DICTIONARY_PATTERNS = Map.of(
             AddressField.CTRY, "normalization/countries/*.txt",
             AddressField.STRT_NM, "normalization/street-types/*.txt",
-            AddressField.CTRY_SUB_DVSN, "normalization/subdivisions/*.txt"
+            AddressField.CTRY_SUB_DVSN, "normalization/subdivisions/*.txt",
+            AddressField.BLDG_NM, "normalization/building-types/*.txt"
     );
 
     /**
@@ -69,7 +70,8 @@ public final class FieldNormalizer {
      * {@link NormalizationStrategy#FULL_VALUE}.
      */
     private static final Map<AddressField, NormalizationStrategy> FIELD_STRATEGIES = Map.of(
-            AddressField.STRT_NM, NormalizationStrategy.FIRST_LAST_WORD
+            AddressField.STRT_NM, NormalizationStrategy.FIRST_LAST_WORD,
+            AddressField.BLDG_NM, NormalizationStrategy.FIRST_LAST_WORD
     );
 
     /** Loaded dictionaries keyed by AddressField. Each value is an unmodifiable synonym→canonical map. */

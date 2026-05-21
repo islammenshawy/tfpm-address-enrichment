@@ -1,0 +1,14 @@
+Abu Dhabi
+AUH|Abu Dhabi Emirate
+Dubai
+DXB|Dubai Emirate
+Sharjah
+SHJ|Sharjah Emirate
+Ajman
+AJM|Ajman Emirate
+Umm Al Quwain
+UAQ|Umm al-Quwain|Umm Al Qaiwain
+Ras Al Khaimah
+RAK|Ras al-Khaimah|Ras al Khaima
+Fujairah
+FUJ|Fujairah Emirate|Al Fujairah

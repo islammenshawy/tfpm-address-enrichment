@@ -1,0 +1,8 @@
+England
+ENG
+Scotland
+SCT|Alba
+Wales
+WLS|Cymru
+Northern Ireland
+NIR
