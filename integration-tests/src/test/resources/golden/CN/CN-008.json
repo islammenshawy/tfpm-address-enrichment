@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Haidian",
+      "value": "Beijing",
       "required": false
     },
     "STRT_NM": {
@@ -28,10 +28,6 @@
     },
     "BLDG_NB": {
       "value": "27",
-      "required": true
-    },
-    "ADR_LINE": {
-      "value": "No. 27 Zhongguancun Dajie",
       "required": true
     }
   },

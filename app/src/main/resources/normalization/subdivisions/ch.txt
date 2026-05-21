@@ -1,0 +1,52 @@
+ZH
+Zürich|Zurich|Zuerich|Winterthur|Uster|Dietikon|Wädenswil|Dübendorf|Horgen|Bülach|Kloten|Illnau-Effretikon|Opfikon|Adliswil
+BE
+Bern|Berne|Biel|Bienne|Thun|Köniz|Burgdorf|Langenthal|Interlaken|Spiez|Muri bei Bern|Ittigen|Ostermundigen
+LU
+Luzern|Lucerne|Emmen|Kriens|Horw|Ebikon|Sursee|Meggen|Root
+UR
+Altdorf|Andermatt|Erstfeld|Schattdorf
+SZ
+Schwyz|Einsiedeln|Freienbach|Küssnacht|Wollerau
+OW
+Sarnen|Engelberg|Kerns
+NW
+Stans|Hergiswil|Buochs
+GL
+Glarus|Näfels|Netstal|Ennenda
+ZG
+Zug|Baar|Cham|Risch|Steinhausen
+FR
+Fribourg|Freiburg|Bulle|Villars-sur-Glâne|Marly|Granges-Paccot
+SO
+Solothurn|Soleure|Olten|Grenchen|Zuchwil
+BS
+Basel|Bâle|Riehen|Bettingen
+BL
+Liestal|Allschwil|Reinach|Muttenz|Pratteln|Binningen|Birsfelden|Arlesheim|Münchenstein
+SH
+Schaffhausen|Neuhausen am Rheinfall|Stein am Rhein
+AR
+Herisau|Teufen|Heiden|Speicher
+AI
+Appenzell
+SG
+St. Gallen|St Gallen|Sankt Gallen|Rapperswil-Jona|Wil|Buchs|Gossau|Rorschach|Altstätten
+GR
+Chur|Coire|Coira|Davos|St. Moritz|Arosa|Klosters|Landquart|Ilanz
+AG
+Aarau|Baden|Wettingen|Aarburg|Brugg|Lenzburg|Wohlen|Rheinfelden|Zofingen|Muri
+TG
+Frauenfeld|Kreuzlingen|Amriswil|Arbon|Weinfelden|Romanshorn
+TI
+Lugano|Bellinzona|Locarno|Mendrisio|Chiasso|Paradiso|Ascona|Minusio
+VD
+Lausanne|Montreux|Nyon|Vevey|Morges|Renens|Yverdon-les-Bains|Pully|Prilly|Aigle
+VS
+Sion|Sitten|Visp|Brig-Glis|Martigny|Sierre|Monthey|Naters|Zermatt|Crans-Montana
+NE
+Neuchâtel|Neuenburg|La Chaux-de-Fonds|Le Locle
+GE
+Genève|Geneva|Genf|Carouge|Lancy|Meyrin|Vernier|Onex|Thônex|Plan-les-Ouates
+JU
+Delémont|Porrentruy|Bassecourt

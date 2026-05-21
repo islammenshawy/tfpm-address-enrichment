@@ -26,10 +26,6 @@
       "value": "Times Square Tower 1",
       "required": false
     },
-    "ADR_LINE": {
-      "value": "Suite 3501, 35/F, Times Square Tower 1",
-      "required": true
-    },
     "CTRY_SUB_DVSN": {
       "value": "Causeway Bay",
       "required": false

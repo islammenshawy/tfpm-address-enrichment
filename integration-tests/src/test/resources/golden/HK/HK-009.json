@@ -11,7 +11,7 @@
       "required": true
     },
     "TWN_NM": {
-      "value": "Kowloon",
+      "value": "Hong Kong",
       "required": true
     },
     "STRT_NM": {
@@ -25,10 +25,6 @@
     "BLDG_NM": {
       "value": "The Long Beach Tower 5",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Flat 12A, 38/F, Tower 5, The Long Beach",
-      "required": true
     },
     "CTRY_SUB_DVSN": {
       "value": "Tai Kok Tsui",

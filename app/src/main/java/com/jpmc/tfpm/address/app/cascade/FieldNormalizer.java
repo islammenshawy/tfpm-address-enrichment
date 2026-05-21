@@ -60,7 +60,8 @@ public final class FieldNormalizer {
      */
     private static final Map<AddressField, String> FIELD_DICTIONARY_PATTERNS = Map.of(
             AddressField.CTRY, "normalization/countries/*.txt",
-            AddressField.STRT_NM, "normalization/street-types/*.txt"
+            AddressField.STRT_NM, "normalization/street-types/*.txt",
+            AddressField.CTRY_SUB_DVSN, "normalization/subdivisions/*.txt"
     );
 
     /**

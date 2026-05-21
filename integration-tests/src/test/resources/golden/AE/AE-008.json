@@ -21,10 +21,6 @@
     "BLDG_NB": {
       "value": "9",
       "required": true
-    },
-    "ADR_LINE": {
-      "value": "Maktab 503, Bina 9",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

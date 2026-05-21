@@ -11,7 +11,7 @@
       "required": true
     },
     "TWN_NM": {
-      "value": "Kowloon",
+      "value": "Hong Kong",
       "required": true
     },
     "STRT_NM": {
@@ -20,10 +20,6 @@
     },
     "BLDG_NB": {
       "value": "168",
-      "required": true
-    },
-    "ADR_LINE": {
-      "value": "Unit 1603, 16/F",
       "required": true
     },
     "CTRY_SUB_DVSN": {

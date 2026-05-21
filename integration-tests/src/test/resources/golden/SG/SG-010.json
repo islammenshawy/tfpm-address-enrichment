@@ -26,10 +26,6 @@
       "value": "12",
       "required": true
     },
-    "ADR_LINE": {
-      "value": "12 Marina Boulevard, #38-01",
-      "required": true
-    },
     "BLDG_NM": {
       "value": "Marina Bay Financial Centre Tower 3",
       "required": false

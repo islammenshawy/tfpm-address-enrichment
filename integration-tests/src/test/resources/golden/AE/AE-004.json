@@ -25,10 +25,6 @@
     "CTRY_SUB_DVSN": {
       "value": "Jumeirah 2",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Villa 12, Street 8",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

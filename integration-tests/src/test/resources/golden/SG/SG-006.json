@@ -26,10 +26,6 @@
       "value": "5",
       "required": true
     },
-    "ADR_LINE": {
-      "value": "5 Changi Business Park Central 1, #03-12",
-      "required": true
-    },
     "BLDG_NM": {
       "value": "Changi City Point",
       "required": false

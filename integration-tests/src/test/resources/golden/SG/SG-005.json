@@ -26,10 +26,6 @@
       "value": "10",
       "required": true
     },
-    "ADR_LINE": {
-      "value": "10 Toh Guan Road, #07-01",
-      "required": true
-    },
     "BLDG_NM": {
       "value": "TT International Tradepark",
       "required": false

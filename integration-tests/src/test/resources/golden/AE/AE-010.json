@@ -21,10 +21,6 @@
     "BLDG_NM": {
       "value": "Etihad Towers Tower 3",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Office 1802, Level 18, Etihad Towers",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

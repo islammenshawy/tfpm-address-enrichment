@@ -11,16 +11,12 @@
       "required": true
     },
     "TWN_NM": {
-      "value": "New Territories",
+      "value": "Hong Kong",
       "required": true
     },
     "BLDG_NM": {
       "value": "Mei Foo Sun Chuen Block 7",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Flat B, 23/F, Block 7",
-      "required": true
     },
     "CTRY_SUB_DVSN": {
       "value": "Lai Chi Kok",

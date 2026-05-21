@@ -25,10 +25,6 @@
     "BLDG_NB": {
       "value": "95",
       "required": true
-    },
-    "ADR_LINE": {
-      "value": "Kanzlei Weber und Partner",
-      "required": false
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

@@ -29,10 +29,6 @@
     "BLDG_NB": {
       "value": "1585",
       "required": true
-    },
-    "ADR_LINE": {
-      "value": "200",
-      "required": false
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

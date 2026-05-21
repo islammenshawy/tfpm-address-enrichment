@@ -22,10 +22,7 @@
       "value": "Königsallee",
       "required": true
     },
-    "BLDG_NB": {
-      "value": "21/23",
-      "required": true
-    }
+    "BLDG_NB": "21"
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

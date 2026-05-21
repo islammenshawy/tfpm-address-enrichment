@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Economic-Technological Development Area",
+      "value": "Tianjin",
       "required": false
     },
     "STRT_NM": {
@@ -28,10 +28,6 @@
     },
     "BLDG_NB": {
       "value": "56",
-      "required": true
-    },
-    "ADR_LINE": {
-      "value": "Factory 3, 56 Donghuan Lu",
       "required": true
     }
   },

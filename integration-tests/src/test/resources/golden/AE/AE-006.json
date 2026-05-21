@@ -21,10 +21,6 @@
     "CTRY_SUB_DVSN": {
       "value": "Dubai Internet City",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Office 2301, Floor 23",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

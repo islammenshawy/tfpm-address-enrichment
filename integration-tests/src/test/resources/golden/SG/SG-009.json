@@ -26,10 +26,6 @@
       "value": "1",
       "required": true
     },
-    "ADR_LINE": {
-      "value": "1 Harbourfront Avenue, #14-06",
-      "required": true
-    },
     "BLDG_NM": {
       "value": "Keppel Bay Tower",
       "required": false

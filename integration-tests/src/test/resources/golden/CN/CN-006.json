@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Pudong New Area",
+      "value": "Shanghai",
       "required": false
     },
     "STRT_NM": {
@@ -33,10 +33,6 @@
     "BLDG_NM": {
       "value": "Building 5",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Building 5, No. 88, Keyuan Road",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

@@ -11,7 +11,7 @@ approach|app|apch|appr
 arcade|arc
 arterial|artl
 artery|art|arty
-avenue|av|ave|aven|avenu|avn|avnu|avnue
+avenue|av|ave|aven|avenu|avn|avnu|avnue|dajie|dàjiē
 avenues|avs|aves|avens|avenus|avns|avnus|avnues
 autoroute|aut
 back|bk
@@ -25,7 +25,7 @@ bend|bnd
 block|blk|blck
 bluff|blf|bluf|bluffs|blfs
 boardwalk|bwk|bwlk|board walk
-boulevard|blvd|bd|bde|blv|bl|blvde|blvrd|boulavard|boul|boulv|bvd|boulevarde
+boulevard|blvd|bd|bde|blv|bl|blvde|blvrd|boulavard|boul|boulv|bvd|boulevarde|dadao|dàdào
 bottom|bot|bottm|btm|bttm
 bottoms|bttms|btms|bottms
 boundary|bdy
@@ -304,7 +304,7 @@ ring
 rise|ri
 riverway|rvwy
 riviera|rvra
-road|rd|ro|r|roa|raod
+road|rd|ro|r|roa|raod|lu|lù
 roads|raods|rds
 roadside|rdsd|road side
 roadway|rdwy|rdw|rdy

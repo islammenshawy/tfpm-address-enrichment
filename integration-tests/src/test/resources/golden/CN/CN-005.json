@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Tianhe",
+      "value": "Guangdong",
       "required": false
     },
     "STRT_NM": {
@@ -33,10 +33,6 @@
     "BLDG_NM": {
       "value": "Teem Tower",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Unit 2205, Teem Tower",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

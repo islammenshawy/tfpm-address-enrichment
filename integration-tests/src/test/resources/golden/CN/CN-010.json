@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Jianghan",
+      "value": "Hubei",
       "required": false
     },
     "STRT_NM": {
@@ -33,10 +33,6 @@
     "BLDG_NM": {
       "value": "Wanda Plaza Tower A",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Room 801, Tower A, Wanda Plaza",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

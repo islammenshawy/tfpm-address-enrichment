@@ -26,10 +26,6 @@
       "value": "Wanchai Tower",
       "required": false
     },
-    "ADR_LINE": {
-      "value": "15/F, Wanchai Tower",
-      "required": true
-    },
     "CTRY_SUB_DVSN": {
       "value": "Wan Chai",
       "required": false

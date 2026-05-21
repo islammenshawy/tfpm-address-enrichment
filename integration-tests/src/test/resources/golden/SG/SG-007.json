@@ -25,10 +25,6 @@
     "BLDG_NB": {
       "value": "80",
       "required": true
-    },
-    "ADR_LINE": {
-      "value": "80 Robinson Road, #17-02",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

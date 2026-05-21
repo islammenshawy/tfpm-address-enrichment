@@ -11,7 +11,7 @@
       "required": true
     },
     "TWN_NM": {
-      "value": "Kowloon",
+      "value": "Hong Kong",
       "required": true
     },
     "STRT_NM": {
@@ -25,10 +25,6 @@
     "BLDG_NM": {
       "value": "Miramar Tower",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Unit 1205, 12/F, Miramar Tower",
-      "required": true
     },
     "CTRY_SUB_DVSN": {
       "value": "Tsim Sha Tsui",

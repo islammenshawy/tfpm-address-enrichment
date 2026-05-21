@@ -26,10 +26,6 @@
       "value": "298",
       "required": true
     },
-    "ADR_LINE": {
-      "value": "Blk 298 Tiong Bahru Road, #15-03",
-      "required": true
-    },
     "BLDG_NM": {
       "value": "Central Plaza",
       "required": false

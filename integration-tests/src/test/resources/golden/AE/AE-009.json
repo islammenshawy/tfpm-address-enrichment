@@ -17,10 +17,6 @@
     "BLDG_NB": {
       "value": "6588",
       "required": true
-    },
-    "ADR_LINE": {
-      "value": "PO Box 6588",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

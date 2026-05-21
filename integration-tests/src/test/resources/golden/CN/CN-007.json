@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Futian",
+      "value": "Guangdong",
       "required": false
     },
     "STRT_NM": {
@@ -33,10 +33,6 @@
     "BLDG_NM": {
       "value": "Ping An Finance Centre",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "18F, Ping An Finance Centre",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

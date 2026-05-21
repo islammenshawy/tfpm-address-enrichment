@@ -26,10 +26,6 @@
       "value": "The Center",
       "required": false
     },
-    "ADR_LINE": {
-      "value": "Room 2102, 21/F, The Center",
-      "required": true
-    },
     "CTRY_SUB_DVSN": {
       "value": "Central",
       "required": false

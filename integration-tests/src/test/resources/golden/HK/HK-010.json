@@ -29,10 +29,6 @@
     "CTRY_SUB_DVSN": {
       "value": "Wan Chai",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "Revenue Tower",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

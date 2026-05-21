@@ -33,10 +33,6 @@
     "BLDG_NM": {
       "value": "China World Trade Center Tower B",
       "required": false
-    },
-    "ADR_LINE": {
-      "value": "China World Trade Center, Tower B, Floor 18",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",
