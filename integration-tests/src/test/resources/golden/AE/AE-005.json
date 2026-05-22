@@ -17,7 +17,8 @@
     "CTRY_SUB_DVSN": {
       "value": "Sharjah",
       "required": false
-    }
+    },
+    "BLDG_NB": "17"
   },
   "validator": "golden-set-expansion@jpmorgan.com",
   "validated_at": "2026-05-10",

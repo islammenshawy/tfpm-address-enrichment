@@ -11,7 +11,8 @@
     "TWN_NM": "Dubai",
     "BLDG_NM": "Gate Village Building 4",
     "STRT_NM": "",
-    "PST_CD": ""
+    "PST_CD": "",
+    "BLDG_NB": "4"
   },
   "notes": "DIFC free zone address; free zone name is a signal for CTRY_SUB_DVSN=Dubai. Unit number in BLDG_NB."
 }

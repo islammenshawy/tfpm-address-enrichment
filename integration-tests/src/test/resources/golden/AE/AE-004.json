@@ -18,10 +18,7 @@
       "value": "Al Wasl Road",
       "required": true
     },
-    "BLDG_NB": {
-      "value": "8",
-      "required": true
-    },
+    "BLDG_NB": "12",
     "CTRY_SUB_DVSN": {
       "value": "Dubai",
       "required": false
