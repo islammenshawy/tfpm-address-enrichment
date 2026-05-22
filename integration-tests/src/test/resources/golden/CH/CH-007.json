@@ -18,10 +18,6 @@
       "value": "1003",
       "required": true
     },
-    "CTRY_SUB_DVSN": {
-      "value": "VD",
-      "required": false
-    },
     "STRT_NM": {
       "value": "Place St-François",
       "required": true

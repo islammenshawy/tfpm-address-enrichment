@@ -18,10 +18,6 @@
       "value": "6900",
       "required": true
     },
-    "CTRY_SUB_DVSN": {
-      "value": "TI",
-      "required": false
-    },
     "STRT_NM": {
       "value": "Via Magatti",
       "required": true

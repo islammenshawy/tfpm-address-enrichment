@@ -15,7 +15,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Beijing",
+      "value": "Xicheng",
       "required": false
     },
     "STRT_NM": {

@@ -18,10 +18,6 @@
       "value": "1204",
       "required": true
     },
-    "CTRY_SUB_DVSN": {
-      "value": "GE",
-      "required": false
-    },
     "STRT_NM": {
       "value": "Rue de la Corraterie",
       "required": true

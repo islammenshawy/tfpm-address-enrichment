@@ -23,7 +23,7 @@
       "required": true
     },
     "BLDG_NM": {
-      "value": "Emirates Towers",
+      "value": "Tower 3, Emirates Towers",
       "required": false
     },
     "BLDG_NB": {

@@ -7,7 +7,7 @@
   "locale": "en-CN",
   "expected_fields": {
     "CTRY": "CN",
-    "CTRY_SUB_DVSN": "Shanghai",
+    "CTRY_SUB_DVSN": "Pudong",
     "TWN_NM": "Shanghai",
     "STRT_NM": "Century Avenue",
     "BLDG_NB": "88",

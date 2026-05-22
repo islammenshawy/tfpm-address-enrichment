@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "ZH",
+      "value": "Zürich",
       "required": false
     },
     "STRT_NM": {

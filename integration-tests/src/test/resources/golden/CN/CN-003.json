@@ -23,7 +23,7 @@
       "required": false
     },
     "STRT_NM": {
-      "value": "Jianguomenwai Dajie",
+      "value": "Jianguomenwai Avenue",
       "required": true
     },
     "BLDG_NB": {

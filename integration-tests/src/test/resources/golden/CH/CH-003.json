@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "BE",
+      "value": "Bern",
       "required": false
     },
     "STRT_NM": {

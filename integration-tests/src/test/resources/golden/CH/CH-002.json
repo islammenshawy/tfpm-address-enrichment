@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "GE",
+      "value": "Geneva",
       "required": false
     },
     "STRT_NM": {

@@ -21,10 +21,6 @@
     "CTRY_SUB_DVSN": {
       "value": "ZH",
       "required": false
-    },
-    "BLDG_NB": {
-      "value": "100",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

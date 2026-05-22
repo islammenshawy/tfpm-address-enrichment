@@ -18,10 +18,6 @@
       "value": "8010",
       "required": true
     },
-    "CTRY_SUB_DVSN": {
-      "value": "ZH",
-      "required": false
-    },
     "STRT_NM": {
       "value": "Bahnhofstrasse",
       "required": true

@@ -19,7 +19,7 @@
       "required": true
     },
     "CTRY_SUB_DVSN": {
-      "value": "Shanghai",
+      "value": "Pudong",
       "required": false
     },
     "STRT_NM": {

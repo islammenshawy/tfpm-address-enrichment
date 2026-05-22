@@ -13,10 +13,6 @@
     "TWN_NM": {
       "value": "Dubai",
       "required": true
-    },
-    "BLDG_NB": {
-      "value": "6588",
-      "required": true
     }
   },
   "validator": "golden-set-expansion@jpmorgan.com",

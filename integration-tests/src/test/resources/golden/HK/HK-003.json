@@ -15,7 +15,7 @@
       "required": true
     },
     "BLDG_NM": {
-      "value": "Mei Foo Sun Chuen Block 7",
+      "value": "Block 7, Mei Foo Sun Chuen",
       "required": false
     },
     "CTRY_SUB_DVSN": {

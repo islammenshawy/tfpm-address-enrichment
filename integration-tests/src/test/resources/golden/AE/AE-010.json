@@ -19,7 +19,7 @@
       "required": true
     },
     "BLDG_NM": {
-      "value": "Etihad Towers Tower 3",
+      "value": "Tower 3, Etihad Towers",
       "required": false
     }
   },
