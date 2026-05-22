@@ -374,65 +374,29 @@ abstract class AccuracyTestBase {
         long consensusCount = results.stream().filter(r -> r.consensus != null).count();
         long disagreementCount = results.stream().filter(r -> r.consensus != null && r.consensus.disagreements > 0).count();
 
-        var html = new StringBuilder();
-        html.append("""
-            <!DOCTYPE html><html><head><meta charset="UTF-8">
-            <title>TFPM Address Enrichment — E2E Accuracy Report</title>
-            <style>
-            * { box-sizing: border-box; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #1a1a2e; }
-            h1 { margin: 0 0 5px; font-size: 24px; }
-            h2 { color: #16213e; margin: 30px 0 10px; font-size: 18px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
-            .subtitle { color: #666; font-size: 13px; margin-bottom: 15px; }
-            .cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
-            .card { background: white; padding: 16px 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; min-width: 120px; }
-            .card .v { font-size: 28px; font-weight: 700; }
-            .card .l { font-size: 11px; color: #888; margin-top: 3px; }
-            table { border-collapse: collapse; width: 100%%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin: 10px 0; }
-            th { background: #1a1a2e; color: white; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; }
-            td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: top; }
-            tr:hover { background: #f8f9ff; }
-            .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
-            .b-ok { background: #d1fae5; color: #065f46; }
-            .b-fail { background: #fee2e2; color: #991b1b; }
-            .b-review { background: #fef3c7; color: #92400e; }
-            .b-src { background: #f3f4f6; color: #374151; }
-            .match { color: #059669; }
-            .miss { color: #dc2626; }
-            .expected { background: #f0fdf4; padding: 5px 10px; border-radius: 6px; border-left: 3px solid #22c55e; margin: 2px 0; font-size: 12px; }
-            .actual { background: #eff6ff; padding: 5px 10px; border-radius: 6px; border-left: 3px solid #3b82f6; margin: 2px 0; font-size: 12px; }
-            .field-label { color: #888; font-size: 11px; }
-            .raw-addr { font-size: 11px; color: #555; max-width: 250px; word-wrap: break-word; font-style: italic; }
-            .mode-bar { padding: 12px 20px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: white; background: #059669; }
-            </style></head><body>
-            """);
+        // Load HTML template from classpath
+        var template = new String(AccuracyTestBase.class.getResourceAsStream("/report-template.html").readAllBytes());
 
-        html.append("<h1>Address Enrichment — E2E Accuracy Report</h1>");
-        html.append("<div class='subtitle'>").append(LocalDateTime.now().format(
-                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
-                .append(" · ").append(mode).append("</div>");
-
-        html.append("<div class='mode-bar'>Live Spring Boot app → POST /api/v1/enrich → real pipeline (config from application-local.yml)</div>");
-
-        html.append("<div class='cards'>");
-        html.append(card(total, "Fixtures"));
+        // Summary cards
+        var summaryCards = new StringBuilder();
+        summaryCards.append(card(total, "Fixtures"));
         if (hasGolden) {
-            html.append(card(String.format("%.0f%%", avgAcc * 100), "Accuracy"));
-            html.append(card(perfect, "Perfect"));
+            summaryCards.append(card(String.format("%.0f%%", avgAcc * 100), "Accuracy"));
+            summaryCards.append(card(perfect, "Perfect"));
         }
-        html.append(card(avgMs + "ms", "Avg Latency"));
-        html.append(card(successCount, "SUCCESS", "b-ok")).append(card(reviewCount, "REVIEW", "b-review"));
-        html.append(card(unstructurable, "UNSTRUCTURABLE", "b-fail"));
+        summaryCards.append(card(avgMs + "ms", "Avg Latency"));
+        summaryCards.append(card(successCount, "SUCCESS", "b-ok")).append(card(reviewCount, "REVIEW", "b-review"));
+        summaryCards.append(card(unstructurable, "UNSTRUCTURABLE", "b-fail"));
         if (consensusCount > 0) {
-            html.append(card(consensusCount, "Consensus Runs", "b-src"));
-            html.append(card(disagreementCount, "Disagreements", disagreementCount > 0 ? "b-review" : "b-ok"));
+            summaryCards.append(card(consensusCount, "Consensus Runs", "b-src"));
+            summaryCards.append(card(disagreementCount, "Disagreements", disagreementCount > 0 ? "b-review" : "b-ok"));
         }
-        html.append("</div>");
 
-        // Per-country
-        html.append("<h2>Per-Country</h2><table><tr><th>Country</th><th>Fixtures</th>");
-        if (hasGolden) html.append("<th>Accuracy</th><th>Perfect</th>");
-        html.append("<th>Avg Latency</th><th>Outcomes</th><th>Consensus</th></tr>");
+        // Per-country table
+        var countryTable = new StringBuilder();
+        countryTable.append("<table><tr><th>Country</th><th>Fixtures</th>");
+        if (hasGolden) countryTable.append("<th>Accuracy</th><th>Perfect</th>");
+        countryTable.append("<th>Avg Latency</th><th>Outcomes</th><th>Consensus</th></tr>");
         var byCountry = new TreeMap<String, List<FixtureResult>>();
         results.forEach(r -> byCountry.computeIfAbsent(r.country, k -> new ArrayList<>()).add(r));
         for (var e : byCountry.entrySet()) {
@@ -442,28 +406,33 @@ abstract class AccuracyTestBase {
             var rev = cr.stream().filter(r -> "REQUIRES_REVIEW".equals(r.outcome)).count();
             var cDisagree = cr.stream().filter(r -> r.consensus != null && r.consensus.disagreements > 0).count();
             var cTotal = cr.stream().filter(r -> r.consensus != null).count();
-            html.append(String.format("<tr><td><b>%s</b></td><td>%d</td>", e.getKey(), cr.size()));
+            countryTable.append(String.format("<tr><td><b>%s</b></td><td>%d</td>", e.getKey(), cr.size()));
             if (hasGolden) {
                 var scored = cr.stream().filter(r -> r.accuracy >= 0).toList();
                 var ca = scored.isEmpty() ? 0 : scored.stream().mapToDouble(r -> r.accuracy).average().orElse(0);
                 var cp = cr.stream().filter(r -> r.accuracy == 1.0).count();
-                html.append(String.format("<td>%.0f%%</td><td>%d</td>", ca * 100, cp));
+                countryTable.append(String.format("<td>%.0f%%</td><td>%d</td>", ca * 100, cp));
             }
-            html.append(String.format("<td>%dms</td>" +
+            countryTable.append(String.format("<td>%dms</td>" +
                     "<td><span class='badge b-ok'>%d</span> <span class='badge b-review'>%d</span></td>" +
                     "<td>%s</td></tr>",
                     cl, ok, rev,
                     cTotal > 0 ? String.format("<span class='badge %s'>%d✗/%d</span>",
                             cDisagree > 0 ? "b-review" : "b-ok", cDisagree, cTotal) : "—"));
         }
-        html.append("</table>");
+        countryTable.append("</table>");
 
-        // Detail
-        html.append("<h2>Detailed Results</h2><table><tr><th>ID</th><th>Country</th><th>Sources</th><th>Outcome</th><th>Recommendation</th><th>Raw</th>");
-        if (hasGolden) html.append("<th>Expected</th>");
-        html.append("<th>Structured Output</th><th>Consensus</th>");
-        if (hasGolden) html.append("<th>Accuracy</th>");
-        html.append("<th>ms</th></tr>");
+        // Country filter options
+        var countryOptions = new StringBuilder();
+        byCountry.keySet().forEach(c -> countryOptions.append("<option value=\"").append(c).append("\">").append(c).append("</option>"));
+
+        // Detail table
+        var detailTable = new StringBuilder();
+        detailTable.append("<table id='detailTable'><tr><th>ID</th><th>Country</th><th>Sources</th><th>Outcome</th><th>Recommendation</th><th>Raw</th>");
+        if (hasGolden) detailTable.append("<th>Expected</th>");
+        detailTable.append("<th>Structured Output</th><th>Consensus</th>");
+        if (hasGolden) detailTable.append("<th>Accuracy</th>");
+        detailTable.append("<th>ms</th></tr>");
         for (var r : results) {
             var outBadge = switch (r.outcome) {
                 case "SUCCESS" -> "b-ok";
@@ -545,28 +514,40 @@ abstract class AccuracyTestBase {
 
             var recBadge = "AutoApproved".equals(r.recommendation) ? "b-ok" : "b-review";
             var recLabel = "AutoApproved".equals(r.recommendation) ? "✓ Auto" : "⚠ Review";
-            html.append(String.format("<tr><td><b>%s</b></td><td>%s</td>" +
+            var accPct = r.accuracy < 0 ? -1 : (int)(r.accuracy * 100);
+            detailTable.append(String.format("<tr data-acc='%d' data-outcome='%s' data-country='%s'>" +
+                    "<td><b>%s</b></td><td>%s</td>" +
                     "<td>%s</td>" +
                     "<td><span class='badge %s'>%s</span></td>" +
                     "<td><span class='badge %s'>%s</span></td>" +
                     "<td class='raw-addr'>%s</td>",
+                    accPct, r.outcome, r.country,
                     r.id, r.country, sourceBadges,
                     outBadge, r.outcome,
                     recBadge, recLabel,
                     r.raw));
-            if (hasGolden) html.append("<td>").append(expHtml).append("</td>");
-            html.append("<td>").append(actHtml).append("</td>");
-            html.append("<td>").append(consensusHtml).append("</td>");
+            if (hasGolden) detailTable.append("<td>").append(expHtml).append("</td>");
+            detailTable.append("<td>").append(actHtml).append("</td>");
+            detailTable.append("<td>").append(consensusHtml).append("</td>");
             if (hasGolden) {
                 var accBadge = r.accuracy == 1.0 ? "b-ok" : (r.accuracy < 0 ? "b-src" : "b-fail");
                 var accText = r.accuracy < 0 ? "n/a" : String.format("%.0f%%", r.accuracy * 100);
-                html.append(String.format("<td><span class='badge %s'>%s</span></td>", accBadge, accText));
+                detailTable.append(String.format("<td><span class='badge %s'>%s</span></td>", accBadge, accText));
             }
-            html.append(String.format("<td>%d</td></tr>", r.latencyMs));
+            detailTable.append(String.format("<td>%d</td></tr>", r.latencyMs));
         }
-        html.append("</table></body></html>");
+        detailTable.append("</table>");
 
-        Files.writeString(reportPath, html.toString());
+        // Inject data into template placeholders
+        var finalHtml = template
+                .replace("{{TIMESTAMP}}", LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")))
+                .replace("{{MODE}}", mode)
+                .replace("{{SUMMARY_CARDS}}", summaryCards.toString())
+                .replace("{{COUNTRY_TABLE}}", countryTable.toString())
+                .replace("{{COUNTRY_OPTIONS}}", countryOptions.toString())
+                .replace("{{DETAIL_TABLE}}", detailTable.toString());
+
+        Files.writeString(reportPath, finalHtml);
         System.out.printf("%n=== E2E ACCURACY REPORT (%s) ===%nTotal: %d, %.0f%% accuracy, %d perfect, %dms avg%n",
                 mode, total, avgAcc * 100, perfect, avgMs);
         System.out.printf("Outcomes: SUCCESS=%d, REVIEW=%d, UNSTRUCTURABLE=%d%n",

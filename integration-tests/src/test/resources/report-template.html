@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>TFPM Address Enrichment — E2E Accuracy Report</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f8f9fa; color: #1a1a2e; }
+h1 { margin: 0 0 5px; font-size: 24px; }
+h2 { color: #16213e; margin: 30px 0 10px; font-size: 18px; border-bottom: 2px solid #e0e0e0; padding-bottom: 5px; }
+.subtitle { color: #666; font-size: 13px; margin-bottom: 15px; }
+.cards { display: flex; flex-wrap: wrap; gap: 10px; margin: 15px 0; }
+.card { background: white; padding: 16px 20px; border-radius: 10px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); text-align: center; min-width: 120px; }
+.card .v { font-size: 28px; font-weight: 700; }
+.card .l { font-size: 11px; color: #888; margin-top: 3px; }
+table { border-collapse: collapse; width: 100%; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); margin: 10px 0; }
+th { background: #1a1a2e; color: white; padding: 10px 12px; font-size: 12px; text-align: left; text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 1; }
+td { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 13px; vertical-align: top; }
+tr:hover { background: #f8f9ff; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; }
+.b-ok { background: #d1fae5; color: #065f46; }
+.b-fail { background: #fee2e2; color: #991b1b; }
+.b-review { background: #fef3c7; color: #92400e; }
+.b-src { background: #f3f4f6; color: #374151; }
+.match { color: #059669; }
+.miss { color: #dc2626; }
+.expected { background: #f0fdf4; padding: 5px 10px; border-radius: 6px; border-left: 3px solid #22c55e; margin: 2px 0; font-size: 12px; }
+.actual { background: #eff6ff; padding: 5px 10px; border-radius: 6px; border-left: 3px solid #3b82f6; margin: 2px 0; font-size: 12px; }
+.field-label { color: #888; font-size: 11px; }
+.raw-addr { font-size: 11px; color: #555; max-width: 250px; word-wrap: break-word; font-style: italic; }
+.mode-bar { padding: 12px 20px; border-radius: 8px; margin: 10px 0; font-size: 13px; color: white; background: #059669; }
+.filters { display: flex; gap: 12px; align-items: center; margin: 10px 0; flex-wrap: wrap; }
+.filters label { font-size: 13px; font-weight: 600; }
+.filters select, .filters button { padding: 6px 10px; border-radius: 6px; border: 1px solid #ccc; font-size: 13px; }
+.filters button { background: #f3f4f6; cursor: pointer; }
+.filters button:hover { background: #e5e7eb; }
+#filterCount { font-size: 12px; color: #888; }
+</style>
+</head>
+<body>
+
+<h1>Address Enrichment — E2E Accuracy Report</h1>
+<div class="subtitle">{{TIMESTAMP}} · {{MODE}}</div>
+<div class="mode-bar">Live Spring Boot app → POST /api/v1/enrich → real pipeline (config from application-local.yml)</div>
+
+<div class="cards">{{SUMMARY_CARDS}}</div>
+
+<h2>Per-Country</h2>
+{{COUNTRY_TABLE}}
+
+<h2>Detailed Results</h2>
+<div class="filters">
+  <label>Filter:</label>
+  <select id="fltAccuracy" onchange="applyFilters()">
+    <option value="">All Accuracy</option>
+    <option value="100">100% Only</option>
+    <option value="lt100">&lt;100% (Imperfect)</option>
+    <option value="lt80">&lt;80%</option>
+    <option value="0">0% (Total Miss)</option>
+  </select>
+  <select id="fltOutcome" onchange="applyFilters()">
+    <option value="">All Outcomes</option>
+    <option value="SUCCESS">SUCCESS</option>
+    <option value="REQUIRES_REVIEW">REQUIRES_REVIEW</option>
+    <option value="UNSTRUCTURABLE">UNSTRUCTURABLE</option>
+  </select>
+  <select id="fltCountry" onchange="applyFilters()">
+    <option value="">All Countries</option>
+    {{COUNTRY_OPTIONS}}
+  </select>
+  <span id="filterCount"></span>
+  <button onclick="resetFilters()">Reset</button>
+</div>
+
+{{DETAIL_TABLE}}
+
+<script>
+function applyFilters() {
+  var accF = document.getElementById('fltAccuracy').value;
+  var outF = document.getElementById('fltOutcome').value;
+  var ctyF = document.getElementById('fltCountry').value;
+  var rows = document.querySelectorAll('#detailTable tr[data-acc]');
+  var shown = 0;
+  rows.forEach(function(row) {
+    var acc = parseInt(row.getAttribute('data-acc'));
+    var outcome = row.getAttribute('data-outcome');
+    var country = row.getAttribute('data-country');
+    var show = true;
+    if (accF === '100') show = acc === 100;
+    else if (accF === 'lt100') show = acc < 100 && acc >= 0;
+    else if (accF === 'lt80') show = acc < 80 && acc >= 0;
+    else if (accF === '0') show = acc === 0;
+    if (outF) show = show && outcome === outF;
+    if (ctyF) show = show && country === ctyF;
+    row.style.display = show ? '' : 'none';
+    if (show) shown++;
+  });
+  document.getElementById('filterCount').textContent = shown + '/' + rows.length + ' shown';
+}
+function resetFilters() {
+  document.getElementById('fltAccuracy').value = '';
+  document.getElementById('fltOutcome').value = '';
+  document.getElementById('fltCountry').value = '';
+  applyFilters();
+}
+applyFilters();
+</script>
+</body>
+</html>
