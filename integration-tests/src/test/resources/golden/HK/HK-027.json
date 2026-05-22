@@ -1,0 +1,13 @@
+{
+  "fixture_id": "HK-027",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Flat A, 12/F, Tung Chung Crescent, 1 Kin Tung Road, Tung Chung, Lantau",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong"
+  },
+  "notes": "Lantau island residential"
+}

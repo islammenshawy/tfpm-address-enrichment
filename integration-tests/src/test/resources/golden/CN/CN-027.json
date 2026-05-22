@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CN-027",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Floor 20, Hangzhou Tower, 6 Wulin Square, Xiacheng District, Hangzhou, Zhejiang 310003",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Hangzhou",
+    "PST_CD": "310003"
+  },
+  "notes": "Hangzhou tower"
+}

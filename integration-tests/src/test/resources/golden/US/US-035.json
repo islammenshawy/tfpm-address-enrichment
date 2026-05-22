@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-035",
+  "country": "US",
+  "source": "generated",
+  "raw": "3344 Peachtree Road NE, Suite 1800, Atlanta, GA 30326",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Atlanta",
+    "CTRY_SUB_DVSN": "GA",
+    "PST_CD": "30326",
+    "STRT_NM": "Peachtree Road NE",
+    "BLDG_NB": "3344"
+  },
+  "notes": "Buckhead Atlanta"
+}

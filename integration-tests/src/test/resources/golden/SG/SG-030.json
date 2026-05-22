@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-030",
+  "country": "SG",
+  "source": "generated",
+  "raw": "2 Changi South Lane, Singapore 486123",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "486123",
+    "STRT_NM": "Changi South Lane",
+    "BLDG_NB": "2"
+  },
+  "notes": "Changi industrial"
+}

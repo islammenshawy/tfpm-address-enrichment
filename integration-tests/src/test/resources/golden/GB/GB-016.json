@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-016",
+  "country": "GB",
+  "source": "generated",
+  "raw": "20 Moorgate, London EC2R 6DA",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "PST_CD": "EC2R 6DA",
+    "STRT_NM": "Moorgate",
+    "BLDG_NB": "20"
+  },
+  "notes": "City of London Moorgate"
+}

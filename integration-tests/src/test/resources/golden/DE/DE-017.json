@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-017",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Poststraße 15, 20354 Hamburg, Germany",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Hamburg",
+    "PST_CD": "20354",
+    "STRT_NM": "Poststraße",
+    "BLDG_NB": "15"
+  },
+  "notes": "Hamburg with English country"
+}

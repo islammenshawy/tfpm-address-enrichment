@@ -1,0 +1,13 @@
+{
+  "fixture_id": "CN-024",
+  "country": "CN",
+  "source": "generated",
+  "raw": "上海市黄浦区中山东一路12号",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Shanghai"
+  },
+  "notes": "Full Chinese characters — The Bund address"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "HK-021",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Shop 2075, Level 2, ifc Mall, 8 Finance Street, Central, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Central",
+    "STRT_NM": "Finance Street",
+    "BLDG_NB": "8"
+  },
+  "notes": "IFC Mall retail"
+}

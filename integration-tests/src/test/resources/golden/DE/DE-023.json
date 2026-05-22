@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-023",
+  "country": "DE",
+  "source": "generated",
+  "raw": "An der Hauptwache 7, 60313 Frankfurt am Main",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Frankfurt am Main",
+    "PST_CD": "60313",
+    "STRT_NM": "An der Hauptwache",
+    "BLDG_NB": "7"
+  },
+  "notes": "Multi-word street with preposition"
+}

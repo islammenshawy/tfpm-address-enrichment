@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-025",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Schillerstraße 30, 99423 Weimar",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Weimar",
+    "PST_CD": "99423",
+    "STRT_NM": "Schillerstraße",
+    "BLDG_NB": "30"
+  },
+  "notes": "Small East German city"
+}

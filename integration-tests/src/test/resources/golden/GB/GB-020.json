@@ -1,0 +1,14 @@
+{
+  "fixture_id": "GB-020",
+  "country": "GB",
+  "source": "generated",
+  "raw": "Temple Quay, 1 Friary, Bristol BS1 6EA",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Bristol",
+    "PST_CD": "BS1 6EA"
+  },
+  "notes": "Bristol address"
+}

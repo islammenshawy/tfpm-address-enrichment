@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-029",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Bahnhofplatz 9, 6460 Altdorf",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Altdorf",
+    "STRT_NM": "Bahnhofplatz",
+    "BLDG_NB": "9",
+    "PST_CD": "6460"
+  },
+  "notes": "Small town Uri canton"
+}

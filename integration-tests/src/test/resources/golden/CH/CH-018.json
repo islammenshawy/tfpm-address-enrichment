@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-018",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Via Nassa 15, 6900 Lugano, Svizzera",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Lugano",
+    "STRT_NM": "Via Nassa",
+    "BLDG_NB": "15",
+    "PST_CD": "6900"
+  },
+  "notes": "Italian-speaking Ticino"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-019",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Theodor-Heuss-Allee 108, 60486 Frankfurt am Main",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Frankfurt am Main",
+    "PST_CD": "60486",
+    "STRT_NM": "Theodor-Heuss-Allee",
+    "BLDG_NB": "108"
+  },
+  "notes": "Hyphenated German street name"
+}

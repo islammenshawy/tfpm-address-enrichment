@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-016",
+  "country": "SG",
+  "source": "generated",
+  "raw": "1 North Bridge Road, #07-07, High Street Centre, Singapore 179094",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "179094",
+    "STRT_NM": "North Bridge Road",
+    "BLDG_NB": "1",
+    "BLDG_NM": "High Street Centre"
+  },
+  "notes": "City Hall area"
+}

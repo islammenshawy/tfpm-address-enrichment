@@ -1,0 +1,15 @@
+{
+  "fixture_id": "DE-020",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Rheinstraße 4G, 55116 Mainz",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Mainz",
+    "PST_CD": "55116",
+    "STRT_NM": "Rheinstraße"
+  },
+  "notes": "Small city with letter suffix building"
+}

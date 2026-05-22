@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CN-016",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Room 1501, Tower A, China Resources Building, 8 Jianguomen North Avenue, Dongcheng District, Beijing 100005",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Beijing",
+    "PST_CD": "100005"
+  },
+  "notes": "Beijing Dongcheng tower"
+}

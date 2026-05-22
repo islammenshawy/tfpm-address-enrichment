@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-027",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Residenzstraße 27, 80333 München",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "München",
+    "PST_CD": "80333",
+    "STRT_NM": "Residenzstraße",
+    "BLDG_NB": "27"
+  },
+  "notes": "Munich inner city"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "US-023",
+  "country": "US",
+  "source": "generated",
+  "raw": "One Vanderbilt Avenue, Suite 6000, New York, NY 10017",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "CTRY_SUB_DVSN": "NY",
+    "PST_CD": "10017",
+    "STRT_NM": "Vanderbilt Avenue"
+  },
+  "notes": "Named building with suite"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-025",
+  "country": "GB",
+  "source": "generated",
+  "raw": "BARCLAYS BANK PLC, 1 CHURCHI, LL PLACE LONDON E14 5HP U, NITED KINGDOM",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "PST_CD": "E14 5HP",
+    "STRT_NM": "Churchill Place",
+    "BLDG_NB": "1"
+  },
+  "notes": "SWIFT MT 35-char mangled with bank name"
+}

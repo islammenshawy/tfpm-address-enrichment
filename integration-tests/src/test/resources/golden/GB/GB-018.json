@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-018",
+  "country": "GB",
+  "source": "generated",
+  "raw": "5 George Square, Glasgow G2 1DY, Scotland",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Glasgow",
+    "PST_CD": "G2 1DY",
+    "STRT_NM": "George Square",
+    "BLDG_NB": "5"
+  },
+  "notes": "Scottish address"
+}

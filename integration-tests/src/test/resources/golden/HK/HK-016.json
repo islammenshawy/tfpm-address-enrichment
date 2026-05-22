@@ -1,0 +1,17 @@
+{
+  "fixture_id": "HK-016",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Level 50, Central Plaza, 18 Harbour Road, Wan Chai, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Wan Chai",
+    "STRT_NM": "Harbour Road",
+    "BLDG_NB": "18",
+    "BLDG_NM": "Central Plaza"
+  },
+  "notes": "Wan Chai landmark"
+}

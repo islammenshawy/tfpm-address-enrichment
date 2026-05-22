@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-026",
+  "country": "US",
+  "source": "generated",
+  "raw": "227 West Monroe Street, Suite 4900, Chicago, IL 60606",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Chicago",
+    "CTRY_SUB_DVSN": "IL",
+    "PST_CD": "60606",
+    "STRT_NM": "West Monroe Street",
+    "BLDG_NB": "227"
+  },
+  "notes": "Chicago Loop"
+}

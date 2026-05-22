@@ -1,0 +1,17 @@
+{
+  "fixture_id": "HK-028",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Unit 1209, Star House, 3 Salisbury Road, Tsim Sha Tsui, Kowloon, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Tsim Sha Tsui",
+    "STRT_NM": "Salisbury Road",
+    "BLDG_NB": "3",
+    "BLDG_NM": "Star House"
+  },
+  "notes": "Star House TST"
+}

@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-029",
+  "country": "SG",
+  "source": "generated",
+  "raw": "12 Marina View, #42-01, Asia Square Tower 2, Singapore 018961",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "018961",
+    "STRT_NM": "Marina View",
+    "BLDG_NB": "12",
+    "BLDG_NM": "Asia Square Tower 2"
+  },
+  "notes": "Asia Square Marina Bay"
+}

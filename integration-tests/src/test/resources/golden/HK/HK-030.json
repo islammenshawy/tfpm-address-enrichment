@@ -1,0 +1,16 @@
+{
+  "fixture_id": "HK-030",
+  "country": "HK",
+  "source": "generated",
+  "raw": "3/F, Cityplaza One, 1111 King's Road, Taikoo Shing, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "STRT_NM": "King's Road",
+    "BLDG_NB": "1111",
+    "BLDG_NM": "Cityplaza One"
+  },
+  "notes": "Taikoo Shing"
+}

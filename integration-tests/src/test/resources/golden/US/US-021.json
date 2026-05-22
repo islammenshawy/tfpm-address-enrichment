@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-021",
+  "country": "US",
+  "source": "generated",
+  "raw": "1585 Broadway, New York, NY 10036",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "CTRY_SUB_DVSN": "NY",
+    "PST_CD": "10036",
+    "STRT_NM": "Broadway",
+    "BLDG_NB": "1585"
+  },
+  "notes": "Times Square area"
+}

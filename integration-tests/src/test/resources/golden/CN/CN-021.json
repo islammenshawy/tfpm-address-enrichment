@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CN-021",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Suite 2001, Guangzhou International Finance Center, 5 Zhujiang West Road, Tianhe, Guangzhou 510623",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Guangzhou",
+    "PST_CD": "510623",
+    "STRT_NM": "Zhujiang West Road"
+  },
+  "notes": "Guangzhou IFC"
+}

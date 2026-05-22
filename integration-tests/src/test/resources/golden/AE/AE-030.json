@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-030",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Office 406, Al Masraf Building, Baniyas Street, Deira, Dubai",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai",
+    "STRT_NM": "Baniyas Street"
+  },
+  "notes": "Deira office address"
+}

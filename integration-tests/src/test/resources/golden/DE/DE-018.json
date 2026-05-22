@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-018",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Leopoldstraße 244, 80807 München, Deutschland",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "München",
+    "PST_CD": "80807",
+    "STRT_NM": "Leopoldstraße",
+    "BLDG_NB": "244"
+  },
+  "notes": "Munich with German country"
+}

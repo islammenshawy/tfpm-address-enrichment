@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-023",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Dufourstrasse 40, 9000 St. Gallen",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "St. Gallen",
+    "STRT_NM": "Dufourstrasse",
+    "BLDG_NB": "40",
+    "PST_CD": "9000"
+  },
+  "notes": "St. Gallen with period in name"
+}

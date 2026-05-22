@@ -1,0 +1,15 @@
+{
+  "fixture_id": "HK-025",
+  "country": "HK",
+  "source": "generated",
+  "raw": "HSBC MAIN BUILDING 1 QUEENS, ROAD CENTRAL HONG KONG",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "STRT_NM": "Queen's Road Central",
+    "BLDG_NB": "1"
+  },
+  "notes": "SWIFT MT mangled"
+}

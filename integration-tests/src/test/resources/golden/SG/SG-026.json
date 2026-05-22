@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-026",
+  "country": "SG",
+  "source": "generated",
+  "raw": "30 Cecil Street, #19-08, Prudential Tower, Singapore 049712",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "049712",
+    "STRT_NM": "Cecil Street",
+    "BLDG_NB": "30",
+    "BLDG_NM": "Prudential Tower"
+  },
+  "notes": "Cecil Street CBD"
+}

@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-019",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Warehouse 7, Plot 597-838, Dubai Investment Park 2, Dubai, United Arab Emirates",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai"
+  },
+  "notes": "Industrial warehouse address"
+}

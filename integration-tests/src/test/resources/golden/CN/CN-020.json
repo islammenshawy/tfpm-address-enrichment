@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CN-020",
+  "country": "CN",
+  "source": "generated",
+  "raw": "15F, Ping An Finance Centre, 5033 Yitian Road, Futian District, Shenzhen 518048",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Shenzhen",
+    "PST_CD": "518048",
+    "STRT_NM": "Yitian Road",
+    "BLDG_NB": "5033"
+  },
+  "notes": "Ping An tower Shenzhen"
+}

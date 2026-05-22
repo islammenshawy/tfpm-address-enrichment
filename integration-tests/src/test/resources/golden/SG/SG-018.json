@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-018",
+  "country": "SG",
+  "source": "generated",
+  "raw": "391B Orchard Road, #24-01, Ngee Ann City Tower B, Singapore 238874",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "238874",
+    "STRT_NM": "Orchard Road",
+    "BLDG_NM": "Ngee Ann City Tower B"
+  },
+  "notes": "Orchard Road shopping"
+}

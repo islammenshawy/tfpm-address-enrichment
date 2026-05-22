@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-025",
+  "country": "US",
+  "source": "generated",
+  "raw": "100 International Drive, Baltimore, MD 21202",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Baltimore",
+    "CTRY_SUB_DVSN": "MD",
+    "PST_CD": "21202",
+    "STRT_NM": "International Drive",
+    "BLDG_NB": "100"
+  },
+  "notes": "Baltimore harbor"
+}

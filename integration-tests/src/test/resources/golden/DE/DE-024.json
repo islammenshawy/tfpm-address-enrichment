@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-024",
+  "country": "DE",
+  "source": "generated",
+  "raw": "DEUTSCHE BANK AG, TAUNUSANLA, GE 12 60325 FRANKFURT AM MA, IN GERMANY",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Frankfurt am Main",
+    "PST_CD": "60325",
+    "STRT_NM": "Taunusanlage",
+    "BLDG_NB": "12"
+  },
+  "notes": "SWIFT MT 35-char mangled"
+}

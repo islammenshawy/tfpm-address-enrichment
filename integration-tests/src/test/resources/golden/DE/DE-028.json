@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-028",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Kurfürstendamm 195, 10707 Berlin, Germany",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Berlin",
+    "PST_CD": "10707",
+    "STRT_NM": "Kurfürstendamm",
+    "BLDG_NB": "195"
+  },
+  "notes": "Famous Berlin boulevard"
+}

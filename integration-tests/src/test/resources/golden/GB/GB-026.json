@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-026",
+  "country": "GB",
+  "source": "generated",
+  "raw": "45 Albion Street, Leeds LS1 6AD",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Leeds",
+    "PST_CD": "LS1 6AD",
+    "STRT_NM": "Albion Street",
+    "BLDG_NB": "45"
+  },
+  "notes": "Leeds with building number"
+}

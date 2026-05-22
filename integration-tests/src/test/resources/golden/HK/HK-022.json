@@ -1,0 +1,17 @@
+{
+  "fixture_id": "HK-022",
+  "country": "HK",
+  "source": "generated",
+  "raw": "38/F, Tower One, Times Square, 1 Matheson Street, Causeway Bay, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Causeway Bay",
+    "STRT_NM": "Matheson Street",
+    "BLDG_NB": "1",
+    "BLDG_NM": "Times Square"
+  },
+  "notes": "Causeway Bay shopping district"
+}

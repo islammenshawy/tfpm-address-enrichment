@@ -1,0 +1,17 @@
+{
+  "fixture_id": "HK-017",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Room 1006, 10/F, Tower 2, Lippo Centre, 89 Queensway, Admiralty, Hong Kong",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Admiralty",
+    "STRT_NM": "Queensway",
+    "BLDG_NB": "89",
+    "BLDG_NM": "Lippo Centre"
+  },
+  "notes": "Admiralty with room and floor"
+}

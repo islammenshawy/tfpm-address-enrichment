@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-026",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Karl-Liebknecht-Straße 5, 10178 Berlin",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Berlin",
+    "PST_CD": "10178",
+    "STRT_NM": "Karl-Liebknecht-Straße",
+    "BLDG_NB": "5"
+  },
+  "notes": "Double-hyphenated street name"
+}

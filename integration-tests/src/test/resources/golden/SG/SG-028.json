@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-028",
+  "country": "SG",
+  "source": "generated",
+  "raw": "6 Battery Road, #10-01, Singapore 049909",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "049909",
+    "STRT_NM": "Battery Road",
+    "BLDG_NB": "6"
+  },
+  "notes": "Battery Road financial"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CN-022",
+  "country": "CN",
+  "source": "generated",
+  "raw": "No. 8 Wangfujing Street, Dongcheng District, Beijing 100006, China",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Beijing",
+    "PST_CD": "100006",
+    "STRT_NM": "Wangfujing Street",
+    "BLDG_NB": "8"
+  },
+  "notes": "Famous shopping street with country name"
+}

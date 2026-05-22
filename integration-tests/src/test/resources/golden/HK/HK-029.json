@@ -1,0 +1,16 @@
+{
+  "fixture_id": "HK-029",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Office 2501, 25/F, K11 ATELIER King's Road, 728 King's Road, Quarry Bay",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Quarry Bay",
+    "STRT_NM": "King's Road",
+    "BLDG_NB": "728"
+  },
+  "notes": "Quarry Bay — no Hong Kong"
+}

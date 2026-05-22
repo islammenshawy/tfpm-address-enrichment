@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-034",
+  "country": "US",
+  "source": "generated",
+  "raw": "600 Congress Avenue, Suite 3300, Austin, TX 78701",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Austin",
+    "CTRY_SUB_DVSN": "TX",
+    "PST_CD": "78701",
+    "STRT_NM": "Congress Avenue",
+    "BLDG_NB": "600"
+  },
+  "notes": "Austin Congress Ave"
+}

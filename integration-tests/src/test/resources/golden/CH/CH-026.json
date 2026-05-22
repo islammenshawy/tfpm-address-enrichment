@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-026",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Poststrasse 4, 7000 Chur",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Chur",
+    "STRT_NM": "Poststrasse",
+    "BLDG_NB": "4",
+    "PST_CD": "7000"
+  },
+  "notes": "Graubünden capital"
+}

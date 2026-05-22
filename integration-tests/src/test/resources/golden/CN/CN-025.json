@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CN-025",
+  "country": "CN",
+  "source": "generated",
+  "raw": "BANK OF CHINA, 1 FUXINGMEN NEI, DAJIE XICHENG DISTRICT BEI, JING 100818 CHINA",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Beijing",
+    "PST_CD": "100818"
+  },
+  "notes": "SWIFT MT mangled with 35-char splits"
+}

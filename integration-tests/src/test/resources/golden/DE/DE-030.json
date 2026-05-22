@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-030",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Domplatz 1, 50667 Köln",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Köln",
+    "PST_CD": "50667",
+    "STRT_NM": "Domplatz",
+    "BLDG_NB": "1"
+  },
+  "notes": "Cologne cathedral square"
+}

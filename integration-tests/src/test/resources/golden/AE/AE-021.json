@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-021",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Flat 2204, Marina Heights Tower, Al Raha Beach, Abu Dhabi, UAE",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Abu Dhabi",
+    "CTRY_SUB_DVSN": "Abu Dhabi",
+    "BLDG_NM": "Marina Heights Tower"
+  },
+  "notes": "Residential flat"
+}

@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-029",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Ajman Free Zone, PO Box 2222, Ajman",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Ajman",
+    "CTRY_SUB_DVSN": "Ajman"
+  },
+  "notes": "Ajman free zone"
+}

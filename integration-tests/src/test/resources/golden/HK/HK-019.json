@@ -1,0 +1,14 @@
+{
+  "fixture_id": "HK-019",
+  "country": "HK",
+  "source": "generated",
+  "raw": "Unit B, 15/F, Block 3, Whampoa Garden, Hung Hom, Kowloon",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong",
+    "CTRY_SUB_DVSN": "Hung Hom"
+  },
+  "notes": "Kowloon residential"
+}

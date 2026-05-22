@@ -1,0 +1,13 @@
+{
+  "fixture_id": "CN-018",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Unit 2208, Tower 2, International Commerce Centre, 1 Austin Road West, Kowloon",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "HK",
+    "TWN_NM": "Hong Kong"
+  },
+  "notes": "ICC Kowloon — HK not CN despite Chinese-style"
+}

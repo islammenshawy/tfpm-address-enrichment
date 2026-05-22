@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-024",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Quai du Mont-Blanc 7, Case postale 6095, 1211 Genève 6",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Genève",
+    "STRT_NM": "Quai du Mont-Blanc",
+    "BLDG_NB": "7",
+    "PST_CD": "1211"
+  },
+  "notes": "Geneva with PO Box (Case postale)"
+}

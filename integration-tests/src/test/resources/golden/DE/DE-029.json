@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-029",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Gänsemarkt 36, 20354 Hamburg",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Hamburg",
+    "PST_CD": "20354",
+    "STRT_NM": "Gänsemarkt",
+    "BLDG_NB": "36"
+  },
+  "notes": "Hamburg with umlaut"
+}

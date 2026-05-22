@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-025",
+  "country": "AE",
+  "source": "generated",
+  "raw": "RAKEZ Business Zone, FZ RAK, P.O. Box 10055, Ras Al Khaimah, UAE",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Ras Al Khaimah",
+    "CTRY_SUB_DVSN": "Ras Al Khaimah"
+  },
+  "notes": "RAK free zone"
+}

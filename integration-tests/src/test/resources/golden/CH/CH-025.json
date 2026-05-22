@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-025",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Talacker 50, 8001 Zürich, Switzerland",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Zürich",
+    "STRT_NM": "Talacker",
+    "BLDG_NB": "50",
+    "PST_CD": "8001"
+  },
+  "notes": "Zurich with English country"
+}

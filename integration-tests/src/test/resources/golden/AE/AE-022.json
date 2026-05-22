@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-022",
+  "country": "AE",
+  "source": "generated",
+  "raw": "JAFZA One, Office JO-1410, Jebel Ali Free Zone, Dubai",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai",
+    "BLDG_NM": "JAFZA One"
+  },
+  "notes": "Jebel Ali free zone office"
+}

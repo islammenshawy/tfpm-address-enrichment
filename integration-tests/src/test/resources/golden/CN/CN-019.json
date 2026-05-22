@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CN-019",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Building 10, No.1 Zhongguancun East Road, Haidian District, Beijing 100084",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Beijing",
+    "PST_CD": "100084",
+    "BLDG_NB": "1"
+  },
+  "notes": "Zhongguancun tech district"
+}

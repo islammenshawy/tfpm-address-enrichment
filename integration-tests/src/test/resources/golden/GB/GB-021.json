@@ -1,0 +1,15 @@
+{
+  "fixture_id": "GB-021",
+  "country": "GB",
+  "source": "generated",
+  "raw": "St Andrew Square, Edinburgh EH2 2BD",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Edinburgh",
+    "PST_CD": "EH2 2BD",
+    "STRT_NM": "St Andrew Square"
+  },
+  "notes": "Edinburgh square"
+}

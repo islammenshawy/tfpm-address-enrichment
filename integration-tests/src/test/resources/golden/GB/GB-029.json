@@ -1,0 +1,15 @@
+{
+  "fixture_id": "GB-029",
+  "country": "GB",
+  "source": "generated",
+  "raw": "Cathedral Road, Cardiff CF11 9HA, Wales",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Cardiff",
+    "PST_CD": "CF11 9HA",
+    "STRT_NM": "Cathedral Road"
+  },
+  "notes": "Welsh capital"
+}

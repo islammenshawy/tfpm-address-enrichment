@@ -1,0 +1,16 @@
+{
+  "fixture_id": "AE-016",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Level 14, Boulevard Plaza Tower 1, Sheikh Mohammed bin Rashid Boulevard, Downtown Dubai",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai",
+    "BLDG_NM": "Boulevard Plaza Tower 1",
+    "STRT_NM": "Sheikh Mohammed bin Rashid Boulevard"
+  },
+  "notes": "Downtown Dubai tower address"
+}

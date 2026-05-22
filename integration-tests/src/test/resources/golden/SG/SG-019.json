@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-019",
+  "country": "SG",
+  "source": "generated",
+  "raw": "10 Anson Road, #35-07, International Plaza, Singapore 079903",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "079903",
+    "STRT_NM": "Anson Road",
+    "BLDG_NB": "10",
+    "BLDG_NM": "International Plaza"
+  },
+  "notes": "Tanjong Pagar CBD"
+}

@@ -1,0 +1,12 @@
+{
+  "fixture_id": "AE-026",
+  "country": "AE",
+  "source": "generated",
+  "raw": "EMIRATES NBD HEAD OFFICE, BAN",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE"
+  },
+  "notes": "Truncated SWIFT MT line — minimal parseable"
+}

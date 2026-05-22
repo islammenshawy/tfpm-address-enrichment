@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-017",
+  "country": "AE",
+  "source": "generated",
+  "raw": "PO Box 500, Abu Dhabi Global Market, Al Maryah Island, Abu Dhabi",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Abu Dhabi",
+    "CTRY_SUB_DVSN": "Abu Dhabi"
+  },
+  "notes": "ADGM free zone PO Box"
+}

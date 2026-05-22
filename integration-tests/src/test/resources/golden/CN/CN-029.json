@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CN-029",
+  "country": "CN",
+  "source": "generated",
+  "raw": "No. 1 Jiefang Avenue, Jianghan District, Wuhan, Hubei 430022",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Wuhan",
+    "PST_CD": "430022",
+    "STRT_NM": "Jiefang Avenue",
+    "BLDG_NB": "1"
+  },
+  "notes": "Wuhan main avenue"
+}

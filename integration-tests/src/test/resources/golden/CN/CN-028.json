@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CN-028",
+  "country": "CN",
+  "source": "generated",
+  "raw": "888 Huanhu Xi San Lu, Binjiang District, Hangzhou 310052",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Hangzhou",
+    "PST_CD": "310052"
+  },
+  "notes": "Alibaba area Binjiang"
+}

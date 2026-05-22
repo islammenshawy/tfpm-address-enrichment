@@ -1,0 +1,14 @@
+{
+  "fixture_id": "CN-030",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Room 3012, Chengdu IFS Tower 1, 1 Hongxing Road Section 3, Jinjiang District, Chengdu 610021",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Chengdu",
+    "PST_CD": "610021"
+  },
+  "notes": "Chengdu IFS"
+}

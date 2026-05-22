@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-016",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Paradeplatz 8, 8001 Zürich, Schweiz",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Zürich",
+    "STRT_NM": "Paradeplatz",
+    "BLDG_NB": "8",
+    "PST_CD": "8001"
+  },
+  "notes": "Classic Zurich Paradeplatz"
+}

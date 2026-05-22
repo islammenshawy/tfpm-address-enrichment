@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-032",
+  "country": "US",
+  "source": "generated",
+  "raw": "200 Vesey Street, New York, NY 10281",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "CTRY_SUB_DVSN": "NY",
+    "PST_CD": "10281",
+    "STRT_NM": "Vesey Street",
+    "BLDG_NB": "200"
+  },
+  "notes": "World Financial Center area"
+}

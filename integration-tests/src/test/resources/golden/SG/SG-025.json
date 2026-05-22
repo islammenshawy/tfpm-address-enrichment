@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-025",
+  "country": "SG",
+  "source": "generated",
+  "raw": "9 Raffles Place, #48-01, Republic Plaza, Singapore 048619",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "048619",
+    "STRT_NM": "Raffles Place",
+    "BLDG_NB": "9",
+    "BLDG_NM": "Republic Plaza"
+  },
+  "notes": "Republic Plaza"
+}

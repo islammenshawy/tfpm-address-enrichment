@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-028",
+  "country": "AE",
+  "source": "generated",
+  "raw": "NATIONAL BANK OF FUJAIRAH, HAMAD BIN ABDULLA ROAD, FUJAIRAH, UNITED ARAB EMIRATES",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Fujairah",
+    "CTRY_SUB_DVSN": "Fujairah",
+    "STRT_NM": "Hamad Bin Abdulla Road"
+  },
+  "notes": "Bank name in address with full country name"
+}

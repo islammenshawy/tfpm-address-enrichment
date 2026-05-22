@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-018",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Suite 301, Building 4, Gold and Diamond Park, Sheikh Zayed Road, Dubai, UAE",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai",
+    "STRT_NM": "Sheikh Zayed Road"
+  },
+  "notes": "Gold and Diamond Park address"
+}

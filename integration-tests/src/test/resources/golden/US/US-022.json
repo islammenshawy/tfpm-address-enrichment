@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-022",
+  "country": "US",
+  "source": "generated",
+  "raw": "345 Park Avenue, New York, NY 10154, United States",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "CTRY_SUB_DVSN": "NY",
+    "PST_CD": "10154",
+    "STRT_NM": "Park Avenue",
+    "BLDG_NB": "345"
+  },
+  "notes": "Midtown with country"
+}

@@ -1,0 +1,15 @@
+{
+  "fixture_id": "AE-020",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Office 1802, Addax Tower, City of Lights, Al Reem Island, Abu Dhabi",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Abu Dhabi",
+    "CTRY_SUB_DVSN": "Abu Dhabi",
+    "BLDG_NM": "Addax Tower"
+  },
+  "notes": "Al Reem Island tower"
+}

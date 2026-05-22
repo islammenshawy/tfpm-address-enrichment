@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-019",
+  "country": "GB",
+  "source": "generated",
+  "raw": "100 Bothwell Street, Glasgow G2 7JE",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Glasgow",
+    "PST_CD": "G2 7JE",
+    "STRT_NM": "Bothwell Street",
+    "BLDG_NB": "100"
+  },
+  "notes": "Glasgow no country"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-027",
+  "country": "SG",
+  "source": "generated",
+  "raw": "71 Robinson Road, #14-01, Singapore 068895",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "068895",
+    "STRT_NM": "Robinson Road",
+    "BLDG_NB": "71"
+  },
+  "notes": "Robinson Road plain"
+}

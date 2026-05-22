@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-033",
+  "country": "US",
+  "source": "generated",
+  "raw": "1401 Lawrence Street, Suite 1300, Denver, CO 80202",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Denver",
+    "CTRY_SUB_DVSN": "CO",
+    "PST_CD": "80202",
+    "STRT_NM": "Lawrence Street",
+    "BLDG_NB": "1401"
+  },
+  "notes": "Denver downtown"
+}

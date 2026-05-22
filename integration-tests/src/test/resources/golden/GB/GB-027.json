@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-027",
+  "country": "GB",
+  "source": "generated",
+  "raw": "7 Donegall Square North, Belfast BT1 5GB, Northern Ireland",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Belfast",
+    "PST_CD": "BT1 5GB",
+    "STRT_NM": "Donegall Square North",
+    "BLDG_NB": "7"
+  },
+  "notes": "Belfast Northern Ireland"
+}

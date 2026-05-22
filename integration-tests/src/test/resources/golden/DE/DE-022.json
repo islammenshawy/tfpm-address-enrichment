@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-022",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Goetheplatz 4, 60313 Frankfurt",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Frankfurt",
+    "PST_CD": "60313",
+    "STRT_NM": "Goetheplatz",
+    "BLDG_NB": "4"
+  },
+  "notes": "Short city name no suffix"
+}

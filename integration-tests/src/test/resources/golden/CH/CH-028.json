@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-028",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Place de la Riponne 10, 1005 Lausanne",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Lausanne",
+    "STRT_NM": "Place de la Riponne",
+    "BLDG_NB": "10",
+    "PST_CD": "1005"
+  },
+  "notes": "Lausanne square address"
+}

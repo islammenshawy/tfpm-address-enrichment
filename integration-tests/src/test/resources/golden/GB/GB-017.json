@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-017",
+  "country": "GB",
+  "source": "generated",
+  "raw": "1 Cabot Square, Canary Wharf, London E14 4QJ",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "PST_CD": "E14 4QJ",
+    "STRT_NM": "Cabot Square",
+    "BLDG_NB": "1"
+  },
+  "notes": "Canary Wharf"
+}

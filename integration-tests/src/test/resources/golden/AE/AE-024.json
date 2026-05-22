@@ -1,0 +1,16 @@
+{
+  "fixture_id": "AE-024",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Al Bateen Tower, Corniche Road, Abu Dhabi, United Arab Emirates",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Abu Dhabi",
+    "CTRY_SUB_DVSN": "Abu Dhabi",
+    "STRT_NM": "Corniche Road",
+    "BLDG_NM": "Al Bateen Tower"
+  },
+  "notes": "Corniche tower address"
+}

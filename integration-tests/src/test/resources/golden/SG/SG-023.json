@@ -1,0 +1,14 @@
+{
+  "fixture_id": "SG-023",
+  "country": "SG",
+  "source": "generated",
+  "raw": "1 Changi Business Park Crescent, #07-06, Plaza 8, Singapore 486025",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "486025"
+  },
+  "notes": "Changi Business Park"
+}

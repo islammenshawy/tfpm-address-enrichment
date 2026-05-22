@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-024",
+  "country": "US",
+  "source": "generated",
+  "raw": "555 California Street, Suite 5000, San Francisco, CA 94104",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "San Francisco",
+    "CTRY_SUB_DVSN": "CA",
+    "PST_CD": "94104",
+    "STRT_NM": "California Street",
+    "BLDG_NB": "555"
+  },
+  "notes": "SF financial district"
+}

@@ -1,0 +1,15 @@
+{
+  "fixture_id": "GB-028",
+  "country": "GB",
+  "source": "generated",
+  "raw": "The Moor, Sheffield S1 4PF",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Sheffield",
+    "PST_CD": "S1 4PF",
+    "STRT_NM": "The Moor"
+  },
+  "notes": "Sheffield — The as street prefix"
+}

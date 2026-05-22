@@ -1,0 +1,15 @@
+{
+  "fixture_id": "US-029",
+  "country": "US",
+  "source": "generated",
+  "raw": "One Financial Center, Boston, MA 02111",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Boston",
+    "CTRY_SUB_DVSN": "MA",
+    "PST_CD": "02111"
+  },
+  "notes": "Named building Boston"
+}

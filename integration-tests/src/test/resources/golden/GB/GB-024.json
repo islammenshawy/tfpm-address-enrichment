@@ -1,0 +1,15 @@
+{
+  "fixture_id": "GB-024",
+  "country": "GB",
+  "source": "generated",
+  "raw": "Park Row, Leeds LS1 5AB",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Leeds",
+    "PST_CD": "LS1 5AB",
+    "STRT_NM": "Park Row"
+  },
+  "notes": "Leeds no number"
+}

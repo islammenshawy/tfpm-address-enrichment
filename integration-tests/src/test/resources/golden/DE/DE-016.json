@@ -1,0 +1,15 @@
+{
+  "fixture_id": "DE-016",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Bockenheimer Landstraße 2-4, 60306 Frankfurt am Main",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Frankfurt am Main",
+    "PST_CD": "60306",
+    "STRT_NM": "Bockenheimer Landstraße"
+  },
+  "notes": "Frankfurt Bockenheim — no country"
+}

@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-030",
+  "country": "US",
+  "source": "generated",
+  "raw": "1300 I Street NW, Suite 400, Washington, DC 20005",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Washington",
+    "CTRY_SUB_DVSN": "DC",
+    "PST_CD": "20005",
+    "STRT_NM": "I Street NW",
+    "BLDG_NB": "1300"
+  },
+  "notes": "DC with directional"
+}

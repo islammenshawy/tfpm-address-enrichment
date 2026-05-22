@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-027",
+  "country": "US",
+  "source": "generated",
+  "raw": "2200 Ross Avenue, Suite 2200, Dallas, TX 75201",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Dallas",
+    "CTRY_SUB_DVSN": "TX",
+    "PST_CD": "75201",
+    "STRT_NM": "Ross Avenue",
+    "BLDG_NB": "2200"
+  },
+  "notes": "Dallas uptown"
+}

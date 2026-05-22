@@ -1,0 +1,15 @@
+{
+  "fixture_id": "CN-023",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Room 801, Block B, Vanke Center, 2168 Keyuan South Road, Nanshan District, Shenzhen",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Shenzhen",
+    "STRT_NM": "Keyuan South Road",
+    "BLDG_NB": "2168"
+  },
+  "notes": "Nanshan tech hub"
+}

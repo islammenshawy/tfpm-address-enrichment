@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-027",
+  "country": "AE",
+  "source": "generated",
+  "raw": "FLOOR 23 TOWER C INDEX TOWER, DIFC PO BOX 777 DUBAI UAE",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai"
+  },
+  "notes": "SWIFT MT uppercase compressed"
+}

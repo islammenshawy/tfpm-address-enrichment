@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-028",
+  "country": "US",
+  "source": "generated",
+  "raw": "1111 Brickell Avenue, Suite 1000, Miami, FL 33131",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "Miami",
+    "CTRY_SUB_DVSN": "FL",
+    "PST_CD": "33131",
+    "STRT_NM": "Brickell Avenue",
+    "BLDG_NB": "1111"
+  },
+  "notes": "Miami Brickell"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-022",
+  "country": "GB",
+  "source": "generated",
+  "raw": "33 King William Street, London EC4R 9AS, United Kingdom",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "PST_CD": "EC4R 9AS",
+    "STRT_NM": "King William Street",
+    "BLDG_NB": "33"
+  },
+  "notes": "City of London with full country"
+}

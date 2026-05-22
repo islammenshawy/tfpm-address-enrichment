@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-027",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Marktgasse 55, 3011 Bern, Schweiz",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Bern",
+    "STRT_NM": "Marktgasse",
+    "BLDG_NB": "55",
+    "PST_CD": "3011"
+  },
+  "notes": "Bern old town"
+}

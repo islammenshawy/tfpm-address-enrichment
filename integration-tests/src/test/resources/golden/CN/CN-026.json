@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CN-026",
+  "country": "CN",
+  "source": "generated",
+  "raw": "No. 88 Zhongshan South Road, Gulou District, Nanjing, Jiangsu 210005",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Nanjing",
+    "PST_CD": "210005",
+    "STRT_NM": "Zhongshan South Road",
+    "BLDG_NB": "88"
+  },
+  "notes": "Nanjing provincial capital"
+}

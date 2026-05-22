@@ -1,0 +1,15 @@
+{
+  "fixture_id": "GB-023",
+  "country": "GB",
+  "source": "generated",
+  "raw": "One Canada Square, Level 28, Canary Wharf, London E14 5AB",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "London",
+    "PST_CD": "E14 5AB",
+    "BLDG_NM": "One Canada Square"
+  },
+  "notes": "Named building Canary Wharf"
+}

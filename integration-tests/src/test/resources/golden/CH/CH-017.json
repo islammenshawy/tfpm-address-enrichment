@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-017",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Rue du Rhône 50, 1204 Genève",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Genève",
+    "STRT_NM": "Rue du Rhône",
+    "BLDG_NB": "50",
+    "PST_CD": "1204"
+  },
+  "notes": "French-speaking Geneva"
+}

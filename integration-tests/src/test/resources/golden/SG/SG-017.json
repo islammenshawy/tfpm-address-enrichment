@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-017",
+  "country": "SG",
+  "source": "generated",
+  "raw": "80 Robinson Road, #02-00, Singapore 068898",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "068898",
+    "STRT_NM": "Robinson Road",
+    "BLDG_NB": "80"
+  },
+  "notes": "CBD office"
+}

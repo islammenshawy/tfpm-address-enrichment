@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-021",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Pilatusstrasse 2, 6003 Luzern",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Luzern",
+    "STRT_NM": "Pilatusstrasse",
+    "BLDG_NB": "2",
+    "PST_CD": "6003"
+  },
+  "notes": "Lucerne address"
+}

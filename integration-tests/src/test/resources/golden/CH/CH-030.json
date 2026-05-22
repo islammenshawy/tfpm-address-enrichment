@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-030",
+  "country": "CH",
+  "source": "generated",
+  "raw": "CREDIT SUISSE, PARADEPLATZ 8, 8070 ZUERICH",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Zürich",
+    "STRT_NM": "Paradeplatz",
+    "BLDG_NB": "8",
+    "PST_CD": "8070"
+  },
+  "notes": "SWIFT MT uppercase with umlaut variant"
+}

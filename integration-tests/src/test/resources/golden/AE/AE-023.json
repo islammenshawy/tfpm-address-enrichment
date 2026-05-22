@@ -1,0 +1,14 @@
+{
+  "fixture_id": "AE-023",
+  "country": "AE",
+  "source": "generated",
+  "raw": "Shop 12, Ground Floor, City Centre Deira, Port Saeed, Deira, Dubai",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "AE",
+    "TWN_NM": "Dubai",
+    "CTRY_SUB_DVSN": "Dubai"
+  },
+  "notes": "Shopping mall address"
+}

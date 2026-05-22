@@ -1,0 +1,17 @@
+{
+  "fixture_id": "SG-022",
+  "country": "SG",
+  "source": "generated",
+  "raw": "138 Market Street, #32-01, CapitaGreen, Singapore 048946",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "048946",
+    "STRT_NM": "Market Street",
+    "BLDG_NB": "138",
+    "BLDG_NM": "CapitaGreen"
+  },
+  "notes": "Raffles Place area"
+}

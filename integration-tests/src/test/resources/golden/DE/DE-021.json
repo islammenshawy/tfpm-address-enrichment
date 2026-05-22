@@ -1,0 +1,16 @@
+{
+  "fixture_id": "DE-021",
+  "country": "DE",
+  "source": "generated",
+  "raw": "Am Sandtorkai 78, 20457 Hamburg",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "DE",
+    "TWN_NM": "Hamburg",
+    "PST_CD": "20457",
+    "STRT_NM": "Am Sandtorkai",
+    "BLDG_NB": "78"
+  },
+  "notes": "HafenCity Hamburg"
+}

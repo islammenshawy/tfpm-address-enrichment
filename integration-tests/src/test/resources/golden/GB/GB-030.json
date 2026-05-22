@@ -1,0 +1,16 @@
+{
+  "fixture_id": "GB-030",
+  "country": "GB",
+  "source": "generated",
+  "raw": "2 St Philips Place, Birmingham B3 2RB",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "GB",
+    "TWN_NM": "Birmingham",
+    "PST_CD": "B3 2RB",
+    "STRT_NM": "St Philips Place",
+    "BLDG_NB": "2"
+  },
+  "notes": "Birmingham"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-022",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Avenue de la Gare 33, 1003 Lausanne, Switzerland",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Lausanne",
+    "STRT_NM": "Avenue de la Gare",
+    "BLDG_NB": "33",
+    "PST_CD": "1003"
+  },
+  "notes": "Lausanne French address with English country"
+}

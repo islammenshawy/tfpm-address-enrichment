@@ -1,0 +1,17 @@
+{
+  "fixture_id": "US-031",
+  "country": "US",
+  "source": "generated",
+  "raw": "JPMORGAN CHASE AND CO, 383 M, ADISON AVENUE FL 45 NEW YO, RK NY 10179 USA",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "US",
+    "TWN_NM": "New York",
+    "CTRY_SUB_DVSN": "NY",
+    "PST_CD": "10179",
+    "STRT_NM": "Madison Avenue",
+    "BLDG_NB": "383"
+  },
+  "notes": "SWIFT MT 35-char mangled with company name"
+}

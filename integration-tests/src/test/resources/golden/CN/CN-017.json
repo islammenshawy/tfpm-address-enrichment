@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CN-017",
+  "country": "CN",
+  "source": "generated",
+  "raw": "Floor 35, Shanghai World Financial Center, 100 Century Avenue, Pudong, Shanghai 200120",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CN",
+    "TWN_NM": "Shanghai",
+    "PST_CD": "200120",
+    "STRT_NM": "Century Avenue",
+    "BLDG_NB": "100"
+  },
+  "notes": "SWFC Pudong"
+}

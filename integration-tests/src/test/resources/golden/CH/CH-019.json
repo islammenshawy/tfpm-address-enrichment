@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-019",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Bundesplatz 3, 3003 Bern",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Bern",
+    "STRT_NM": "Bundesplatz",
+    "BLDG_NB": "3",
+    "PST_CD": "3003"
+  },
+  "notes": "Swiss capital"
+}

@@ -1,0 +1,16 @@
+{
+  "fixture_id": "SG-024",
+  "country": "SG",
+  "source": "generated",
+  "raw": "DBS BANK LTD 12 MARINA BLVD, MARINA BAY FINANCIAL CENTR, E TOWER 3 SINGAPORE 018982",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "018982",
+    "STRT_NM": "Marina Boulevard",
+    "BLDG_NB": "12"
+  },
+  "notes": "SWIFT MT mangled with bank name"
+}

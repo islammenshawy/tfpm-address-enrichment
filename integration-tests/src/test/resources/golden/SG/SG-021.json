@@ -1,0 +1,14 @@
+{
+  "fixture_id": "SG-021",
+  "country": "SG",
+  "source": "generated",
+  "raw": "Blk 123 Bukit Merah Lane 1, #05-678, Singapore 150123",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "SG",
+    "TWN_NM": "Singapore",
+    "PST_CD": "150123"
+  },
+  "notes": "HDB block address"
+}

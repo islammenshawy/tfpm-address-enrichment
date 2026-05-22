@@ -1,0 +1,16 @@
+{
+  "fixture_id": "CH-020",
+  "country": "CH",
+  "source": "generated",
+  "raw": "Aeschenvorstadt 71, 4002 Basel",
+  "country_hint": "",
+  "locale": "",
+  "expected_fields": {
+    "CTRY": "CH",
+    "TWN_NM": "Basel",
+    "STRT_NM": "Aeschenvorstadt",
+    "BLDG_NB": "71",
+    "PST_CD": "4002"
+  },
+  "notes": "Basel financial district"
+}
