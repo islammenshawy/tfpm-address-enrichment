@@ -26,10 +26,6 @@
       "value": "Tower 3, Emirates Towers",
       "required": false
     },
-    "BLDG_NB": {
-      "value": "1204",
-      "required": false
-    },
     "PST_CD": {
       "value": "",
       "required": false

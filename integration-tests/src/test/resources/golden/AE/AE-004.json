@@ -19,7 +19,7 @@
       "required": true
     },
     "BLDG_NB": {
-      "value": "12",
+      "value": "8",
       "required": true
     },
     "CTRY_SUB_DVSN": {
