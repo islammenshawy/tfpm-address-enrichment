@@ -1,0 +1,1431 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Underwriting Platform — Requirements Intake</title>
+<style>
+  :root{
+    --bg:#1a1917;--bg2:#222120;--card:#222120;--card2:#2a2927;--line:rgba(255,255,255,0.10);
+    --text:#f0ede8;--muted:#b5b2ac;--text2:#b5b2ac;--text3:#7a776f;--dim:#7a776f;--accent:#d4a843;--accent2:#9d82d4;
+    --ok:#3ab87a;--warn:#d4a843;--danger:#d9615a;--shadow:0 8px 24px rgba(0,0,0,.42);
+    --border2:rgba(255,255,255,0.14);--bg3:#2a2927;--r:10px;--rsm:7px;--abg:rgba(212,168,67,0.1);--abdr:rgba(212,168,67,0.32);
+    --must:#d9615a;--nice:#d4a843;--not:#7a776f;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1200px 600px at 85% -10%,#2a231c 0%,var(--bg) 45%) fixed,var(--bg);
+    color:var(--text);font:15px/1.6 'DM Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px 140px}
+  .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:11px;font-family:'JetBrains Mono',monospace}
+  h1{font-size:30px;margin:.15em 0 .18em;font-weight:800;letter-spacing:-.015em;line-height:1.15;font-family:'Plus Jakarta Sans',sans-serif}
+  h1 .grad{color:var(--accent);-webkit-text-fill-color:var(--accent)}
+  .lede{color:var(--muted);max-width:760px}
+
+  /* progress */
+  .steps{display:flex;gap:6px;flex-wrap:wrap;margin:22px 0 8px}
+  .steps .s{flex:1 1 0;min-width:78px;background:var(--card);border:0.5px solid var(--border2);border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;color:var(--dim);cursor:pointer;transition:.15s}
+  .steps .s.active{border-color:var(--accent);color:var(--text);background:linear-gradient(180deg,var(--card2),var(--card))}
+  .steps .s.done{color:var(--ok);border-color:rgba(58,184,122,.4)}
+  .steps .s b{display:block;font-size:16px;line-height:1.1}
+  .bar{height:5px;background:var(--line);border-radius:4px;overflow:hidden;margin:4px 0 24px}
+  .bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width .3s}
+
+  .panel{background:linear-gradient(180deg,var(--card),var(--bg2));border:0.5px solid var(--border2);border-radius:12px;padding:22px;box-shadow:var(--shadow);min-height:320px}
+  .ptitle{font-size:20px;font-weight:800;margin:0 0 3px}
+  .psub{color:var(--muted);font-size:13.5px;margin:0 0 18px}
+
+  label.f{display:block;margin:0 0 14px}
+  label.f .lab{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--dim);font-weight:700;margin-bottom:6px;display:block}
+  label.f .req{color:var(--danger)}
+  input.t,select.t,textarea.t{width:100%;background:var(--bg2);border:0.5px solid var(--border2);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;font-family:inherit}
+  input.t:focus,select.t:focus,textarea.t:focus{outline:none;border-color:var(--accent)}
+  textarea.t{min-height:74px;resize:vertical}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.row{grid-template-columns:1fr}}
+  .ex{color:var(--dim);font-size:12px;margin-top:5px;font-style:italic}
+  .ex b{color:var(--warn);font-style:normal;font-weight:700}
+
+  /* feature cards */
+  .area{border:0.5px solid var(--border2);border-radius:10px;padding:16px 16px 12px;margin:0 0 18px;background:rgba(21,29,58,.5)}
+  .area > h3{margin:0 0 2px;font-size:16px;display:flex;gap:8px;align-items:center}
+  .area > .ah{color:var(--muted);font-size:12.5px;margin:0 0 12px}
+  .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+  @media(max-width:640px){.fgrid{grid-template-columns:1fr}}
+  .opt{display:flex;gap:10px;align-items:flex-start;background:var(--card2);border:0.5px solid var(--border2);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.12s}
+  .opt:hover{border-color:var(--accent)}
+  .opt.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(212,168,67,.14),rgba(21,29,58,.6))}
+  .opt input{margin-top:3px;accent-color:var(--accent);width:16px;height:16px;flex:0 0 auto}
+  .opt .on-n{font-weight:600;font-size:13.5px}
+  .opt .on-e{color:var(--dim);font-size:11.5px;margin-top:2px}
+  .prio{display:flex;gap:8px;align-items:center;margin:2px 0 10px}
+  .prio span{color:var(--dim);font-size:12px}
+  .prio button{background:var(--card2);border:0.5px solid var(--border2);color:var(--muted);border-radius:8px;padding:5px 11px;font-size:12px;cursor:pointer;font-weight:600}
+  .prio button.on{color:var(--text)}
+  .prio button[data-v="MUST"].on{border-color:var(--danger);color:#e6a29c;background:rgba(217,97,90,.16)}
+  .prio button[data-v="SHOULD"].on{border-color:var(--warn);color:#e6c884;background:rgba(212,168,67,.16)}
+  .prio button[data-v="NICE"].on{border-color:var(--ok);color:#8fd4b8;background:rgba(58,184,122,.16)}
+  .prio button[data-ps].on{border-color:var(--accent);color:var(--text);background:rgba(212,168,67,.16)}
+  .citems{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+  .cil{font-size:10.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;font-weight:700;margin-bottom:7px}
+  .chiprow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+  .cchip{background:var(--card2);border:1px solid var(--accent);border-radius:999px;padding:4px 10px;font-size:12px;display:inline-flex;gap:6px;align-items:center}
+  .cchip button{background:none;border:none;color:var(--dim);cursor:pointer;font-size:12px;padding:0;line-height:1}
+  .cchip button:hover{color:var(--danger)}
+  .ciadd{display:flex;gap:8px}
+  .ciadd input.t{flex:1}
+  .ciadd .btn{flex:0 0 auto;padding:9px 14px}
+
+  /* products */
+  .pgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+  .prod{border:0.5px solid var(--border2);border-radius:12px;padding:13px 14px;cursor:pointer;background:var(--card2);transition:.12s;position:relative}
+  .prod:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .prod.on{border-color:var(--accent);background:linear-gradient(180deg,rgba(212,168,67,.16),var(--card2))}
+  .prod .pn{font-weight:700;font-size:14.5px;margin-bottom:4px}
+  .prod .pe{color:var(--muted);font-size:12px}
+  .prod .tick{position:absolute;top:10px;right:12px;color:var(--accent);opacity:0;font-weight:800}
+  .prod.on .tick{opacity:1}
+
+  /* nav + save bar */
+  .nav{display:flex;gap:10px;justify-content:space-between;margin-top:20px}
+  .btn{border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);border-radius:var(--rsm);padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+  .btn:hover{border-color:var(--border2);color:var(--text);background:var(--card2)}
+  .btn.primary{background:var(--accent);border:none;color:#1a1917;font-weight:700;box-shadow:0 1px 0 0 rgba(255,255,255,.22) inset,0 2px 5px rgba(0,0,0,.4);text-shadow:none}
+  .btn.primary:hover{background:#e0b95f;color:#1a1917}
+  .btn.ghost{background:transparent}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+
+  .savebar{position:fixed;left:0;right:0;bottom:0;background:rgba(26,25,23,.92);backdrop-filter:blur(8px);border-top:0.5px solid var(--border2);padding:10px 20px;z-index:50}
+  .savebar .in{max-width:1080px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .savebar .status{font-size:12.5px;color:var(--muted);flex:1 1 220px;min-width:180px}
+  .savebar .status b{color:var(--ok)}
+  .savebar .status .warnc{color:var(--warn)}
+  .savebar .btn{padding:9px 14px;font-size:13px}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--dim);margin-right:6px}
+  .dot.live{background:var(--ok);box-shadow:0 0 0 0 rgba(58,184,122,.6);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(58,184,122,.5)}70%{box-shadow:0 0 0 7px rgba(58,184,122,0)}100%{box-shadow:0 0 0 0 rgba(58,184,122,0)}}
+
+  /* decision / policy questions — single-select + a stipulation note */
+  .dblock{border-top:1px dashed var(--line);margin-top:14px;padding-top:12px}
+  .dq{margin:0 0 16px;background:rgba(157,130,212,.05);border:1px solid rgba(157,130,212,.22);border-radius:12px;padding:12px 13px}
+  .dq:last-child{margin-bottom:0}
+  .dqh{font-size:13.5px;font-weight:700;color:var(--text);margin-bottom:3px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .dqh .tag{font-size:9.5px;font-weight:800;letter-spacing:.08em;color:var(--accent2);border:1px solid var(--accent2);border-radius:6px;padding:1px 6px;text-transform:uppercase;flex:0 0 auto}
+  .dqs{color:var(--muted);font-size:12px;margin:0 0 9px}
+  .dopts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  @media(max-width:640px){.dopts{grid-template-columns:1fr}}
+  .dq textarea.t{margin-top:9px;min-height:48px}
+  .dq .none{font-size:11.5px;color:var(--dim);margin-top:8px}
+  .callout{background:var(--card2);border:0.5px solid var(--border2);border-left:2px solid var(--accent);border-radius:var(--rsm);padding:13px 16px;font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.6}
+  .callout b{color:var(--text)}
+  .summary{background:var(--bg2);border:0.5px solid var(--border2);border-radius:12px;padding:14px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted);white-space:pre-wrap;max-height:360px;overflow:auto}
+  .kv{display:flex;gap:8px;margin:4px 0}.kv .k{color:var(--dim);min-width:130px}
+  .pill{display:inline-block;background:var(--card2);border:0.5px solid var(--border2);border-radius:999px;padding:2px 9px;margin:2px;font-size:12px}
+
+  /* ── Feature-selector tab ── */
+  .modetabs{display:flex;gap:8px;margin:6px 0 18px;flex-wrap:wrap}
+  .mtab{background:var(--card2);border:0.5px solid var(--border2);color:var(--muted);border-radius:12px;padding:9px 16px;font-size:14px;font-weight:700;cursor:pointer}
+  .mtab.on{border-color:var(--accent);color:var(--text);background:linear-gradient(180deg,rgba(212,168,67,.16),var(--card2))}
+  .mtab .mb{font-size:11px;color:var(--dim);font-weight:800;margin-left:5px}
+  .hide{display:none !important}
+  #featuresView .panel{min-height:auto}
+  .idrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 8px}
+  @media(max-width:640px){.idrow2{grid-template-columns:1fr}}
+  .eff{display:inline-block;min-width:22px;text-align:center;font-size:10.5px;font-weight:800;border-radius:6px;padding:1px 6px}
+  .eff.S{color:#8fd4b8;background:rgba(58,184,122,.16);border:1px solid rgba(58,184,122,.4)}
+  .eff.M{color:#a9c5e6;background:rgba(212,168,67,.16);border:1px solid rgba(212,168,67,.4)}
+  .eff.L{color:#e6c884;background:rgba(212,168,67,.16);border:1px solid rgba(212,168,67,.4)}
+  .eff.XL{color:#e6a29c;background:rgba(217,97,90,.16);border:1px solid rgba(217,97,90,.4)}
+  .controls{position:sticky;top:0;z-index:20;background:rgba(26,25,23,.86);backdrop-filter:blur(8px);border:0.5px solid var(--border2);border-radius:10px;padding:10px 12px;margin:14px 0 8px;box-shadow:var(--shadow)}
+  .controls .r1{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .search{flex:1 1 240px;min-width:180px}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .fbtn{background:var(--card2);border:0.5px solid var(--border2);color:var(--muted);border-radius:999px;padding:6px 11px;font-size:12px;cursor:pointer;font-weight:600}
+  .fbtn.on{border-color:var(--accent);color:var(--text);background:rgba(212,168,67,.16)}
+  .fbtn .n{color:var(--dim);font-weight:800;margin-left:4px}
+  .jump{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px}
+  .jchip{font-size:11.5px;color:var(--muted);background:var(--card2);border:0.5px solid var(--border2);border-radius:8px;padding:4px 9px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+  .jchip:hover{border-color:var(--accent)}
+  .jchip .done{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+  .jchip .done.full{background:var(--ok)} .jchip .done.part{background:var(--nice)}
+  .cat{border:0.5px solid var(--border2);border-radius:12px;margin:14px 0;background:linear-gradient(180deg,var(--card),var(--bg2));overflow:hidden}
+  .cath{display:flex;gap:12px;align-items:center;padding:14px 16px;cursor:pointer;user-select:none}
+  .cath .ic{font-size:20px;flex:0 0 auto} .cath .ct{font-weight:800;font-size:16px} .cath .cb{color:var(--muted);font-size:12.5px}
+  .cath .prog{margin-left:auto;font-size:11.5px;color:var(--dim);text-align:right;flex:0 0 auto} .cath .prog b{color:var(--text)}
+  .cath .bulk{display:flex;gap:5px;margin-top:4px}
+  .cath .bulk button{font-size:10.5px;border:0.5px solid var(--border2);background:var(--card2);color:var(--dim);border-radius:6px;padding:2px 7px;cursor:pointer}
+  .cath .bulk button:hover{border-color:var(--accent);color:var(--text)}
+  .flist{border-top:0.5px solid var(--border2)}
+  .frow{display:flex;gap:12px;align-items:flex-start;padding:11px 16px;border-bottom:1px solid rgba(42,55,95,.5)}
+  .frow:last-child{border-bottom:none} .frow:hover{background:rgba(27,37,71,.4)}
+  .frow .meta{flex:1 1 auto;min-width:0}
+  .frow .fn{font-weight:600;font-size:13.5px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+  .frow .fe{color:var(--dim);font-size:12px;margin-top:2px}
+  .seg{display:flex;flex:0 0 auto;border:0.5px solid var(--border2);border-radius:9px;overflow:hidden}
+  .seg button{background:var(--bg2);border:none;color:var(--muted);font-size:11.5px;font-weight:700;padding:7px 9px;cursor:pointer;border-right:0.5px solid var(--border2);white-space:nowrap}
+  .seg button:last-child{border-right:none} .seg button:hover{color:var(--text)}
+  .seg button.on.must{background:rgba(217,97,90,.2);color:#e6a29c}
+  .seg button.on.nice{background:rgba(212,168,67,.2);color:#e6c884}
+  .seg button.on.not{background:rgba(122,119,111,.28);color:#b5b2ac}
+  .frow.rated-must{box-shadow:inset 3px 0 0 var(--must)}
+  .frow.rated-nice{box-shadow:inset 3px 0 0 var(--nice)}
+  .frow.rated-not{box-shadow:inset 3px 0 0 var(--not);opacity:.62}
+  .sumgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:8px 0}
+  @media(max-width:720px){.sumgrid{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--card2);border:0.5px solid var(--border2);border-radius:12px;padding:12px 14px}
+  .stat .v{font-size:22px;font-weight:800} .stat .l{font-size:11.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em}
+  .stat.must .v{color:var(--must)} .stat.nice .v{color:var(--nice)} .stat.not .v{color:var(--not)}
+  .meter{height:9px;background:var(--line);border-radius:6px;overflow:hidden;display:flex;margin:8px 0}
+  .meter i{display:block;height:100%}
+  .rolltab{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px}
+  .rolltab td,.rolltab th{padding:6px 8px;border-bottom:0.5px solid var(--border2);text-align:left}
+  .rolltab th{color:var(--dim);font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:.05em}
+  .rolltab td.num{text-align:right;font-variant-numeric:tabular-nums}
+  /* intelligence layer — AI/ML highlighting */
+  .ai{display:inline-block;font-size:10px;font-weight:800;border-radius:6px;padding:1px 6px;letter-spacing:.02em;white-space:nowrap}
+  .ai.ML{color:#cdbce8;background:rgba(157,130,212,.2);border:1px solid rgba(157,130,212,.55)}
+  .ai.LLM{color:#a9c5e6;background:rgba(212,168,67,.2);border:1px solid rgba(212,168,67,.55)}
+  .frow.ai-ml{background:linear-gradient(90deg,rgba(157,130,212,.07),transparent 60%)}
+  .frow.ai-llm{background:linear-gradient(90deg,rgba(212,168,67,.07),transparent 60%)}
+  .frow.ai-ml:hover,.frow.ai-llm:hover{background:rgba(27,37,71,.5)}
+  .fbtn.ai-filter{border-color:rgba(157,130,212,.5)} .fbtn.ai-filter.on{background:rgba(157,130,212,.18);border-color:var(--accent2);color:#cdbce8}
+  .intel{background:linear-gradient(180deg,rgba(157,130,212,.1),rgba(212,168,67,.05));border:1px solid rgba(157,130,212,.35);border-radius:12px;padding:13px 15px;margin:0 0 14px}
+  .intel .ih{font-size:14px;font-weight:800;margin-bottom:4px}
+  .intel .ip{font-size:12.5px;color:var(--muted);line-height:1.5}
+  /* "more info & live example" per face */
+  .morerow{padding:2px 16px 11px;border-bottom:1px solid rgba(42,55,95,.5)}
+  .morebtn{background:none;border:none;color:var(--accent);font-size:12px;font-weight:700;cursor:pointer;padding:0}
+  .morebtn:hover{text-decoration:underline}
+  .moreinfo{padding:2px 16px 15px;border-bottom:1px solid rgba(42,55,95,.5)}
+  .moreinfo p{margin:0 0 11px;color:var(--muted);font-size:12.5px;line-height:1.6}
+  .moreinfo figure{margin:0}
+  .moreinfo img{width:100%;max-width:780px;border:0.5px solid var(--border2);border-radius:10px;display:block;box-shadow:var(--shadow)}
+  .moreinfo figcaption{font-size:11.5px;color:var(--dim);margin-top:7px;font-style:italic;max-width:780px}
+
+  /* Slope exec-brief type roles */
+  h1,.ptitle,.ct,.dqh,.intel .ih{font-family:'Plus Jakarta Sans','DM Sans',sans-serif;letter-spacing:-.015em}
+  .eyebrow,.lab,.cil,.h2,.stat .l,.stat span,.slbl,.prio>span,.morebtn{font-family:'DM Sans',sans-serif}
+  .stat b,.stat .v,.eff,.ai,.cov,.mb,.fbtn .n,.prog,.rolltab td.num,.dqh .tag,.pchip small,.mono{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Requirements intake · underwriting platform (greenfield)</div>
+  <h1>Help us <span class="grad">build the right thing</span></h1>
+  <p class="lede">We're building the <b>credit-underwriting component</b> from scratch — the data, scoring, rating, limits, decisioning, monitoring and adverse-action core. (Money movement, servicing, reporting and connectivity are separate components — not covered here.) Use the two tabs below: <b>Guided requirements</b> walks you through the “why” (needs, policies, examples); the <b>Feature selector</b> is the full build surface to triage <b>Must / Nice / Not needed</b>. Both save into the <b>same file</b> as you go, so one response covers everything — stop and resume anytime.</p>
+
+  <div class="hdiv"></div>
+
+  <div class="modetabs" id="modetabs"></div>
+
+  <div id="intakeView">
+    <div class="steps" id="steps"></div>
+    <div class="bar"><i id="barfill" style="width:0%"></i></div>
+
+    <div class="panel" id="panel"></div>
+
+    <div class="nav">
+      <button class="btn ghost" id="back">← Back</button>
+      <button class="btn primary" id="next">Next →</button>
+    </div>
+  </div>
+
+  <div id="featuresView" class="hide">
+    <div class="callout">The full surface of an intelligent underwriting build — <b id="fs-total">…</b> capabilities across the faces of the
+      platform. Mark each <b style="color:var(--must)">Must have</b>, <b style="color:var(--nice)">Nice to have</b> or <b>Not needed</b>.
+      Effort tags (<span class="eff S">S</span> days · <span class="eff M">M</span> weeks · <span class="eff L">L</span> ~1–2 months ·
+      <span class="eff XL">XL</span> a quarter+) are <b>relative build-weight</b>, not a quote — they make the complexity add up.
+      <b id="fs-ai">…</b> of them are the <b style="color:var(--accent2)">🧠 intelligence layer</b> (trained ML + LLM — the part that needs data, governance &amp; retraining for life; filter with <b>🧠 AI / ML</b>).
+      Everything here saves into the <b>same file</b> as your requirements, so one response covers both.</div>
+    <div class="idrow2">
+      <label class="f"><span class="lab">Your name <span class="req">*</span></span><input class="t" id="fs-name" placeholder="e.g. Priya Nair"></label>
+      <label class="f"><span class="lab">Team / department <span class="req">*</span></span><input class="t" id="fs-team" placeholder="e.g. Trade Finance Credit Risk"></label>
+    </div>
+    <div class="sumgrid" id="fs-hero"></div>
+    <div class="controls">
+      <div class="r1"><input class="t search" id="fs-search" placeholder="🔎 Filter capabilities — e.g. “sanctions”, “limit”, “model”…"><div class="filters" id="fs-filters"></div></div>
+      <div class="jump" id="fs-jump"></div>
+    </div>
+    <div id="fs-cats"></div>
+    <div class="panel">
+      <div class="ptitle">Anything missing, or a whole face out of scope?</div>
+      <div class="psub">Capabilities we didn’t list, or why a face doesn’t apply to you.</div>
+      <textarea class="t" id="fs-notes" placeholder="e.g. We fund from our own balance sheet — the whole Marketplace face is out of scope. Add multi-lingual adverse-action notices for DACH."></textarea>
+    </div>
+    <div class="panel">
+      <div class="ptitle">Scope summary</div>
+      <div class="psub">What your selection adds up to — share the saved file with engineering as the scoping baseline.</div>
+      <div id="fs-summary"></div>
+    </div>
+  </div>
+</div>
+
+<div class="savebar">
+  <div class="in">
+    <div class="status" id="status"><span class="dot"></span>Not saving yet — link a file to begin.</div>
+    <button class="btn" id="linkBtn">💾 Save to my file…</button>
+    <button class="btn" id="appendBtn">➕ Append to collection…</button>
+    <button class="btn ghost" id="dlBtn">⬇ Download</button>
+    <button class="btn ghost" id="copyBtn">⧉ Copy summary</button>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Question model — "if we were starting from scratch, what would we ask?"
+// ─────────────────────────────────────────────────────────────────────────────
+const PRODUCTS = [
+  {id:'reverse_factoring', n:'Reverse factoring', ex:'Anchor buyer approves payables; suppliers get paid early at the buyer’s credit risk.'},
+  {id:'receivables_finance', n:'Receivables finance', ex:'Supplier sells its invoices; you finance against the receivable and its dilution risk.'},
+  {id:'po_finance', n:'PO / pre-shipment finance', ex:'Fund a confirmed purchase order in milestone tranches; converts to invoice finance on shipment.'},
+  {id:'inventory_finance', n:'Inventory / warehouse finance', ex:'Lend against warehouse receipts as borrowing-base collateral at a per-type LTV.'},
+  {id:'distributor_finance', n:'Distributor finance', ex:'Buyer-rails draw funds the OEM; the distributor repays on sale.'},
+  {id:'dynamic_discounting', n:'Dynamic discounting', ex:'Buyer’s own cash pays suppliers early for a sliding discount — no external funding.'},
+  {id:'guarantees', n:'Guarantees / LCs', ex:'Issue, amend and examine demand guarantees or letters of credit (e.g. URDG 758).'},
+  {id:'term_wc', n:'Term / working-capital loans', ex:'Revolving or term facilities underwritten on financials + cash flow.'},
+  {id:'other_product', n:'Something else', ex:'Tell us in the free-form box — e.g. supply-chain-linked ESG financing.'},
+];
+
+const AREAS = {
+  parties:{icon:'👥', title:'Parties & onboarding', help:'Who you underwrite and how they arrive.',
+    feats:[
+      {id:'buyers', n:'Underwrite buyers (anchors)', ex:'Set an anchor buyer’s standing/rating that drives its suppliers’ limits.'},
+      {id:'suppliers', n:'Underwrite suppliers', ex:'Score a supplier’s standalone credit + cash flow.'},
+      {id:'funders', n:'Onboard funders / investors', ex:'Bring third-party capital that buys into the book.'},
+      {id:'portal_self', n:'Self-serve portal onboarding', ex:'Supplier completes a guided wizard with doc upload + bank link.'},
+      {id:'invite', n:'Invite / campaign onboarding', ex:'Buyer invites its supplier base in a CSV wave; funnel is tracked.'},
+      {id:'api_intake', n:'API / ERP-fed intake', ex:'Approved-payables feed lands invoices via API, no manual entry.'},
+    ], ph:'e.g. Anchor buyer invites suppliers; suppliers self-onboard via the portal, upload a W-9 + bank statement, and link their bank.'},
+  data:{icon:'🗄️', title:'Data sources', help:'What real data feeds the decision. The more real sources, the fewer stubs.',
+    feats:[
+      {id:'comm_bureau', n:'Commercial bureau', ex:'e.g. D&B / Experian Commercial — scores, tradelines, public records.'},
+      {id:'consumer_bureau', n:'Consumer / owner bureau', ex:'Owner-consent pulls for thin-file SMBs.'},
+      {id:'open_banking', n:'Open banking (bank cash flow)', ex:'e.g. Plaid — balances, inflow/outflow, NSF, days-cash runway.'},
+      {id:'erp', n:'ERP / accounting', ex:'e.g. SAP/Oracle via OData, QuickBooks — AR/AP, GL.'},
+      {id:'ar_tape', n:'AR / AP aging tape', ex:'A CSV tape of receivables → derived acceptance policy.'},
+      {id:'financials', n:'Financial statements', ex:'Uploaded 10-K/10-Q or management accounts, table-extracted.'},
+      {id:'trade_docs', n:'Trade documents', ex:'Invoices, POs, bills of lading, warehouse receipts.'},
+    ], ph:'e.g. Experian Commercial + Plaid + SAP via OData + AR aging tape (CSV) + uploaded financial statements.'},
+  risk:{icon:'📊', title:'Risk appetite & limits', help:'How much, sized how, and capped where.',
+    feats:[
+      {id:'peer_limit', n:'Peer-benchmark limit sizing', ex:'Limit anchored to comparable obligors’ approved limits.'},
+      {id:'fin_limit', n:'Financials-driven sizing', ex:'e.g. a % of annual turnover or a DSCR-based cap.'},
+      {id:'per_product', n:'Per-product sub-limits', ex:'One envelope allocated across products by tenor/LGD.'},
+      {id:'concentration', n:'Concentration caps', ex:'Single-buyer ≤ 30% of a supplier’s book; country caps.'},
+      {id:'group_caps', n:'Group / parent caps', ex:'A hard group cap reserved atomically at the funding gate.'},
+      {id:'covenants', n:'Covenants & review', ex:'Borrowing-base covenants + periodic re-review triggers.'},
+    ], ph:'e.g. Max 20% of annual turnover, single-buyer concentration cap 30%, a group hard cap, and quarterly re-review.'},
+  decisioning:{icon:'⚙️', title:'Decisioning & autonomy', help:'How decisions get made — and how much is automated.',
+    feats:[
+      {id:'manual', n:'Manual underwriter decisions', ex:'Every case reviewed in a case-file cockpit.'},
+      {id:'stp', n:'Straight-through (auto) decisions', ex:'Auto-approve clean cases under a cap; refer the rest.'},
+      {id:'four_eyes', n:'Four-eyes / maker-checker', ex:'A second approver above a threshold.'},
+      {id:'policy_rules', n:'Configurable policy rules', ex:'Decline floors, auto-approve scores, per-product rules.'},
+      {id:'escalation', n:'Escalation & routing', ex:'Route by region/segment/product to the right team.'},
+      {id:'reasons', n:'Explainable decisions', ex:'Every limit move carries a reason code + a scorecard “why”.'},
+    ], ph:'e.g. Auto-approve under $50k for tier 1–2 with clean signals; four-eyes above $250k; everything else refers with reasons.'},
+  adverse:{icon:'⚖️', title:'Adverse action', help:'Denials and unfavourable changes — what triggers them, the reasons you disclose, the regime, and how the notice is produced. Heavily regulated; be comprehensive, and add anything specific to your jurisdiction below.',
+    addPh:'another adverse-action trigger, reason code or rule',
+    feats:[
+      {id:'aa_decline', n:'Application decline', ex:'New credit denied outright.'},
+      {id:'aa_counter', n:'Counter-offer / approved for less', ex:'Approved below the amount requested — a partial adverse action.'},
+      {id:'aa_reduce', n:'Limit reduction', ex:'An existing limit cut on review or a risk signal.'},
+      {id:'aa_freeze', n:'Freeze / suspension of draws', ex:'New draws frozen pending review (e.g. severe deterioration).'},
+      {id:'aa_terminate', n:'Termination / non-renewal', ex:'Facility closed or not renewed at maturity.'},
+      {id:'aa_terms', n:'Unfavourable change in terms', ex:'Price increase, shorter tenor, or more collateral required.'},
+      {id:'aa_refuse_increase', n:'Refusal to increase on request', ex:'A requested limit increase is declined.'},
+      {id:'aa_reason_codes', n:'Structured reason codes', ex:'Map each decision to a governed reason-code set — never free text.'},
+      {id:'aa_principal_reasons', n:'Principal-reasons statement', ex:'State the specific principal reasons (ECOA/Reg B), not a vague “low score”.'},
+      {id:'aa_bureau_based', n:'Consumer-report-based notice', ex:'FCRA notice naming the credit bureau when a report drove the decision.'},
+      {id:'aa_allowlist', n:'Reason allowlist / no internal leak', ex:'Only permitted disclosures show — no PD / LGD / model trace to the applicant.'},
+      {id:'aa_fcra', n:'FCRA compliance', ex:'Free-report + dispute-rights disclosure when a consumer report was used.'},
+      {id:'aa_regb', n:'ECOA / Reg B compliance', ex:'Specific reasons within the statutory window; business-credit rules.'},
+      {id:'aa_intl', n:'Non-US regimes', ex:'e.g. GDPR right-to-explanation / local consumer-credit law.'},
+      {id:'aa_tipping', n:'Tipping-off suppression', ex:'AML / sanctions / fraud declines → a generic notice; the real reason stays internal (SAR).'},
+      {id:'aa_category', n:'Category-driven notice selection', ex:'Credit decline discloses FCRA codes; a compliance decline uses the generic notice.'},
+      {id:'aa_record', n:'Deterministic notice of record', ex:'Byte-identical notice rendered from reason codes — not model-generated prose.'},
+      {id:'aa_plain', n:'Plain-language draft (non-authoritative)', ex:'An optional readable explanation, clearly not the notice of record.'},
+      {id:'aa_delivery', n:'Delivery + timing', ex:'Channel (mail / email / portal) and the statutory timing window.'},
+      {id:'aa_retention', n:'Record retention & audit', ex:'Retain the notice + reasons (e.g. 7 years) for examination.'},
+      {id:'aa_no_silent', n:'No silent declines', ex:'Every decline / adverse change produces a recorded notice — no silent action.'},
+    ], ph:'e.g. FCRA notice with specific reason codes for credit declines; a tipping-off-safe generic notice for AML/sanctions; a deterministic notice of record retained 7 years; never expose PD/LGD to the applicant.'},
+  models:{icon:'🤖', title:'Models, rating & limits', help:'How much of the scoring, rating and limit policy you expect to configure yourself.',
+    feats:[
+      {id:'rating_tiers', n:'Set limit tiers by rating', ex:'Map rating / PD bands → limit tiers (e.g. AAA–A → tier 1 with more headroom).'},
+      {id:'thresholds', n:'Configure decision thresholds', ex:'Auto-approve floor, decline floor, review band — editable, not hard-coded.'},
+      {id:'rating_scale', n:'Rating scale & mapping', ex:'Your own grades (1–10 / AAA–D) mapped to PD and to agency standings.'},
+      {id:'own_model', n:'Bring / choose the model', ex:'Use your own scorecard or PD model, or pick among provided ones.'},
+      {id:'governance', n:'Model governance', ex:'Version, maker-checker approve, validate vs ground truth, promote / roll back.'},
+      {id:'calibration', n:'Calibrate to your book', ex:'Segment calibration on your own realized outcomes.'},
+      {id:'explainable', n:'Explainability / reason codes', ex:'A scorecard “why” + reason codes on every decision.'},
+      {id:'challenger', n:'Challenger / shadow testing', ex:'Run a candidate model in shadow before it decides live.'},
+    ], ph:'e.g. We set limit tiers from rating bands and edit the auto-approve / decline thresholds ourselves; bring our own scorecard but govern it (approve, validate, roll back).'},
+  riskscope:{icon:'🎯', title:'Risk model — scope & inputs', help:'Whose risk you actually underwrite, and what goes into the model. It often differs by product — e.g. reverse factoring is the BUYER’s risk; receivables / PO finance leans on the SUPPLIER.',
+    addPh:'another model input or a product-specific risk-scope rule',
+    feats:[
+      {id:'rs_buyer', n:'Buyer (anchor) risk', ex:'Reverse factoring: the obligor is the buyer; supplier limits flow from the buyer’s standing.'},
+      {id:'rs_supplier', n:'Supplier (seller) risk', ex:'Receivables / PO finance: the supplier’s standalone credit + cash flow is assessed.'},
+      {id:'rs_both', n:'Both / combined', ex:'A blended view — the buyer’s PD influences the supplier’s limit (counterparty as a feature).'},
+      {id:'rs_perproduct', n:'Scope varies by product', ex:'Buyer-only for some products, supplier-led for others — configurable per product.'},
+      {id:'rs_relationship', n:'Relationship / graph risk', ex:'Concentration, contagion and linked-party stress feed the effective PD.'},
+      {id:'rs_bureau', n:'Bureau / financials', ex:'Commercial (and owner) bureau, financial statements, ratios.'},
+      {id:'rs_cashflow', n:'Bank cash flow', ex:'Open-banking inflow / outflow, runway, volatility.'},
+      {id:'rs_trade', n:'Trade / behavioural history', ex:'Realized payment timing, dilution, prior performance.'},
+      {id:'rs_country', n:'Country / industry / macro', ex:'Sovereign / OECD country risk, sector benchmarks.'},
+      {id:'rs_collateral', n:'Collateral / structure (LGD)', ex:'LGD from deal structure, collateral, guarantees, insurance.'},
+    ], ph:'e.g. Reverse factoring underwrites the buyer; receivables finance underwrites the supplier with the buyer as a counterparty feature; the model blends bureau + cash flow + trade history + graph risk; scope is set per product.'},
+  signals:{icon:'📡', title:'Signals & monitoring', help:'What raises a risk signal on a live obligor, and how a signal is handled once raised. This is the ongoing-risk spine — be comprehensive about your triggers, and add any we miss.',
+    addPh:'another event that should raise a signal',
+    feats:[
+      {id:'sig_fin', n:'Financial deterioration', ex:'Worsening quarterly financials / DSCR / leverage trend.'},
+      {id:'sig_score', n:'Score / rating drop', ex:'ML score falls, or a bureau / agency rating migrates down.'},
+      {id:'sig_payment', n:'Payment behaviour', ex:'Late / overdue payments, missed collections, slow-pay trend.'},
+      {id:'sig_cashflow', n:'Cash-flow deterioration', ex:'NSF / overdrafts, falling days-cash runway, revenue volatility.'},
+      {id:'sig_dilution', n:'Dilution / disputes', ex:'Rising credit notes, disputes or deductions on the receivable.'},
+      {id:'sig_concentration', n:'Concentration breach', ex:'A single buyer / country over its cap.'},
+      {id:'sig_covenant', n:'Covenant / borrowing-base breach', ex:'A facility covenant or borrowing-base test fails.'},
+      {id:'sig_utilization', n:'Utilisation / over-limit', ex:'A draw over limit, or utilisation above a threshold.'},
+      {id:'sig_media', n:'Adverse media / news', ex:'Negative news picked up by the risk radar.'},
+      {id:'sig_sanctions', n:'Sanctions / PEP hit', ex:'A re-screening match on an obligor or owner.'},
+      {id:'sig_aml', n:'AML / TBML typology', ex:'Pass-through flows, double-financing, over / under-invoicing.'},
+      {id:'sig_fraud', n:'Fraud / anomaly', ex:'A consortium fraud alert or a novel-pattern anomaly flag.'},
+      {id:'sig_docauth', n:'Document authenticity', ex:'A tampered or cloned document detected at submit.'},
+      {id:'sig_industry', n:'Industry mismatch', ex:'Declared industry conflicts with the registry.'},
+      {id:'sig_verification', n:'Verification / KYC gap', ex:'A KYB / eIDV failure or an expired verification.'},
+      {id:'sig_ownership', n:'Ownership / control change', ex:'A beneficial-owner change makes KYC stale.'},
+      {id:'sig_deadline', n:'Examination / SLA deadline', ex:'An examination clock (e.g. Art.16) due-soon or breached.'},
+      {id:'sig_collateral', n:'Collateral stale', ex:'A warehouse receipt or collateral valuation ages out.'},
+      {id:'sig_network', n:'Network contagion / group stress', ex:'A linked party’s or parent’s stress propagates.'},
+      {id:'sig_dedup', n:'Dedup + fold (recurrence)', ex:'Re-detections of the same signal fold into one, with a count.'},
+      {id:'sig_disposition', n:'Dispositions', ex:'Acknowledge / dismiss / action; a resolved signal is suppressed.'},
+      {id:'sig_action', n:'Signal → action', ex:'Confirm ⇒ freeze / reduce limit / re-underwrite via the decision engine.'},
+      {id:'sig_route', n:'Routing to a worklist', ex:'The obligor surfaces to a queue / risk desk with a navigable reference.'},
+      {id:'sig_propagate', n:'Event-driven propagation', ex:'Effects fan out to related parties via pub/sub, not an in-request loop.'},
+    ], ph:'e.g. Raise on score drop, overdue payments, sanctions hits, dilution spikes and adverse media; dedup + fold recurrences; confirm ⇒ freeze via the decision engine; route to the risk desk.'},
+  cadence:{icon:'🔁', title:'Underwriting cadence & re-underwrite', help:'When you underwrite — and what makes you do it again. Do you assess the obligor once (draws check a standing limit) or score every transaction?',
+    addPh:'another re-underwrite trigger or cadence rule',
+    feats:[
+      {id:'uw_profile', n:'Profile-centric (underwrite once)', ex:'Assess the obligor to a standing limit; individual draws / invoices check against it — cheap, fast.'},
+      {id:'uw_pertx', n:'Per-transaction underwriting', ex:'Score / decide each transaction (invoice, draw, PO) independently.'},
+      {id:'uw_hybrid', n:'Hybrid — limit + per-draw gate', ex:'A standing limit plus per-draw eligibility checks (tenor, buyer approved, 3-way match).'},
+      {id:'uw_pit', n:'Point-in-time scoring', ex:'Score at the moment of decision; later events FLAG, they don’t silently rescore.'},
+      {id:'uw_periodic', n:'Periodic review', ex:'Scheduled re-review (e.g. quarterly / annual) even with no event.'},
+      {id:'uw_onsignal', n:'Re-underwrite on signal', ex:'A material risk signal triggers an automatic rescore / review.'},
+      {id:'uw_material', n:'Material-change trigger', ex:'A new buyer standing, an ownership change, or a big financial move re-triggers.'},
+      {id:'uw_request', n:'On request / draw-over-limit', ex:'A limit-increase request or a draw above the limit forces a review.'},
+      {id:'uw_validity', n:'Data-validity window', ex:'Re-pull bureau / cash-flow when the data is older than a set window.'},
+      {id:'uw_eligibility', n:'Transaction eligibility rules', ex:'Per-draw checks (approved buyer, tenor cap, concentration) with no full re-underwrite.'},
+    ], ph:'e.g. Profile-centric: underwrite the obligor to a limit; draws check eligibility + the limit; re-underwrite on a material signal, a limit request, or a stale bureau pull; quarterly periodic review.'},
+  stipulations:{icon:'📋', title:'Stipulations & conditions', help:'Conditions that must be met before (or during) financing.',
+    feats:[
+      {id:'stip_library', n:'Governed stipulation library', ex:'Reusable conditions per product/type (e.g. a signed Notice of Assignment).'},
+      {id:'stip_gating', n:'Gating vs advisory conditions', ex:'A gating stipulation HOLDS funding until VERIFIED or WAIVED.'},
+      {id:'stip_autoraise', n:'Auto-raise from data gaps', ex:'A missing or expired document raises a stipulation automatically.'},
+      {id:'stip_verify', n:'Verification workflow', ex:'Submit evidence → an examiner verifies → provenance promoted.'},
+      {id:'stip_waiver', n:'Waivers (reason + four-eyes)', ex:'Override a condition with a reason code and a second approver.'},
+      {id:'stip_expiry', n:'Expiry / re-trigger', ex:'A bank statement older than 90 days re-raises the condition.'},
+    ], ph:'e.g. Require a signed NoA + a verified 3-way match before first funding; auto-raise a stipulation if the financials are stale.'},
+  pricing:{icon:'🏷️', title:'Pricing, fees & rate cards', help:'How each deal is priced and what the customer sees.',
+    feats:[
+      {id:'rate_card', n:'Rate-card grid', ex:'Rates by product × segment × tenor.'},
+      {id:'risk_priced', n:'Risk-based all-in pricing', ex:'All-in = live benchmark (SOFR/SONIA) + a credit spread from the score.'},
+      {id:'fees', n:'Fee schedules', ex:'Setup, service, late and per-product fees.'},
+      {id:'quote', n:'Pre-funding indicative quote', ex:'Show the customer expected pricing before they commit.'},
+      {id:'two_lens', n:'Two-lens pricing (internal vs customer)', ex:'Banker-full breakdown internally; PD/LGD stripped from the customer view.'},
+      {id:'gain_share', n:'Gain-share / discount economics', ex:'Dynamic-discounting or gain-share splits.'},
+      {id:'price_sim', n:'Pricing impact simulator', ex:'Model a rate-card change across the whole book before it goes live.'},
+      {id:'pr_tiers', n:'Pricing tiers by rating / risk', ex:'Spread tiers mapped to rating / PD bands — like limit tiers, but for price.'},
+      {id:'pr_provision', n:'Provisioning & governance of pricing', ex:'Who sets the rate card, the approval to change it, and effective dates.'},
+      {id:'pr_override', n:'Deal-level overrides', ex:'A desk override with a reason + four-eyes beyond a band.'},
+    ], ph:'e.g. Rate card by product×tenor; spread tiers by rating band; all-in = SOFR + risk-based spread; governed rate-card changes with four-eyes; indicative quote at submit; never expose PD/LGD to the customer.'},
+  documents:{icon:'📄', title:'Documents & verification', help:'What documents you handle and how they’re checked.',
+    feats:[
+      {id:'doc_upload', n:'Upload + classification', ex:'Invoices, POs, financials, bills of lading auto-classified.'},
+      {id:'doc_extract', n:'OCR / table extraction', ex:'Pull line items + financial tables from PDFs and scans.'},
+      {id:'doc_xval', n:'Cross-validation', ex:'Extracted figures vs bureau / declared values.'},
+      {id:'doc_3way', n:'3-way match', ex:'Invoice ↔ PO ↔ goods-received before funding.'},
+      {id:'doc_tamper', n:'Tamper / forgery detection', ex:'Flag edited or cloned documents.'},
+      {id:'doc_shipment', n:'Shipment / BoL verification', ex:'Confirm a bill of lading against vessel / port data.'},
+    ], ph:'e.g. Extract financials from uploaded 10-Ks, cross-check against the bureau, run a 3-way match, and flag tampered documents.'},
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Decision / POLICY questions — the CHOICE a feature implies, not just "do you want it".
+// Each is a single-select among mutually-exclusive options PLUS a free "stipulation / more info"
+// field. Many distilled features carry a decision like this (how risk nets out when signals
+// disagree, how hard an adverse fact floors the score, whether a gap gates funding…). They're
+// attached to the relevant area so they render in context. Add a new one by dropping it here.
+// ─────────────────────────────────────────────────────────────────────────────
+const DECISIONS = {
+  riskscope:[
+    {id:'rs_divergence', tag:'Model policy',
+     q:'When the balance sheet and bank cash flow DISAGREE, how should risk net out?',
+     help:'A pristine balance sheet with deteriorating cash flow, vs. strong cash flow on a levered book — which reads as riskier when the two signals diverge?',
+     opts:[
+       {id:'cashflow_leads', n:'Cash flow leads', ex:'Weak cash flow + strong balance sheet ranks riskier than the reverse — financing is repaid from real collections and deteriorating cash flow is the earlier distress signal.'},
+       {id:'financials_lead', n:'Financials lead', ex:'A strong balance sheet cushions weak cash flow more; leverage / solvency dominates the rank.'},
+       {id:'symmetric', n:'Symmetric', ex:'A conflict itself raises risk equally either way — no lean toward either signal.'},
+       {id:'refer', n:'Refer to a human', ex:'A material divergence is never auto-decided — route to an underwriter.'},
+     ], notePh:'cash-flow-leads for reverse factoring; refer to a human for term loans over $1M'},
+    {id:'rs_missing', tag:'Model policy',
+     q:'When a MATERIAL input is missing (e.g. no statements on file, so no leverage ratio), what should the model do?',
+     help:'The thin-file case — some inputs simply aren’t there yet. What’s the default behaviour?',
+     opts:[
+       {id:'lean_available', n:'Lean on the signals present', ex:'Rely more on the correlated inputs you DO have (e.g. cash flow) — the model is trained to substitute.'},
+       {id:'impute_peer', n:'Impute from a peer cohort', ex:'Fill the gap with a same-segment peer benchmark, clearly flagged as imputed.'},
+       {id:'gate_stip', n:'Raise a data-gap stipulation', ex:'Hold / condition the decision until the missing document is provided.'},
+       {id:'conservative', n:'Score conservatively', ex:'Treat the gap as worst-case until it’s filled — safe but blunt.'},
+     ], notePh:'lean on cash flow, but raise a stipulation for statements above $250k'},
+    {id:'rs_conflict', tag:'Model policy',
+     q:'When two sources report the SAME figure differently (e.g. Plaid revenue vs. a statement’s revenue), which is authoritative?',
+     help:'Cross-source disagreement — the value that feeds the model, and what the disagreement itself signals.',
+     opts:[
+       {id:'realized', n:'Realized beats reported', ex:'Our own settled / observed data (bank, settlements) overrides a reported figure.'},
+       {id:'recent', n:'Most recent wins', ex:'The freshest source is authoritative regardless of channel.'},
+       {id:'conservative', n:'Most conservative wins', ex:'Take the riskier of the two figures.'},
+       {id:'review', n:'Flag for review', ex:'A material discrepancy lowers the cross-validation score and routes for a look.'},
+     ], notePh:'realized-over-reported; any gap over 15% flags for review'},
+  ],
+  models:[
+    {id:'md_floor', tag:'Model policy',
+     q:'How hard should ADVERSE FACTS (subprime bureau, open collections, a bankruptcy) floor the score — even with strong cash flow?',
+     help:'Whether strong cash flow can fully offset a hard negative, or a floor holds regardless.',
+     opts:[
+       {id:'hard_floor', n:'Hard floor — cannot be offset', ex:'An adverse fact imposes a risk floor that cash-flow strength cannot cancel.'},
+       {id:'partial', n:'Partial offset', ex:'Strong cash flow softens but never fully removes the penalty.'},
+       {id:'offsettable', n:'Fully offsettable', ex:'A strong enough profile can net the adverse fact out.'},
+     ], notePh:'hard floor for bankruptcy + open collections; partial for a single late payment'},
+    {id:'md_absolute', tag:'Governance',
+     q:'May a model drive AUTOMATED decisions on absolute PD, or only rank / refer until it’s validated on YOUR realized outcomes?',
+     help:'How much authority a model has before it has proven itself on your own default history.',
+     opts:[
+       {id:'rank_only', n:'Rank-only until validated', ex:'The model ranks + refers; it cannot auto-decide on absolute PD until real-outcome validation passes.'},
+       {id:'absolute_gated', n:'Absolute once a gate clears', ex:'Absolute-PD automation unlocks after N real defaults validate calibration.'},
+       {id:'absolute_now', n:'Absolute now', ex:'Trust the model’s absolute PD for automation from day one.'},
+     ], notePh:'rank-only until ~2,000 real outcomes with both classes validate calibration'},
+    {id:'md_coherence', tag:'Governance',
+     q:'Before a model version goes live, must its TRAINING assumptions be reconciled against the real serving inputs?',
+     help:'e.g. that each feature is trained as absent under the same source that actually populates it — the check that catches a feature masked with the wrong data source.',
+     opts:[
+       {id:'gate_block', n:'Yes — a blocking promotion gate', ex:'A source-coherence gate must pass or the candidate cannot be promoted.'},
+       {id:'gate_warn', n:'Warn, but allow override', ex:'Surface the mismatch; a governor can promote with a reason.'},
+       {id:'manual', n:'Manual review only', ex:'No automated gate — rely on a reviewer.'},
+     ], notePh:'blocking gate: training missingness taxonomy must equal the served feature→source map'},
+  ],
+  decisioning:[
+    {id:'dc_disagree', tag:'Policy',
+     q:'When the model and a human (or an LLM assist) DISAGREE, which governs the recorded decision?',
+     help:'The authority order when an automated recommendation and a reviewer conflict.',
+     opts:[
+       {id:'human', n:'Human governs', ex:'The underwriter’s decision is the record; the model is advisory.'},
+       {id:'model', n:'Model governs within policy', ex:'Inside the auto band the model decides; humans handle exceptions.'},
+       {id:'block', n:'Disagreement blocks → review', ex:'A conflict forces a second-approver review before anything commits.'},
+     ], notePh:'human governs; but a model DECLINE always blocks an auto-approve'},
+  ],
+  cadence:[
+    {id:'cd_timing', tag:'Policy',
+     q:'After the decision, do later events RESCORE the obligor, or only FLAG it for review?',
+     help:'Whether the score is point-in-time (events flag) or continuously recomputed.',
+     opts:[
+       {id:'flag', n:'Flag, don’t silently rescore', ex:'Point-in-time at decision; later events raise a signal / review, they don’t silently move the number.'},
+       {id:'rescore', n:'Rescore on a material event', ex:'A material signal automatically recomputes the score.'},
+       {id:'periodic', n:'Periodic only', ex:'Recompute on a schedule (e.g. quarterly), not per-event.'},
+     ], notePh:'flag-not-rescore intraday; a full rescore on the quarterly review or a rating migration'},
+  ],
+  stipulations:[
+    {id:'st_default', tag:'Policy',
+     q:'Is a newly AUTO-RAISED stipulation GATING (holds funding) or advisory by default?',
+     help:'The default posture when the system raises a condition from a data gap or a signal.',
+     opts:[
+       {id:'gating', n:'Gating by default', ex:'Holds funding until VERIFIED or WAIVED (four-eyes).'},
+       {id:'advisory', n:'Advisory by default', ex:'Surfaced as a condition but doesn’t block; an examiner decides.'},
+       {id:'by_type', n:'Depends on the type', ex:'e.g. a missing NoA gates; a stale bank statement is advisory.'},
+     ], notePh:'gating for KYC / NoA / 3-way-match; advisory for a statement under 120 days old'},
+  ],
+  pricing:[
+    {id:'pr_band', tag:'Policy',
+     q:'Is risk-based pricing BANDED (floor / cap per tier), or purely model-driven?',
+     help:'Whether the score can price a deal without guardrails.',
+     opts:[
+       {id:'banded', n:'Banded — floor & cap per tier', ex:'The spread is constrained to a governed band per rating tier.'},
+       {id:'pure', n:'Purely model-driven', ex:'The score sets the spread directly, no band.'},
+       {id:'override', n:'Model + desk override', ex:'Model-driven with a reason-coded four-eyes override beyond the band.'},
+     ], notePh:'banded per rating tier; a desk override with reason + four-eyes beyond ±50bps'},
+  ],
+  adverse:[
+    {id:'aa_notice', tag:'Compliance',
+     q:'How is the notice of record PRODUCED?',
+     help:'The authoritative applicant notice — deterministic vs. model-drafted.',
+     opts:[
+       {id:'deterministic', n:'Deterministic template of record', ex:'Rendered byte-identically from reason codes — no model call on the record path.'},
+       {id:'template_draft', n:'Template of record + optional draft', ex:'Deterministic record, plus a clearly-labelled non-authoritative plain-language draft.'},
+       {id:'model', n:'Model-drafted', ex:'An LLM writes the notice (higher variance / review burden).'},
+     ], notePh:'deterministic record from FCRA reason codes; a plain-language draft that is never auto-sent'},
+  ],
+};
+Object.entries(DECISIONS).forEach(([a,ds])=>{ if(AREAS[a]) AREAS[a].decisions=ds; });
+
+// Steps: identity → products → grouped areas → free-form → review
+const STEPS = [
+  {id:'identity', title:'About you', icon:'👤'},
+  {id:'products', title:'Products', icon:'📦'},
+  {id:'group', title:'Parties & data', icon:'🗄️', areas:['parties','data']},
+  {id:'group', title:'Models, rating & limits', icon:'🤖', areas:['models','riskscope','risk']},
+  {id:'group', title:'Signals & monitoring', icon:'📡', areas:['signals']},
+  {id:'group', title:'Decisions, cadence & conditions', icon:'⚙️', areas:['decisioning','cadence','stipulations']},
+  {id:'group', title:'Risk-based pricing', icon:'🏷️', areas:['pricing']},
+  {id:'group', title:'Adverse action & documents', icon:'⚖️', areas:['adverse','documents']},
+  {id:'custom', title:'Add your own', icon:'➕'},
+  {id:'freeform', title:'Your vision', icon:'💡'},
+  {id:'review', title:'Review & save', icon:'✅'},
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FEATURE SELECTOR (second tab) — the full faces of the build. Ratings live in R.features so ONE
+// saved file (and the collection append) covers BOTH the guided requirements and the scope selection.
+// ─────────────────────────────────────────────────────────────────────────────
+const FS_CATS = [
+  {id:'intake', ic:'🚪', t:'Onboarding & intake', b:'How obligors arrive and become underwritable.'},
+  {id:'data', ic:'🗄️', t:'Data sources & ingestion', b:'The real inputs a decision is built from — more sources, fewer guesses.'},
+  {id:'scoring', ic:'🧠', t:'Credit scoring & ML models', b:'Turning inputs into a probability of default you can defend.'},
+  {id:'rating', ic:'📊', t:'Rating, limits & exposure', b:'From a score to a number: how much, sized how, capped where.'},
+  {id:'decisioning', ic:'⚙️', t:'Decisioning & autonomy', b:'How decisions get made — and how much is safely automated.'},
+  {id:'signals', ic:'📡', t:'Monitoring & signals', b:'The ongoing-risk spine after the deal is live.'},
+  {id:'cadence', ic:'🔁', t:'Underwriting cadence', b:'When you assess — once, per-transaction, or on a trigger.'},
+  {id:'stips', ic:'📋', t:'Stipulations & conditions', b:'What must be true before (and during) financing.'},
+  {id:'pricing', ic:'🏷️', t:'Pricing, fees & rate cards', b:'How each deal is priced and what the customer sees.'},
+  {id:'docs', ic:'📄', t:'Documents & verification', b:'Handling, extracting and trusting the paper.'},
+  {id:'adverse', ic:'⚖️', t:'Adverse action & fair-lending', b:'Denials and unfavourable changes — heavily regulated.'},
+  {id:'crime', ic:'🛡️', t:'KYC / AML / fraud', b:'Know-your-customer, money-laundering and fraud defence.'},
+  {id:'servicing', ic:'💸', t:'Servicing & money movement', b:'Actually moving, collecting, reconciling and accounting for money.'},
+  {id:'products', ic:'📦', t:'Product lifecycles', b:'Each financing product is its own end-to-end flow.'},
+  {id:'marketplace', ic:'🤝', t:'Funding & marketplace', b:'Third-party capital that buys into the book.'},
+  {id:'governance', ic:'🏛️', t:'Model governance & risk', b:'Making the intelligence auditable, validated and reversible.'},
+  {id:'org', ic:'🏢', t:'Org, groups & multi-entity', b:'Parents, subsidiaries, groups and multi-jurisdiction structure.'},
+  {id:'analytics', ic:'📈', t:'Analytics & reporting', b:'Seeing the book, the money and the regulator’s view.'},
+  {id:'platform', ic:'⚡', t:'Platform, scale & resilience', b:'The event-driven, durable, observable machine underneath.'},
+  {id:'access', ic:'🔐', t:'Access, connectivity & experience', b:'Security, integrations and the day-to-day operator experience.'},
+];
+const FS_FEATS = {
+  intake:[
+    {id:'self_portal', n:'Self-serve portal onboarding wizard', ex:'Guided multi-step application with doc upload + bank link; save-and-resume.', eff:'L'},
+    {id:'invite', n:'Invite / campaign onboarding', ex:'A buyer invites its supplier base in a CSV wave; funnel + resend tracked.', eff:'M'},
+    {id:'api_intake', n:'API / ERP-fed intake', ex:'An approved-payables feed lands obligors + invoices with no manual entry.', eff:'M'},
+    {id:'kyb', n:'KYB & beneficial-ownership intake', ex:'Declared owners vs. an EIN/registry cross-confirm; mismatch → stipulation.', eff:'L'},
+    {id:'eidv', n:'Identity verification (eIDV)', ex:'Owner/individual identity proofing via a vendor; the identity stub killer.', eff:'M'},
+    {id:'banklink', n:'Bank link (open banking)', ex:'Plaid connect in the wizard; token → cash-flow pull. Real ACH routing carried through.', eff:'M'},
+    {id:'file_first', n:'File-first intake', ex:'Upload a statement / AR tape / warehouse receipt and let extraction seed the application.', eff:'M'},
+    {id:'dual_role', n:'Dual-role (one account, both hats)', ex:'The same entity is a buyer AND a supplier; entitlement re-verified on hat switch.', eff:'L'},
+    {id:'product_aware', n:'Product-aware intake → initial underwrite', ex:'Intake routes by product and kicks the first assessment automatically.', eff:'M'},
+    {id:'coldstart', n:'Cold-start handling', ex:'A brand-new obligor with no history gets a sane starting band, not an auto-reject.', eff:'M'},
+  ],
+  data:[
+    {id:'comm_bureau', n:'Commercial bureau', ex:'D&B / Experian Commercial — scores, tradelines, public records, financials. Real HTTP + normalizer.', eff:'L'},
+    {id:'owner_bureau', n:'Consumer / owner bureau (consent-gated)', ex:'Owner pulls for thin-file SMBs, with consent capture + FCRA handling.', eff:'M'},
+    {id:'open_banking', n:'Open banking cash flow', ex:'Balances, inflow/outflow, NSF, runway, volatility, deposit concentration, daily-flow distress shapes.', eff:'L'},
+    {id:'erp', n:'ERP / accounting connector', ex:'SAP/Oracle via OData, QuickBooks — AR/AP, GL. One connector is a real integration each.', eff:'XL'},
+    {id:'ar_tape', n:'AR / AP aging tape', ex:'A CSV tape of receivables → a derived per-supplier acceptance policy.', eff:'M'},
+    {id:'statements', n:'Financial statements + table extraction', ex:'Uploaded 10-K/10-Q or management accounts, OCR table-extracted into structured financials.', eff:'L'},
+    {id:'edgar', n:'Public filings (EDGAR)', ex:'Real multi-year 10-K/10-Q ingest for public anchors — liquidity stack, debt split, AR/AP.', eff:'L'},
+    {id:'sanctions', n:'Sanctions / PEP lists', ex:'Screening lists with fuzzy matching + ongoing re-screening.', eff:'M'},
+    {id:'media', n:'Adverse media / news', ex:'A risk radar that pulls negative news and classifies severity.', eff:'L'},
+    {id:'registry', n:'Registry data (EIN / NAICS / industry)', ex:'Declared vs. registry industry → mismatch shock; entity registry cross-checks.', eff:'M'},
+    {id:'shipping', n:'Vessel / BoL tracking', ex:'Confirm a bill of lading against AIS vessel + port-call data.', eff:'M'},
+    {id:'benchmarks', n:'Live benchmark rates', ex:'SOFR / SONIA per region, pulled live, driving all-in pricing.', eff:'S'},
+  ],
+  scoring:[
+    {id:'pd_model', n:'PD model (gradient-boosted)', ex:'A trained probability-of-default model — the core intelligence. Schema, training, serving, monitoring.', eff:'XL'},
+    {id:'scorecard', n:'Explainable scorecard “why”', ex:'A transparent weighted model beside the ML score — reason codes on every decision.', eff:'L'},
+    {id:'feature_pipe', n:'Feature-engineering pipeline', ex:'Every model feature sourced from a REAL input (bureau, cash flow, graph…), never defaulted to 0.', eff:'XL'},
+    {id:'feature_gov', n:'Feature→source governance', ex:'A manifest tying each feature to its real source, with a promotion gate that fails on drift.', eff:'L'},
+    {id:'missing', n:'Missing-data resolution', ex:'Absent inputs handled honestly — lean on present signals, impute from peers, or gate a stipulation.', eff:'L'},
+    {id:'counterparty', n:'Counterparty / anchor-buyer risk model', ex:'For reverse factoring, the supplier’s exposure to the buyer who actually pays.', eff:'L'},
+    {id:'graph', n:'Graph / network features', ex:'Centrality, community, deep-tier, in-cycle — the obligor’s position in the trade graph.', eff:'L'},
+    {id:'country', n:'Country / macro risk model', ex:'Jurisdiction macro-health as a governed feature (OECD CRC + config).', eff:'M'},
+    {id:'lgd', n:'LGD model (loss given default)', ex:'Loss severity from deal structure, collateral, guarantees, insurance — replaces a flat 45%.', eff:'L'},
+    {id:'calibration', n:'Segment calibration', ex:'Calibrate PD to your realized outcomes per segment, with an A/B equivalence harness.', eff:'L'},
+    {id:'real_outcome', n:'Real-outcome validation', ex:'A genuine-loss label + Brier/calibration gate before absolute PD is trusted.', eff:'L'},
+    {id:'divergence', n:'Signal-divergence handling', ex:'When financials and cash flow disagree, a defined, trained netting policy — not an accident.', eff:'M'},
+  ],
+  rating:[
+    {id:'scale', n:'Rating scale & mapping', ex:'Your own grades (1–10 / AAA–D) mapped to PD and to agency standings.', eff:'M'},
+    {id:'tiers', n:'Limit tiers by rating', ex:'Rating / PD bands → limit tiers with headroom rules.', eff:'M'},
+    {id:'peer_limit', n:'Peer-benchmark limit sizing', ex:'Limit anchored to comparable obligors’ approved limits (a governed model).', eff:'L'},
+    {id:'fin_limit', n:'Financials-driven sizing', ex:'% of turnover, DSCR-based caps, borrowing-base math.', eff:'M'},
+    {id:'per_product', n:'Per-product sub-limits', ex:'One envelope allocated across products by tenor / LGD.', eff:'L'},
+    {id:'concentration', n:'Concentration caps', ex:'Single-buyer ≤ X% of a supplier’s book; portfolio-level caps.', eff:'M'},
+    {id:'country_caps', n:'Country exposure caps', ex:'Aggregate exposure ceilings by jurisdiction.', eff:'M'},
+    {id:'group_caps', n:'Group / parent caps (atomic)', ex:'A hard group cap reserved atomically at the funding gate — no double-spend.', eff:'L'},
+    {id:'covenants', n:'Covenants & borrowing base', ex:'Borrowing-base tests + covenant monitoring + periodic review triggers.', eff:'L'},
+    {id:'contagion', n:'Effective-PD contagion adjustment', ex:'A linked party’s stress notches the obligor’s effective PD, absorbed at re-underwrite.', eff:'L'},
+  ],
+  decisioning:[
+    {id:'cockpit', n:'Manual case-file cockpit', ex:'A tabbed underwriter workspace — bureau, cash flow, messaging, history, decision.', eff:'L'},
+    {id:'stp', n:'Straight-through (auto) decisions', ex:'Auto-approve clean cases under a cap; refer the rest — via a single decision-engine apply-point.', eff:'L'},
+    {id:'four_eyes', n:'Four-eyes / maker-checker', ex:'A second approver above a threshold, with segregation of duties.', eff:'M'},
+    {id:'policy_rules', n:'Configurable policy rules', ex:'Decline floors, auto-approve scores, per-product rules — editable, not hard-coded.', eff:'M'},
+    {id:'thresholds', n:'Editable decision thresholds', ex:'Auto-approve / decline / review bands governed from an active config.', eff:'M'},
+    {id:'routing', n:'Escalation & routing', ex:'Route by region / segment / product / portfolio to the right team, capacity-aware.', eff:'L'},
+    {id:'reasons', n:'Explainable decisions + reason codes', ex:'Every limit move carries a governed reason code + a scorecard “why”.', eff:'M'},
+    {id:'ladder', n:'STP autonomy ladder', ex:'Graduated SUGGEST → GATE → AUTO<cap → AUTO per type × action; incident = instant demotion.', eff:'L'},
+    {id:'auto_ready', n:'Auto-approve readiness scoring', ex:'A per-case “how close to straight-through” signal that ranks the queue.', eff:'M'},
+  ],
+  signals:[
+    {id:'spine', n:'Signal spine (ingest + dedup)', ex:'One record/dedup choke point; recurrences fold with a count; dispositions suppress resolved ones.', eff:'L'},
+    {id:'fin_deteriorate', n:'Financial deterioration', ex:'Worsening quarterly financials / DSCR / leverage trend.', eff:'M'},
+    {id:'score_drop', n:'Score / rating drop', ex:'ML score falls or a bureau / agency rating migrates down → re-review.', eff:'M'},
+    {id:'payment', n:'Payment behaviour', ex:'Late / overdue payments, missed collections, slow-pay trend from realized timing.', eff:'M'},
+    {id:'cashflow_det', n:'Cash-flow deterioration', ex:'NSF / overdrafts, falling runway, revenue volatility from the live bank feed.', eff:'M'},
+    {id:'dilution', n:'Dilution / disputes', ex:'Rising credit notes, disputes or deductions on the receivable.', eff:'M'},
+    {id:'breach', n:'Limit / covenant / concentration breach', ex:'Over-limit draw, covenant test fail, single-buyer over cap.', eff:'M'},
+    {id:'sanctions_rescreen', n:'Sanctions / PEP re-screening', ex:'Ongoing re-screening of obligors + owners; a hit raises a signal.', eff:'M'},
+    {id:'aml_typ', n:'AML / TBML typologies', ex:'Pass-through flows, double-financing, over/under-invoicing detectors on live flows.', eff:'XL'},
+    {id:'fraud', n:'Fraud / anomaly', ex:'Consortium fraud alerts + a novel-pattern anomaly model on the fraud subspace.', eff:'L'},
+    {id:'doc_auth', n:'Document authenticity', ex:'A tampered / cloned document detected at submit raises a discreet examiner signal.', eff:'L'},
+    {id:'deadline', n:'Examination / SLA deadline', ex:'An examination clock (e.g. Art.16) due-soon / breached, holiday-calendar aware.', eff:'M'},
+    {id:'contagion_sig', n:'Network contagion / group stress', ex:'A linked party’s or parent’s stress propagates via pub/sub, not an in-request loop.', eff:'L'},
+    {id:'signal_action', n:'Signal → action → worklist', ex:'Confirm ⇒ freeze / reduce / re-underwrite via the decision engine; route to a risk desk.', eff:'M'},
+  ],
+  cadence:[
+    {id:'profile', n:'Profile-centric (underwrite once)', ex:'Assess to a standing limit; draws check against it — cheap and fast.', eff:'M'},
+    {id:'pertx', n:'Per-transaction underwriting', ex:'Score / decide each invoice, draw or PO independently.', eff:'M'},
+    {id:'hybrid', n:'Hybrid — limit + per-draw gate', ex:'A standing limit plus per-draw eligibility (tenor, approved buyer, 3-way match).', eff:'M'},
+    {id:'pit', n:'Point-in-time scoring', ex:'Score at decision; later events FLAG, they don’t silently rescore.', eff:'M'},
+    {id:'periodic', n:'Periodic review', ex:'Scheduled re-review (quarterly / annual) even with no event.', eff:'M'},
+    {id:'onsignal', n:'Re-underwrite on signal', ex:'A material signal triggers an automatic rescore / review.', eff:'M'},
+    {id:'material', n:'Material-change trigger', ex:'A new buyer standing, ownership change, or big financial move re-triggers.', eff:'M'},
+    {id:'validity', n:'Data-validity window', ex:'Re-pull bureau / cash flow when the data is older than a set window.', eff:'S'},
+    {id:'inflight_lock', n:'In-flight assessment lock', ex:'The profile locks during a pull/underwrite (UI + 409 apply-points, TTL self-heal).', eff:'M'},
+  ],
+  stips:[
+    {id:'library', n:'Governed stipulation library', ex:'Reusable conditions per product/type (e.g. a signed Notice of Assignment).', eff:'M'},
+    {id:'gating', n:'Gating vs advisory conditions', ex:'A gating stipulation HOLDS funding until VERIFIED or WAIVED.', eff:'M'},
+    {id:'autoraise', n:'Auto-raise from data gaps', ex:'A missing or expired document raises a stipulation automatically.', eff:'M'},
+    {id:'field_map', n:'Field → stipulation auto-mapping', ex:'A material missing FIELD (not just a doc) auto-maps to the condition that resolves it.', eff:'L'},
+    {id:'verify_wf', n:'Verification workflow', ex:'Submit evidence → an examiner verifies → provenance promoted.', eff:'M'},
+    {id:'waiver', n:'Waivers (reason + four-eyes)', ex:'Override a condition with a reason code and a second approver.', eff:'S'},
+    {id:'expiry', n:'Expiry / re-trigger', ex:'A bank statement older than 90 days re-raises the condition.', eff:'S'},
+  ],
+  pricing:[
+    {id:'rate_card', n:'Rate-card grid', ex:'Rates by product × segment × tenor, governed with effective dates.', eff:'L'},
+    {id:'risk_priced', n:'Risk-based all-in pricing', ex:'All-in = live benchmark + a credit spread from the score.', eff:'M'},
+    {id:'fees', n:'Fee schedules', ex:'Setup, service, late and per-product fees + fee invoicing.', eff:'M'},
+    {id:'quote', n:'Pre-funding indicative quote', ex:'Show the customer expected pricing before they commit.', eff:'M'},
+    {id:'two_lens', n:'Two-lens pricing (internal vs customer)', ex:'Banker-full breakdown internally; PD/LGD stripped from the customer view (no leak).', eff:'M'},
+    {id:'gain_share', n:'Gain-share / dynamic discounting', ex:'Dynamic-discounting or gain-share splits operated on buyer cash / platform capital.', eff:'L'},
+    {id:'sim', n:'Pricing impact simulator', ex:'Model a rate-card change across the whole book before it goes live.', eff:'L'},
+    {id:'pr_tiers', n:'Pricing tiers by rating / risk', ex:'Spread tiers mapped to rating / PD bands.', eff:'M'},
+    {id:'pr_gov', n:'Pricing governance + overrides', ex:'Who sets the card, the approval to change it, and reason-coded deal overrides.', eff:'M'},
+    {id:'guarantee_fee', n:'Guarantee / off-balance fee pricing', ex:'Fee from call-probability × structural LGD, not a desk-set number.', eff:'M'},
+  ],
+  docs:[
+    {id:'upload', n:'Upload + classification', ex:'Invoices, POs, financials, BoLs auto-classified on upload.', eff:'M'},
+    {id:'extract', n:'OCR / table extraction', ex:'Line items + financial tables from PDFs and scans, with bounding boxes.', eff:'L'},
+    {id:'xval', n:'Cross-validation', ex:'Extracted figures vs bureau / declared values, persisted per-document.', eff:'M'},
+    {id:'3way', n:'3-way match', ex:'Invoice ↔ PO ↔ goods-received before funding.', eff:'M'},
+    {id:'tamper', n:'Tamper / forgery detection', ex:'A governed forensic model flags edited / cloned documents; advisory, maker-checker.', eff:'XL'},
+    {id:'localizer', n:'Forgery localizer', ex:'A trained model that highlights WHERE a document was altered.', eff:'XL'},
+    {id:'shipment', n:'Shipment / BoL verification', ex:'Confirm a bill of lading against vessel / port data.', eff:'M'},
+    {id:'corpus', n:'Authenticity corpus (dedup)', ex:'Every upload enters a content-hash corpus; at-submit duplicate / re-use warning.', eff:'M'},
+    {id:'viewer', n:'Source-file viewer with field references', ex:'The invoice/statement rendered with each extracted field pinned to its position.', eff:'M'},
+  ],
+  adverse:[
+    {id:'triggers', n:'Full adverse-action trigger set', ex:'Decline, counter-offer, reduction, freeze, termination, unfavourable terms, refused increase.', eff:'M'},
+    {id:'reason_codes', n:'Structured reason codes', ex:'Every decision maps to a governed reason-code set — never free text.', eff:'M'},
+    {id:'principal', n:'Principal-reasons statement', ex:'The specific principal reasons (ECOA/Reg B), not a vague “low score”.', eff:'M'},
+    {id:'fcra', n:'FCRA notice + dispute rights', ex:'Free-report + dispute-rights disclosure naming the bureau when a report drove it.', eff:'M'},
+    {id:'regb', n:'ECOA / Reg B compliance', ex:'Specific reasons within the statutory window; business-credit rules.', eff:'M'},
+    {id:'tipping', n:'Tipping-off suppression', ex:'AML / sanctions / fraud declines → a generic notice; the real reason stays internal (SAR).', eff:'M'},
+    {id:'allowlist', n:'Reason allowlist / no internal leak', ex:'Only permitted disclosures show — no PD / LGD / model trace to the applicant.', eff:'M'},
+    {id:'record', n:'Deterministic notice of record', ex:'Byte-identical notice rendered from reason codes — no model prose on the record path.', eff:'M'},
+    {id:'delivery', n:'Delivery + timing + retention', ex:'Channel, statutory timing window, and 7-year retention for examination.', eff:'M'},
+    {id:'no_silent', n:'No silent declines', ex:'Every decline / adverse change produces a recorded, delivered notice.', eff:'S'},
+    {id:'intl', n:'Non-US regimes', ex:'GDPR right-to-explanation / local consumer-credit law variants.', eff:'L'},
+  ],
+  crime:[
+    {id:'kyb_reg', n:'KYB ownership registry', ex:'Declared owners vs. registry principals; mismatch → gating stipulation.', eff:'L'},
+    {id:'cdd', n:'CDD / beneficial-ownership certification', ex:'31 CFR 1010.230 prongs → e-sign ceremony → gating stip + DD factor.', eff:'L'},
+    {id:'dd_tiers', n:'DD tiers + perpetual KYC', ex:'Evidenced SDD / CDD / EDD, source-of-funds gate, senior sign-off; vendor push re-tiers.', eff:'L'},
+    {id:'sanctions_screen', n:'Sanctions / PEP screening', ex:'Onboarding + ongoing screening with real match logic + adjudication.', eff:'L'},
+    {id:'aml_tm', n:'AML transaction monitoring', ex:'Typology detectors over bank flows → typed signals → EDD gate.', eff:'XL'},
+    {id:'tbml', n:'TBML monitoring', ex:'Price vs peer reference, goods plausibility, double-financing → BLOCKED at funding.', eff:'XL'},
+    {id:'fraud_feed', n:'Fraud-intelligence feed', ex:'Consortium alerts × the book → case; confirm ⇒ freeze via the decision engine.', eff:'L'},
+    {id:'typ_lib', n:'Typology library + book sweeps', ex:'A maintained typology set that periodically sweeps the whole book.', eff:'L'},
+    {id:'case_mgmt', n:'Case management + SAR handling', ex:'Investigate → disposition → file, with the tipping-off wall intact.', eff:'L'},
+  ],
+  servicing:[
+    {id:'disburse', n:'Disbursement rail', ex:'Money OUT to a captured, verified account (real vendor + callbacks).', eff:'L'},
+    {id:'collect', n:'Collections rail + auto-collection', ex:'Money IN via gateway; due-invoice collection as a durable, idempotent flow.', eff:'L'},
+    {id:'ledger', n:'Receivable ledger (double-entry)', ex:'Balanced postings, trial-balance = 0, priced-fee accrual, delivery-driven due dates.', eff:'XL'},
+    {id:'cash_app', n:'Cash application', ex:'Partial pay, short-pay, dilution, disputes applied to the right receivable.', eff:'L'},
+    {id:'dunning', n:'Dunning / arrears workflow', ex:'Escalating reminders + collections cases on overdue balances.', eff:'M'},
+    {id:'chargeback', n:'Chargebacks + statement reconciliation', ex:'Reversal handling + bank-statement reconciliation of the rail.', eff:'M'},
+    {id:'fx', n:'FX & multi-currency P&L', ex:'Convert monetary features + realized FX gain/loss on cross-currency deals.', eff:'M'},
+    {id:'interest', n:'Interest / fee accrual schedules', ex:'Per-facility accrual + billing over the financing tenor.', eff:'M'},
+    {id:'remittance', n:'Remittance advice + statements', ex:'Per-invoice advice from real settlement records; hash-stamped monthly statements.', eff:'M'},
+    {id:'gateway', n:'Payments gateway (lossless)', ex:'Own store, lossless webhooks, idempotency keys, provider mocks.', eff:'L'},
+  ],
+  products:[
+    {id:'rf', n:'Reverse factoring', ex:'Buyer-anchored payables finance; supplier limits flow from the buyer’s standing + NoA.', eff:'L'},
+    {id:'receivables', n:'Receivables finance', ex:'Supplier-led invoice finance with confirmation + dilution guardrails.', eff:'L'},
+    {id:'po', n:'PO / pre-shipment finance', ex:'Milestone-tranche PO financing → conversion to an invoice.', eff:'L'},
+    {id:'distributor', n:'Distributor finance', ex:'Buyer-rails draw → fund OEM → repay-on-sale ledger + webhook repayment.', eff:'L'},
+    {id:'inventory', n:'Inventory / warehouse finance', ex:'Warehouse receipts as borrowing-base collateral (per-type LTV) + stale-collateral sweep.', eff:'L'},
+    {id:'discounting', n:'Dynamic discounting', ex:'Early-payment on buyer cash or platform capital, priced by days-early.', eff:'M'},
+    {id:'guarantee', n:'Guarantee issuance (URDG 758)', ex:'Issue, amend, demand-examination, expiry lifecycle for off-balance guarantees.', eff:'L'},
+    {id:'term', n:'Term / working-capital loans', ex:'Revolving or term facilities underwritten on financials + cash flow.', eff:'L'},
+    {id:'insurance', n:'Credit-insurance registry', ex:'Insurer master, policies, claims → waterfall recovery in LGD.', eff:'L'},
+  ],
+  marketplace:[
+    {id:'funder_onboard', n:'Funder / investor onboarding', ex:'Third-party capital onboarded with a REAL sanctions gate.', eff:'L'},
+    {id:'commitments', n:'Capital commitments', ex:'Funders commit capital that the book draws against.', eff:'M'},
+    {id:'waterfall', n:'Pro-rata participation waterfall', ex:'Allocate each deal across participants; track investor positions.', eff:'L'},
+    {id:'rate_list_bid', n:'Rate / seal / list / bid / allocate', ex:'The marketplace mechanics of pricing, listing and allocating assets.', eff:'XL'},
+    {id:'payout', n:'Investor payout rail', ex:'Distributions back to funders as collections land.', eff:'L'},
+    {id:'esign', n:'E-sign + four-eyes rating', ex:'Signature ceremony for participation + a governed four-eyes rating.', eff:'L'},
+    {id:'irr', n:'IRR / investor returns', ex:'Position-level return computation for investors.', eff:'M'},
+  ],
+  governance:[
+    {id:'registry', n:'Model registry + versioning (MLflow)', ex:'Every AI/ML model visible, versioned and trainable like the others.', eff:'L'},
+    {id:'maker_checker', n:'Maker-checker promotion', ex:'Trainer ≠ approver; a candidate is evaluated then promoted under review.', eff:'M'},
+    {id:'gates', n:'Promotion gates', ex:'Discrimination / calibration / monotonicity / coverage / golden-benchmark gates block a bad promote.', eff:'L'},
+    {id:'bench', n:'Model validation bench', ex:'A golden real-company set + change-impact studio (candidate vs current, attribute what-ifs).', eff:'L'},
+    {id:'cards', n:'Model cards + surrogate rulebook', ex:'A human-readable CART distilled from the served model + a model card per version.', eff:'M'},
+    {id:'rollback', n:'Atomic rollback', ex:'One-step demote to the prior LIVE version with serving-state proof.', eff:'M'},
+    {id:'prompt_gov', n:'Prompt governance', ex:'LLM prompts as governed data: registry, synthetic A/B gate, four-eyes.', eff:'L'},
+    {id:'backtest', n:'Backtest cadence + drift gate', ex:'Scheduled backtests + an anti-drift gate on the served model.', eff:'M'},
+    {id:'output_guard', n:'LLM output-side guard', ex:'A grounding check before any AI narrative renders — no silent hallucination.', eff:'M'},
+    {id:'privacy', n:'Privacy posture + PII redaction', ex:'A redactor + posture bean so PII never leaks into prompts / logs.', eff:'M'},
+  ],
+  org:[
+    {id:'tree', n:'Parent / sub-org tree', ex:'A legal-entity hierarchy end to end.', eff:'L'},
+    {id:'inherit', n:'Bank-account inheritance + routing', ex:'Effective-account disbursement routing down the org tree.', eff:'M'},
+    {id:'notch', n:'Evidence-based parent notching', ex:'A parent’s standing notches the subsidiary’s underwriting.', eff:'M'},
+    {id:'shock', n:'Directional parent↔sub shock', ex:'Treasury-weighted stress propagation keyed on group role.', eff:'L'},
+    {id:'group_cap', n:'Group hard cap (atomic reserve)', ex:'A group-wide limit reserved atomically at the gate.', eff:'M'},
+    {id:'rollup', n:'Group rollup reports', ex:'Consolidated exposure / performance across the group.', eff:'M'},
+    {id:'scope_switch', n:'Portal group-scope switcher', ex:'Adyen-style parent-org scoping across the portal.', eff:'M'},
+    {id:'residency', n:'Residency / data-jurisdiction stamps', ex:'Every record stamped with its residency for cross-border rules.', eff:'M'},
+  ],
+  analytics:[
+    {id:'portfolio', n:'Portfolio analytics', ex:'Vintage, summary, model-performance — computed via a cached metrics layer.', eff:'L'},
+    {id:'payments_cockpit', n:'Payments cockpit', ex:'Action-queue ops dashboard with a real collect trigger + region rollup.', eff:'L'},
+    {id:'treasury', n:'Treasury analytics', ex:'Funding-gap / liquidity forecast + FTP curve + NII attribution.', eff:'L'},
+    {id:'wc_analytics', n:'Buyer working-capital analytics', ex:'DPO/DSO/CCC + gain-share statements for the anchor.', eff:'M'},
+    {id:'gl_export', n:'GL journal export + period close', ex:'Mapping config, period lock, attestation.', eff:'L'},
+    {id:'ifrs', n:'IFRS / attested exports', ex:'Regulator-grade attested exports on a cadence.', eff:'M'},
+    {id:'saved_reports', n:'Saved / scheduled reports', ex:'Parameterised reports users save and schedule.', eff:'M'},
+    {id:'ops_health', n:'Ops dashboards + health glow', ex:'Deterministic 7d-vs-7d GREEN/AMBER/RED with LLM explains-only.', eff:'M'},
+    {id:'drill', n:'Click-through drill + since-last-visit', ex:'Every metric drills to the underlying rows; “what changed since you last looked”.', eff:'M'},
+  ],
+  platform:[
+    {id:'pubsub', n:'Event-driven pub/sub (Kafka)', ex:'A single publish choke point; consumers cascade — never a synchronous in-request fan-out.', eff:'L'},
+    {id:'flows', n:'Durable orchestrator flows', ex:'Checkpointed, idempotent, crash-recovering multi-step flows (credit pull, extraction, collection).', eff:'XL'},
+    {id:'dlt', n:'DLT / poison-pill protection', ex:'ErrorHandlingDeserializer + dead-letter routing so one bad message can’t jam a partition.', eff:'M'},
+    {id:'scale', n:'Horizontal scale', ex:'N web replicas behind a LB + a single scheduler worker + ShedLock.', eff:'L'},
+    {id:'metrics_cache', n:'Metrics aggregation + caching', ex:'Cent-tolerant Mongo aggregation behind a TTL cache — never per-request scans.', eff:'L'},
+    {id:'idempotency', n:'Idempotency + exposure accounting', ex:'Atomic $inc exposure, idempotent money writes — never read-modify-write.', eff:'M'},
+    {id:'observability', n:'Observability (Loki / Grafana)', ex:'All services + containers shipped to Loki; browser console captured too.', eff:'M'},
+    {id:'monitors', n:'Log + console monitor agents', ex:'Live tailing that surfaces backend + browser errors as bugs during any walkthrough.', eff:'M'},
+    {id:'k8s', n:'Kubernetes deployment', ex:'Manifests + health/readiness probes for the Python model / doc / OCR services.', eff:'L'},
+    {id:'resilience', n:'HTTP client resilience', ex:'Pooled, timed-out clients + breakers/retries → honest-degraded, never fabricated data.', eff:'M'},
+  ],
+  access:[
+    {id:'rbac', n:'RBAC / permissions on every endpoint', ex:'A role/permission gate on every API — no open surface.', eff:'L'},
+    {id:'sso', n:'Corporate SSO (OIDC)', ex:'Enterprise single sign-on for operators.', eff:'M'},
+    {id:'api_keys', n:'API keys + service tokens', ex:'Hash-stored buyer API keys + inter-service tokens.', eff:'M'},
+    {id:'webhooks', n:'Outbound webhooks (HMAC)', ex:'HMAC-signed party-event push with retries + self-service subscriptions.', eff:'M'},
+    {id:'connectors', n:'ERP connectors + PEPPOL/UBL', ex:'A connector framework + PEPPOL/UBL inbound e-invoicing.', eff:'L'},
+    {id:'copilot', n:'Grounded AI copilot / tx-chat', ex:'Per-transaction, citation-grounded chat; cosine-refuses off-context questions.', eff:'L'},
+    {id:'workspace', n:'Workspace dock + persistent chat', ex:'A right-edge rail (Timeline / Notes / Docs / Chat) with shareable sessions.', eff:'M'},
+    {id:'help', n:'Help encyclopedia', ex:'An animated, searchable feature encyclopedia + ES-vector-grounded chatbot.', eff:'L'},
+    {id:'i18n', n:'i18n + PWA', ex:'Localisation (e.g. DE) + an installable progressive-web-app pass.', eff:'M'},
+    {id:'theming', n:'Unified theming', ex:'One canonical palette + a switcher on every app.', eff:'S'},
+  ],
+};
+// ── The INTELLIGENCE layer ──────────────────────────────────────────────────────────────────────
+// Which capabilities are driven by a TRAINED model (ML) or an LLM. These are the ones that need
+// training data, feature engineering, governance (versioning, maker-checker, validation), and drift
+// monitoring — the hard, never-quite-finished part of an "intelligent" system. Tagged here (not
+// inline in the catalogue) so the feature list stays flat; merged onto FS_FEATS below.
+const FS_AI = {
+  // Trained ML models / model-driven scoring & detection
+  pd_model:'ML', scorecard:'ML', feature_pipe:'ML', feature_gov:'ML', missing:'ML', counterparty:'ML',
+  graph:'ML', country:'ML', lgd:'ML', calibration:'ML', real_outcome:'ML', divergence:'ML',
+  peer_limit:'ML', contagion:'ML', auto_ready:'ML',
+  extract:'ML', xval:'ML', tamper:'ML', localizer:'ML',
+  aml_typ:'ML', fraud:'ML', doc_auth:'ML', aml_tm:'ML', tbml:'ML', fraud_feed:'ML',
+  registry:'ML', gates:'ML', bench:'ML', cards:'ML', backtest:'ML',
+  // LLM / generative-AI-driven
+  media:'LLM', copilot:'LLM', help:'LLM', prompt_gov:'LLM', output_guard:'LLM', privacy:'LLM', ops_health:'LLM',
+};
+Object.values(FS_FEATS).flat().forEach(f=>{ if(FS_AI[f.id]) f.ai=FS_AI[f.id]; });
+
+// ── "More info" per face — a longer description + a REAL screenshot of a similar module already
+// running on the platform, so product/business can see what "this face, built" actually looks like.
+// Merged onto FS_CATS (kept separate so the catalogue stays flat). Images live in docs/assets/examples/.
+const FS_CATS_BY_ID = Object.fromEntries(FS_CATS.map(c=>[c.id,c]));
+const FS_MORE = {
+  scoring:{ img:'assets/examples/benchmarking.png',
+    imgCap:'Live on the platform — peer benchmarking: the AI/ML credit score against 35 similar obligors (radar: ML score · PD · utilization · bureau · runway), each metric shown as a percentile band.',
+    text:'The hardest, highest-value face — and the one that is never “done”. A production PD model is a whole sub-project: a 40–50-feature vector sourced from every real input, a training pipeline with governance (versioning, maker-checker, gated promotion, validation against YOUR realized defaults), a served scorecard for the “why”, and continuous drift monitoring. Every XL capability here (the PD model, the feature pipeline) is a multi-quarter effort with its own team, re-trained and re-validated for the life of the platform.' },
+  intake:{ img:'assets/examples/cockpit.png',
+    imgCap:'Live on the platform — the obligor cockpit: revenue, behavioural signals, credit profile and standing assembled from every source into one underwritable view.',
+    text:'Onboarding decides how much friction the customer feels and how much REAL data reaches the model. Self-serve, invite-wave and API/ERP-fed intake are three separate build tracks; KYB, eIDV and the bank-link each integrate a live vendor. Getting this right is what lets everything downstream be automated instead of re-keyed by hand.' },
+  access:{ img:'assets/examples/help.png',
+    imgCap:'Live on the platform — the in-product help encyclopedia: every feature + AI/ML model documented, with an embeddings-grounded chatbot.',
+    text:'The operator experience and the integration surface. RBAC on every endpoint, SSO, API keys and webhooks are the security/plumbing table-stakes; the grounded AI copilot and the searchable encyclopedia are what make a platform of this size usable day-to-day.' },
+  signals:{ text:'The ongoing-risk spine — the platform never stops underwriting. A signal engine ingests, dedups and folds events from a dozen detectors (financial, cash-flow, sanctions, AML/TBML, fraud, document authenticity, contagion), then routes confirmed ones to freeze / reduce / re-underwrite through the decision engine. Several of those detectors are trained models in their own right.' },
+  governance:{ text:'What turns “a model” into “a governed model”: a registry, maker-checker promotion behind quantitative gates (discrimination, calibration, monotonicity, coverage, golden-benchmark), a validation bench that compares a candidate to the live model on real companies, one-step atomic rollback, and prompt governance for every LLM surface. This is the layer regulators and model-risk teams actually examine.' },
+  crime:{ text:'Financial-crime defence is a regulated, model-heavy domain of its own: KYB/CDD/EDD tiering, sanctions & PEP screening with adjudication, AML transaction-monitoring typologies over live bank flows, TBML trade-based checks, and a fraud-intelligence workspace — all behind a tipping-off wall so a decline never leaks the real reason (SAR stays internal).' },
+  docs:{ text:'Turning paper into trustworthy data: classification, OCR/table extraction with bounding boxes, cross-validation against the bureau, a 3-way match, and a governed tamper/forgery model that both flags AND localises edited documents. Several of these are trained CNNs with their own evaluation harnesses.' },
+  servicing:{ text:'Where “approved” becomes real money moving — and the part most underestimated. A double-entry receivable ledger (trial-balance = 0), disbursement + collection rails with idempotent, crash-safe flows, cash application (partial / short-pay / dilution), FX P&L and a lossless payments gateway. Money bugs are the expensive kind.' },
+};
+Object.entries(FS_MORE).forEach(([k,v])=>{ if(FS_CATS_BY_ID[k]) Object.assign(FS_CATS_BY_ID[k], v); });
+
+const FS_EFF_W = {S:1, M:3, L:8, XL:20};
+const FS_RATINGS = [['MUST','Must have','must'],['NICE','Nice to have','nice'],['NOT','Not needed','not']];
+const FS_ALL = FS_CATS.flatMap(c=>FS_FEATS[c.id].map(f=>({...f, cat:c.id})));
+const FS_TOTAL = FS_ALL.length;
+const FS_WEIGHT = FS_ALL.reduce((s,f)=>s+FS_EFF_W[f.eff],0);
+const FS_AI_ML = FS_ALL.filter(f=>f.ai==='ML').length;
+const FS_AI_LLM = FS_ALL.filter(f=>f.ai==='LLM').length;
+const FS_AI_COUNT = FS_AI_ML + FS_AI_LLM;
+let fsFilter='ALL', fsSearch='', fsCollapsed={}, fsMoreOpen={};
+
+const fr = ()=> (R.features = R.features || {ratings:{},notes:''}).ratings || (R.features.ratings={});
+function fsCounts(){ const c={MUST:0,NICE:0,NOT:0,UNRATED:0,mustWeight:0,scopedWeight:0}; const rt=fr();
+  FS_ALL.forEach(f=>{ const r=rt[f.id]; if(r==='MUST'){c.MUST++;c.mustWeight+=FS_EFF_W[f.eff];c.scopedWeight+=FS_EFF_W[f.eff];}
+    else if(r==='NICE'){c.NICE++;c.scopedWeight+=Math.round(FS_EFF_W[f.eff]/2);}
+    else if(r==='NOT'){c.NOT++;} else c.UNRATED++; }); return c; }
+function fsCatCounts(cid){ const c={MUST:0,NICE:0,NOT:0,rated:0,total:FS_FEATS[cid].length}; const rt=fr();
+  FS_FEATS[cid].forEach(f=>{ const r=rt[f.id]; if(r){c.rated++; if(r==='MUST')c.MUST++; else if(r==='NICE')c.NICE++; else c.NOT++;} }); return c; }
+function fsMatches(f){ const r=fr()[f.id];
+  if(fsFilter==='UNRATED' && r) return false;
+  if(fsFilter==='AI' && !f.ai) return false;
+  if(['MUST','NICE','NOT'].includes(fsFilter) && r!==fsFilter) return false;
+  if(fsSearch && !((f.n+' '+f.ex).toLowerCase().includes(fsSearch.toLowerCase()))) return false;
+  return true; }
+function fsSetRating(fid,val){ const rt=fr(); if(rt[fid]===val) delete rt[fid]; else rt[fid]=val; scheduleSave(); renderFeatures(); }
+function fsBulk(cid,val){ const rt=fr(); FS_FEATS[cid].forEach(f=>{ if(val===null) delete rt[f.id]; else rt[f.id]=val; }); scheduleSave(); renderFeatures(); }
+
+function fsHero(){ const c=fsCounts(); const box=$('#fs-hero'); if(!box) return; box.innerHTML='';
+  [['', FS_TOTAL+' capabilities', FS_CATS.length+' faces · '+FS_WEIGHT+' build-units total'],
+   ['must', c.MUST, 'Must have · '+c.mustWeight+' units'],
+   ['nice', c.NICE, 'Nice to have'],
+   ['not', c.NOT+' / '+c.UNRATED, 'Not needed / unrated']]
+  .forEach(([cls,v,l])=>{ const s=elh('div','stat'+(cls?' '+cls:'')); s.innerHTML=`<div class="v">${v}</div><div class="l">${l}</div>`; box.appendChild(s); }); }
+function fsFilters(){ const c=fsCounts(); const box=$('#fs-filters'); if(!box) return; box.innerHTML='';
+  [['ALL','All',FS_TOTAL],['AI','🧠 AI / ML',FS_AI_COUNT],['UNRATED','Unrated',c.UNRATED],['MUST','Must',c.MUST],['NICE','Nice',c.NICE],['NOT','Not needed',c.NOT]]
+  .forEach(([id,label,n])=>{ const b=elh('button','fbtn'+(fsFilter===id?' on':'')+(id==='AI'?' ai-filter':''),`${label}<span class="n">${n}</span>`); b.onclick=()=>{ fsFilter=id; renderFeatures(); }; box.appendChild(b); }); }
+function fsJumpRender(){ const box=$('#fs-jump'); if(!box) return; box.innerHTML='';
+  FS_CATS.forEach(cat=>{ const cc=fsCatCounts(cat.id); const cls=cc.rated===cc.total?'full':(cc.rated>0?'part':'');
+    const chip=elh('span','jchip',`<span class="done ${cls}"></span>${cat.ic} ${cat.t} <b style="color:var(--dim)">${cc.rated}/${cc.total}</b>`);
+    chip.onclick=()=>{ fsCollapsed[cat.id]=false; fsCatsRender(); const el=document.getElementById('fscat-'+cat.id); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); };
+    box.appendChild(chip); }); }
+function fsCatsRender(){ const box=$('#fs-cats'); if(!box) return; box.innerHTML=''; const rt=fr();
+  FS_CATS.forEach(cat=>{
+    const list=FS_FEATS[cat.id].filter(fsMatches); const cc=fsCatCounts(cat.id);
+    if(list.length===0 && (fsFilter!=='ALL'||fsSearch)) return;
+    const wrap=elh('div','cat'); wrap.id='fscat-'+cat.id;
+    const head=elh('div','cath');
+    head.innerHTML=`<span class="ic">${cat.ic}</span><div><div class="ct">${cat.t}</div><div class="cb">${cat.b}</div>
+      <div class="bulk"><button data-b="MUST">All must</button><button data-b="NICE">All nice</button><button data-b="NOT">All not-needed</button><button data-b="CLR">Clear</button></div></div>
+      <div class="prog"><b>${cc.rated}</b>/${cc.total} rated<br><span style="color:var(--must)">${cc.MUST}▲</span> <span style="color:var(--nice)">${cc.NICE}◆</span> <span style="color:var(--not)">${cc.NOT}—</span><br><span style="color:var(--dim)">${fsCollapsed[cat.id]?'▸ expand':'▾ collapse'}</span></div>`;
+    head.querySelectorAll('.bulk button').forEach(b=>{ b.onclick=(e)=>{ e.stopPropagation(); const v=b.getAttribute('data-b'); fsBulk(cat.id, v==='CLR'?null:v); }; });
+    head.onclick=()=>{ fsCollapsed[cat.id]=!fsCollapsed[cat.id]; fsCatsRender(); };
+    wrap.appendChild(head);
+    // "More info & live example" — a longer description + a real platform screenshot for this face.
+    if(cat.text || cat.img){
+      const mrow=elh('div','morerow');
+      mrow.innerHTML=`<button class="morebtn">${fsMoreOpen[cat.id]?'▾':'▸'} More info${cat.img?' &amp; live example':''}</button>`;
+      mrow.querySelector('button').onclick=(e)=>{ e.stopPropagation(); fsMoreOpen[cat.id]=!fsMoreOpen[cat.id]; fsCatsRender(); };
+      wrap.appendChild(mrow);
+      if(fsMoreOpen[cat.id]){
+        const mi=elh('div','moreinfo');
+        let h=cat.text?`<p>${cat.text}</p>`:'';
+        if(cat.img) h+=`<figure><img src="${cat.img}" loading="lazy" alt="${esc(cat.imgCap||cat.t)}"><figcaption>${esc(cat.imgCap||'')}</figcaption></figure>`;
+        mi.innerHTML=h; wrap.appendChild(mi);
+      }
+    }
+    if(!fsCollapsed[cat.id]){
+      const fl=elh('div','flist');
+      list.forEach(f=>{ const r=rt[f.id]; const row=elh('div','frow'+(r?' rated-'+r.toLowerCase():'')+(f.ai?' ai-'+f.ai.toLowerCase():''));
+        const seg=FS_RATINGS.map(([val,label,cls])=>`<button class="${cls}${r===val?' on '+cls:''}" data-v="${val}">${label}</button>`).join('');
+        const aiBadge=f.ai?`<span class="ai ${f.ai}" title="${f.ai==='LLM'?'LLM / generative-AI driven':'Trained ML model — needs training data, governance & drift monitoring'}">${f.ai==='LLM'?'✨ LLM':'🧠 ML'}</span>`:'';
+        row.innerHTML=`<div class="meta"><div class="fn">${esc(f.n)} <span class="eff ${f.eff}">${f.eff}</span>${aiBadge}</div><div class="fe">${esc(f.ex)}</div></div><div class="seg">${seg}</div>`;
+        row.querySelectorAll('.seg button').forEach(b=>{ b.onclick=()=>fsSetRating(f.id, b.getAttribute('data-v')); });
+        fl.appendChild(row); });
+      wrap.appendChild(fl);
+    }
+    box.appendChild(wrap);
+  }); }
+function fsSummary(){ const c=fsCounts(); const box=$('#fs-summary'); if(!box) return; box.innerHTML=''; const rt=fr();
+  // Intelligence-layer framing — the AI/ML/LLM capabilities are the "intelligence phase".
+  const aiMust=FS_ALL.filter(f=>f.ai && rt[f.id]==='MUST'); const aiScoped=FS_ALL.filter(f=>f.ai && (rt[f.id]==='MUST'||rt[f.id]==='NICE'));
+  const intel=elh('div','intel');
+  intel.innerHTML=`<div class="ih">🧠 Intelligence layer — the phase that never fully “finishes”</div>
+    <div class="ip"><b>${FS_AI_COUNT}</b> of ${FS_TOTAL} capabilities are model-driven: <b style="color:var(--accent2)">${FS_AI_ML} trained ML 🧠</b> + <b style="color:var(--accent)">${FS_AI_LLM} LLM ✨</b>. Each needs training data, feature engineering, governance (versioning · maker-checker · validation against real outcomes) and drift monitoring — it is re-trained and re-validated for the life of the platform, not built once.${aiScoped.length?` You’ve scoped <b>${aiScoped.length}</b> of them (<span style="color:var(--must)">${aiMust.length} must-have</span>) — filter with <b>🧠 AI / ML</b> above to review them.`:' Use the <b>🧠 AI / ML</b> filter above to see them all.'}</div>`;
+  box.appendChild(intel);
+  const pctMust=Math.round(c.mustWeight/FS_WEIGHT*100); const niceW=c.scopedWeight-c.mustWeight; const pctNice=Math.round(niceW/FS_WEIGHT*100);
+  const meter=elh('div','meter'); meter.innerHTML=`<i style="width:${pctMust}%;background:var(--must)"></i><i style="width:${pctNice}%;background:var(--nice)"></i><i style="flex:1;background:var(--line)"></i>`;
+  box.appendChild(elh('div',null,`<div style="font-size:13px;color:var(--muted);margin-bottom:2px">Scoped build weight — <b style="color:var(--text)">${c.scopedWeight}</b> of <b>${FS_WEIGHT}</b> catalogue units (<span style="color:var(--must)">${c.mustWeight} must</span> + <span style="color:var(--nice)">${niceW} from nice-to-haves at half weight</span>).</div>`));
+  box.appendChild(meter);
+  box.appendChild(elh('div','psub',`For scale: that’s <b>${c.MUST}</b> must-have capabilities. Even one <b>XL</b> capability (20 units) — a governed PD model, an AML monitoring engine, a double-entry ledger — is a multi-quarter effort with its own team. This is a relative comparator, not a delivery quote.`));
+  const tab=elh('table','rolltab'); tab.innerHTML='<tr><th>Face</th><th class="num">Must</th><th class="num">Nice</th><th class="num">Not</th><th class="num">Rated</th><th class="num">Must units</th></tr>';
+  FS_CATS.forEach(cat=>{ const cc=fsCatCounts(cat.id); const mw=FS_FEATS[cat.id].reduce((s,f)=>s+(rt[f.id]==='MUST'?FS_EFF_W[f.eff]:0),0);
+    tab.appendChild(elh('tr',null,`<td>${cat.ic} ${cat.t}</td><td class="num" style="color:var(--must)">${cc.MUST}</td><td class="num" style="color:var(--nice)">${cc.NICE}</td><td class="num" style="color:var(--not)">${cc.NOT}</td><td class="num">${cc.rated}/${cc.total}</td><td class="num">${mw}</td>`)); });
+  box.appendChild(tab); }
+function renderFeatures(){ const tot=$('#fs-total'); if(tot) tot.textContent=FS_TOTAL; const ai=$('#fs-ai'); if(ai) ai.textContent=FS_AI_COUNT; fsHero(); fsFilters(); fsJumpRender(); fsCatsRender(); fsSummary(); renderModeTabs(); }
+
+// ── mode (tab) switching ──
+let mode='intake';
+function renderModeTabs(){ const box=$('#modetabs'); if(!box) return; const c=fsCounts(); box.innerHTML='';
+  [['intake','📝 Guided requirements',''],['features','🧩 Feature selector', (c.MUST+c.NICE+c.NOT)+'/'+FS_TOTAL+' rated']]
+  .forEach(([id,label,badge])=>{ const b=elh('button','mtab'+(mode===id?' on':''),label+(badge?` <span class="mb">${badge}</span>`:'')); b.onclick=()=>setMode(id); box.appendChild(b); }); }
+function setMode(m){ mode=m;
+  const iv=$('#intakeView'), fv=$('#featuresView'); if(iv) iv.classList.toggle('hide', m!=='intake'); if(fv) fv.classList.toggle('hide', m!=='features');
+  renderModeTabs();
+  if(m==='intake'){ renderAll(); }
+  else { const nm=$('#fs-name'), tm=$('#fs-team'); if(nm) nm.value=R.name||''; if(tm) tm.value=R.team||''; renderFeatures(); }
+  window.scrollTo({top:0,behavior:'smooth'}); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State + persistence
+// ─────────────────────────────────────────────────────────────────────────────
+const LS='uw_req_intake_draft_v1';
+let cur = 0;
+let fileHandle = null;         // personal living file (File System Access API)
+let lastSavedAt = null;
+let saveTimer = null;
+const fsSupported = 'showSaveFilePicker' in window;
+
+const blank = ()=>({
+  respondentId:'', name:'', team:'', role:'', email:'',
+  products:[], productNotes:'',
+  areas:{},           // areaId -> {selected:[], priority:'', notes:''}
+  customAreas:[],     // [{title, priority, notes}] — stakeholder-added topics beyond the guided set
+  freeform:{painPoints:'', mustHaves:'', vision:''},
+  features:{ratings:{}, notes:''},   // second tab — feature-scope triage (Must/Nice/Not), saved in the SAME file
+  meta:{startedAt:new Date().toISOString(), updatedAt:null, version:1},
+});
+let R = load() || blank();
+Object.keys(AREAS).forEach(a=>{ if(!R.areas[a]) R.areas[a]={selected:[],priority:'',notes:'',customItems:[],productScope:'',decisions:{}}; });
+Object.values(R.areas).forEach(st=>{ if(!Array.isArray(st.customItems)) st.customItems=[]; if(st.productScope===undefined) st.productScope=''; if(!st.decisions||typeof st.decisions!=='object') st.decisions={}; });
+if(!Array.isArray(R.customAreas)) R.customAreas=[];
+if(!R.features || typeof R.features!=='object') R.features={ratings:{}, notes:''};
+if(!R.features.ratings || typeof R.features.ratings!=='object') R.features.ratings={};
+
+function load(){ try{ const s=localStorage.getItem(LS); return s?JSON.parse(s):null; }catch(e){ return null; } }
+function persistLocal(){ R.meta.updatedAt=new Date().toISOString(); R.respondentId=respId();
+  try{ localStorage.setItem(LS, JSON.stringify(R)); }catch(e){} }
+function respId(){ return (R.name+'|'+R.team).toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9|\-]/g,'') || 'anonymous'; }
+function fileNameFor(){ const base = (R.name||'response')+'-'+(R.team||''); return 'requirements-'+base.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9\-]/g,'')+'.json'; }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// File saving (File System Access API) with graceful fallback
+// ─────────────────────────────────────────────────────────────────────────────
+async function writeHandle(handle, text){
+  const w = await handle.createWritable();
+  await w.write(text); await w.close();
+}
+// Remember the chosen file handle ACROSS RELOADS (IndexedDB) — FileSystemFileHandle is structured-
+// cloneable — so we never re-prompt for the same file. localStorage can't hold a handle; IDB can.
+function _idb(){ return new Promise((res,rej)=>{ const o=indexedDB.open('uw_req_fs',1); o.onupgradeneeded=()=>o.result.createObjectStore('kv'); o.onsuccess=()=>res(o.result); o.onerror=()=>rej(o.error); }); }
+async function idbSet(k,v){ const db=await _idb(); return new Promise((res,rej)=>{ const t=db.transaction('kv','readwrite'); t.objectStore('kv').put(v,k); t.oncomplete=()=>res(); t.onerror=()=>rej(t.error); }); }
+async function idbGet(k){ const db=await _idb(); return new Promise((res,rej)=>{ const t=db.transaction('kv','readonly'); const r=t.objectStore('kv').get(k); r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+async function idbDel(k){ const db=await _idb(); return new Promise((res)=>{ const t=db.transaction('kv','readwrite'); t.objectStore('kv').delete(k); t.oncomplete=()=>res(); }); }
+async function ensurePermission(handle){ try{ const o={mode:'readwrite'}; if(await handle.queryPermission(o)==='granted') return true; if(await handle.requestPermission(o)==='granted') return true; }catch(e){} return false; }
+function forgetHandle(){ fileHandle=null; try{ idbDel('fileHandle'); }catch(e){} updateStatus(); }
+
+// First-time link: pick the file ONCE. The handle is remembered for this session AND across reloads.
+async function linkFile(){
+  persistLocal();
+  if(!fsSupported){ downloadJSON(); toast('Your browser can’t autosave to a file — downloaded a copy instead. Use Chrome or Edge for continuous save.', true); return; }
+  try{
+    fileHandle = await window.showSaveFilePicker({ suggestedName:fileNameFor(),
+      types:[{description:'JSON', accept:{'application/json':['.json']}}] });
+    await writeHandle(fileHandle, JSON.stringify(R,null,2));
+    try{ await idbSet('fileHandle', fileHandle); }catch(e){}
+    lastSavedAt = new Date(); updateStatus();
+    toast('Linked. Saves now overwrite '+fileHandle.name+' — no more prompts.');
+  }catch(e){ /* user cancelled */ }
+}
+
+// The Save button: if a file is already linked, OVERWRITE it in place (no picker, no dialog).
+// Only the very first save prompts; after that (and after a reload) it silently replaces the same file.
+async function saveNow(){
+  persistLocal();
+  if(!fsSupported){ downloadJSON(); return; }
+  if(fileHandle){
+    if(!(await ensurePermission(fileHandle))){ toast('Write access to '+fileHandle.name+' was declined — pick the file again.', true); forgetHandle(); return; }
+    try{ await writeHandle(fileHandle, JSON.stringify(R,null,2)); lastSavedAt=new Date(); updateStatus(); toast('Saved — overwrote '+fileHandle.name+'.'); }
+    catch(e){ toast('Couldn’t write '+fileHandle.name+' — re-pick the file.', true); forgetHandle(); }
+  } else { await linkFile(); }
+}
+
+async function autosaveToFile(){
+  if(!fileHandle) return;
+  try{
+    if(await fileHandle.queryPermission({mode:'readwrite'})!=='granted') return; // never prompt on a timer — a manual Save re-grants
+    await writeHandle(fileHandle, JSON.stringify(R,null,2)); lastSavedAt=new Date(); updateStatus();
+  }catch(e){ updateStatus('File write failed — click Save to re-link.'); }
+}
+function scheduleSave(){
+  persistLocal(); renderStatusDot();
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(autosaveToFile, 1200);
+}
+function downloadJSON(){
+  persistLocal();
+  const blob = new Blob([JSON.stringify(R,null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=fileNameFor(); a.click();
+  URL.revokeObjectURL(a.href);
+}
+// Append (upsert by respondentId) into a shared collection file so the owner can aggregate everyone.
+async function appendToCollection(){
+  persistLocal();
+  if(!fsSupported){ toast('Appending to a shared collection needs the File System Access API (Chrome/Edge). On this browser, send your downloaded file instead.', true); downloadJSON(); return; }
+  try{
+    const [h] = await window.showOpenFilePicker({
+      types:[{description:'Collection JSON', accept:{'application/json':['.json']}}] });
+    const file = await h.getFile();
+    let arr=[]; const txt=(await file.text()).trim();
+    if(txt){ try{ const parsed=JSON.parse(txt); arr = Array.isArray(parsed)?parsed:(parsed.responses||[]); }catch(e){ if(!confirm('That file isn’t valid JSON. Overwrite it with a fresh collection?')) return; } }
+    const entry = JSON.parse(JSON.stringify(R)); entry.respondentId=respId(); entry.savedAt=new Date().toISOString();
+    const i = arr.findIndex(x=>x.respondentId===entry.respondentId);
+    let verb;
+    if(i>=0){ arr[i]=entry; verb='Updated existing entry'; } else { arr.push(entry); verb='Appended new entry'; }
+    await writeHandle(h, JSON.stringify(arr,null,2));
+    toast(verb+' for “'+(R.name||'anonymous')+'” — collection now holds '+arr.length+' response'+(arr.length>1?'s':'')+'.');
+  }catch(e){ if(e && e.name!=='AbortError') toast('Could not append: '+e.message, true); }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Rendering
+// ─────────────────────────────────────────────────────────────────────────────
+const $ = s=>document.querySelector(s);
+const elh = (t,c,h)=>{const e=document.createElement(t); if(c)e.className=c; if(h!=null)e.innerHTML=h; return e;};
+
+function renderSteps(){
+  const box=$('#steps'); box.innerHTML='';
+  STEPS.forEach((s,i)=>{
+    const d=elh('div','s'+(i===cur?' active':'')+(i<cur?' done':''),`<b>${i<cur?'✓':s.icon}</b>${s.title}`);
+    d.onclick=()=>{ if(identityOk()||i<=1){ cur=i; renderAll(); } else { toast('Add your name and team first.', true); } };
+    box.appendChild(d);
+  });
+  $('#barfill').style.width = Math.round((cur)/(STEPS.length-1)*100)+'%';
+}
+
+function identityOk(){ return R.name.trim() && R.team.trim(); }
+
+function areaBlock(aid){
+  const A=AREAS[aid], st=R.areas[aid];
+  const wrap=elh('div','area');
+  wrap.appendChild(elh('h3',null,`<span>${A.icon}</span> ${A.title}`));
+  wrap.appendChild(elh('div','ah',A.help));
+  const grid=elh('div','fgrid');
+  A.feats.forEach(f=>{
+    const on=st.selected.includes(f.id);
+    const o=elh('label','opt'+(on?' on':''));
+    o.innerHTML=`<input type="checkbox" ${on?'checked':''}><span><span class="on-n">${f.n}</span><span class="on-e">${f.ex}</span></span>`;
+    o.querySelector('input').onchange=(e)=>{
+      if(e.target.checked){ if(!st.selected.includes(f.id)) st.selected.push(f.id); }
+      else st.selected = st.selected.filter(x=>x!==f.id);
+      o.classList.toggle('on', e.target.checked); scheduleSave();
+    };
+    grid.appendChild(o);
+  });
+  wrap.appendChild(grid);
+  // priority
+  const pr=elh('div','prio','<span>Priority for your team:</span>');
+  ['MUST','SHOULD','NICE'].forEach(v=>{
+    const b=elh('button'+(st.priority===v?'':''),null,v==='MUST'?'Must have':v==='SHOULD'?'Should have':'Nice to have');
+    b.setAttribute('data-v',v); if(st.priority===v) b.classList.add('on');
+    b.onclick=()=>{ st.priority = st.priority===v?'':v; pr.querySelectorAll('button').forEach(x=>x.classList.toggle('on', x.getAttribute('data-v')===st.priority)); scheduleSave(); };
+    pr.appendChild(b);
+  });
+  wrap.appendChild(pr);
+
+  // Per-product configuration — is this the SAME across all products, or does it VARY per product?
+  // (e.g. do all products share the same stipulations, or does each product have its own set?)
+  if(!['parties','data'].includes(aid)){
+    const ps=elh('div','prio','<span>Across products:</span>');
+    [['SAME','Same for all products'],['PERPRODUCT','Varies by product']].forEach(([v,label])=>{
+      const b=elh('button',null,label); b.setAttribute('data-ps',v); if(st.productScope===v) b.classList.add('on');
+      b.onclick=()=>{ st.productScope = st.productScope===v?'':v; scheduleSave(); renderPanel(); };  // persist + re-render (shows/hides the per-product hint)
+      ps.appendChild(b);
+    });
+    wrap.appendChild(ps);
+    if(st.productScope==='PERPRODUCT') wrap.appendChild(elh('div','ex','↳ <b>Varies by product</b> — note which products differ (and how) in the box below, e.g. “PO finance needs a signed PO + milestone evidence; reverse factoring needs only the NoA.”'));
+  }
+
+  // Decision / policy questions — the CHOICE this area implies. Single-select + a stipulation note each.
+  if(Array.isArray(A.decisions) && A.decisions.length){
+    if(!st.decisions || typeof st.decisions!=='object') st.decisions={};
+    const db=elh('div','dblock');
+    db.appendChild(elh('div','cil','⚖️ Decisions & policy — pick the option that fits; add stipulations or more detail in your own words'));
+    A.decisions.forEach(d=>{
+      if(!st.decisions[d.id]) st.decisions[d.id]={choice:'',note:''};
+      const ds=st.decisions[d.id];
+      const q=elh('div','dq');
+      q.appendChild(elh('div','dqh',`${d.tag?`<span class="tag">${d.tag}</span>`:''}<span>${d.q}</span>`));
+      if(d.help) q.appendChild(elh('div','dqs',d.help));
+      const dopts=elh('div','dopts');
+      d.opts.forEach(op=>{
+        const on=ds.choice===op.id;
+        const o=elh('label','opt'+(on?' on':''));
+        o.innerHTML=`<input type="radio" name="dq-${aid}-${d.id}" ${on?'checked':''}><span><span class="on-n">${op.n}</span><span class="on-e">${op.ex}</span></span>`;
+        o.querySelector('input').onchange=()=>{ ds.choice=op.id; dopts.querySelectorAll('.opt').forEach(x=>x.classList.remove('on')); o.classList.add('on'); scheduleSave(); };
+        dopts.appendChild(o);
+      });
+      q.appendChild(dopts);
+      const nt=elh('textarea','t');
+      nt.placeholder=(d.notePh?('e.g. '+d.notePh):'Add a stipulation or more detail')+' — optional';
+      nt.value=ds.note||''; nt.oninput=()=>{ ds.note=nt.value; scheduleSave(); };
+      q.appendChild(nt);
+      db.appendChild(q);
+    });
+    wrap.appendChild(db);
+  }
+
+  // free-form
+  const ta=elh('textarea','t'); ta.placeholder=A.ph; ta.value=st.notes||'';
+  ta.oninput=()=>{ st.notes=ta.value; scheduleSave(); };
+  wrap.appendChild(ta);
+  wrap.appendChild(elh('div','ex','<b>Example — </b>'+A.ph.replace(/^e\.g\.\s*/,'')));
+
+  // Per-area "add your own" — extend ANY section; each entry persists in st.customItems and saves to the file,
+  // so team members can add items (e.g. more adverse actions) we didn't list, and we merge them later.
+  if(!Array.isArray(st.customItems)) st.customItems=[];
+  const ci=elh('div','citems');
+  ci.appendChild(elh('div','cil','➕ Add your own — anything not listed above'));
+  const chipRow=elh('div','chiprow');
+  const drawChips=()=>{ chipRow.innerHTML=''; st.customItems.forEach((it,ix)=>{
+    const c=elh('span','cchip'); c.appendChild(document.createTextNode(it+' '));
+    const x=elh('button',null,'✕'); x.title='remove'; x.onclick=()=>{ st.customItems.splice(ix,1); drawChips(); scheduleSave(); };
+    c.appendChild(x); chipRow.appendChild(c); }); };
+  drawChips(); ci.appendChild(chipRow);
+  const addRow=elh('div','ciadd');
+  const inp=elh('input','t'); inp.placeholder='e.g. '+(A.addPh||'a requirement not listed above')+' — press Enter to add';
+  const commit=()=>{ const v=inp.value.trim(); if(v){ st.customItems.push(v); inp.value=''; drawChips(); scheduleSave(); } };
+  const addBtn=elh('button','btn','Add'); addBtn.onclick=commit;
+  inp.addEventListener('keydown', e=>{ if(e.key==='Enter'){ e.preventDefault(); commit(); } });
+  addRow.appendChild(inp); addRow.appendChild(addBtn); ci.appendChild(addRow);
+  wrap.appendChild(ci);
+  return wrap;
+}
+
+function renderPanel(){
+  const p=$('#panel'); p.innerHTML=''; const step=STEPS[cur];
+
+  if(step.id==='identity'){
+    p.appendChild(elh('div','ptitle','About you'));
+    p.appendChild(elh('div','psub','So we can attribute your requirements and follow up. Name and team are required to start saving.'));
+    p.appendChild(elh('div','callout','<b>Your data stays with you.</b> This page has no server — your answers save to a file you choose on your own device, and you can send it to us or append it to our shared collection file when you’re done.'));
+    const row=elh('div','row');
+    row.appendChild(field('Your name','name','text','e.g. Priya Nair', true));
+    row.appendChild(field('Team / department','team','text','e.g. Trade Finance Credit Risk', true));
+    p.appendChild(row);
+    const row2=elh('div','row');
+    row2.appendChild(field('Your role','role','text','e.g. Head of Credit Underwriting'));
+    row2.appendChild(field('Email (optional)','email','text','e.g. priya@bank.com'));
+    p.appendChild(row2);
+  }
+
+  else if(step.id==='products'){
+    p.appendChild(elh('div','ptitle','Which products do you underwrite (or want to)?'));
+    p.appendChild(elh('div','psub','Pick all that apply. Each drives different data, limits and money-movement needs — we’ll tailor the deep-dive to them.'));
+    const g=elh('div','pgrid');
+    PRODUCTS.forEach(pr=>{
+      const on=R.products.includes(pr.id);
+      const c=elh('div','prod'+(on?' on':''),`<div class="tick">✓</div><div class="pn">${pr.n}</div><div class="pe">${pr.ex}</div>`);
+      c.onclick=()=>{ if(R.products.includes(pr.id)) R.products=R.products.filter(x=>x!==pr.id); else R.products.push(pr.id);
+        c.classList.toggle('on'); scheduleSave(); };
+      g.appendChild(c);
+    });
+    p.appendChild(g);
+    const l=elh('label','f'); l.innerHTML='<span class="lab">Anything specific about your product mix?</span>';
+    const ta=elh('textarea','t'); ta.placeholder='e.g. 80% reverse factoring for one large anchor; exploring inventory finance next year.'; ta.value=R.productNotes;
+    ta.oninput=()=>{ R.productNotes=ta.value; scheduleSave(); };
+    l.appendChild(ta); p.appendChild(l);
+  }
+
+  else if(step.id==='group'){
+    p.appendChild(elh('div','ptitle',step.title));
+    p.appendChild(elh('div','psub','Tick what you need and set a priority — then answer the ⚖️ policy questions where they appear (pick an option, or add a stipulation in your own words). Examples are shown on every option; nothing is required.'));
+    step.areas.forEach(a=> p.appendChild(areaBlock(a)));
+  }
+
+  else if(step.id==='custom'){
+    p.appendChild(elh('div','ptitle','Add your own requirements'));
+    p.appendChild(elh('div','psub','Anything the guided flow didn’t cover — add as many topics as you like, each with a title, a priority and a description.'));
+    p.appendChild(elh('div','callout','<b>Examples people add:</b> a bespoke approval chain · concentration exceptions · covenant tests · credit-insurance requirements · syndication / participation · ESG-linked pricing · a specific report layout · rating-override rules · data-retention specifics.'));
+    const list=elh('div'); list.id='customList';
+    R.customAreas.forEach((c,idx)=> list.appendChild(customCard(c,idx)));
+    if(R.customAreas.length===0) list.appendChild(elh('div','ex','<b>Nothing yet — </b>click “Add a topic” to write your own requirement (with an example, like the rest of the flow).'));
+    p.appendChild(list);
+    const add=elh('button','btn primary','➕ Add a topic'); add.style.marginTop='8px';
+    add.onclick=()=>{ R.customAreas.push({title:'',priority:'',notes:''}); scheduleSave(); renderPanel(); };
+    p.appendChild(add);
+  }
+
+  else if(step.id==='freeform'){
+    p.appendChild(elh('div','ptitle','Your vision, in your words'));
+    p.appendChild(elh('div','psub','The most valuable part — tell us what “great” looks like, and what hurts today.'));
+    p.appendChild(freeArea('Biggest pain points today','painPoints','e.g. Underwriting takes 3 days because bureau data is re-keyed by hand and there’s no single view of the obligor.'));
+    p.appendChild(freeArea('Must-haves for day one','mustHaves','e.g. Real bank cash-flow at decision time, per-buyer concentration caps, and an audit trail regulators will accept.'));
+    p.appendChild(freeArea('Where you want to be in 2 years','vision','e.g. 70% of low-risk draws auto-decided in seconds; underwriters only touch the exceptions.'));
+  }
+
+  else if(step.id==='review'){
+    p.appendChild(elh('div','ptitle','Review & save'));
+    p.appendChild(elh('div','psub','Here’s everything you’ve told us. Save to your file (autosaves as you edit) or append it to our shared collection.'));
+    p.appendChild(reviewBlock());
+    const btns=elh('div','nav');
+    const b1=elh('button','btn primary','💾 '+(fileHandle?'Save → '+fileHandle.name:'Save to my file…')); b1.onclick=saveNow;
+    const b2=elh('button','btn','➕ Append to collection…'); b2.onclick=appendToCollection;
+    const b3=elh('button','btn ghost','⬇ Download my response'); b3.onclick=downloadJSON;
+    btns.style.justifyContent='flex-start'; btns.style.flexWrap='wrap';
+    [b1,b2,b3].forEach(b=>btns.appendChild(b)); p.appendChild(btns);
+  }
+}
+
+function field(label, key, type, ph, req){
+  const l=elh('label','f'); l.innerHTML=`<span class="lab">${label}${req?' <span class="req">*</span>':''}</span>`;
+  const i=elh('input','t'); i.type=type; i.placeholder=ph; i.value=R[key]||'';
+  i.oninput=()=>{ R[key]=i.value; scheduleSave(); if(key==='name'||key==='team'){ renderSteps(); updateStatus(); } };
+  l.appendChild(i); return l;
+}
+function freeArea(label,key,ph){
+  const l=elh('label','f'); l.innerHTML=`<span class="lab">${label}</span>`;
+  const ta=elh('textarea','t'); ta.placeholder=ph; ta.value=R.freeform[key]||''; ta.style.minHeight='96px';
+  ta.oninput=()=>{ R.freeform[key]=ta.value; scheduleSave(); };
+  l.appendChild(ta); l.appendChild(elh('div','ex','<b>Example — </b>'+ph.replace(/^e\.g\.\s*/,''))); return l;
+}
+
+function customCard(c, idx){
+  const wrap=elh('div','area');
+  const head=elh('div'); head.style.cssText='display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px';
+  const title=elh('input','t'); title.placeholder='Topic title — e.g. Stipulations, Product pricing, Rating overrides…'; title.value=c.title||'';
+  title.style.cssText='font-weight:700;flex:1'; title.oninput=()=>{ c.title=title.value; scheduleSave(); };
+  const rm=elh('button','btn ghost','✕ Remove'); rm.style.cssText='padding:8px 12px;font-size:12px;flex:0 0 auto';
+  rm.onclick=()=>{ R.customAreas.splice(idx,1); scheduleSave(); renderPanel(); };
+  head.appendChild(title); head.appendChild(rm); wrap.appendChild(head);
+  const pr=elh('div','prio','<span>Priority:</span>');
+  ['MUST','SHOULD','NICE'].forEach(v=>{ const b=elh('button',null,v==='MUST'?'Must have':v==='SHOULD'?'Should have':'Nice to have');
+    b.setAttribute('data-v',v); if(c.priority===v) b.classList.add('on');
+    b.onclick=()=>{ c.priority=c.priority===v?'':v; pr.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x.getAttribute('data-v')===c.priority)); scheduleSave(); };
+    pr.appendChild(b); });
+  wrap.appendChild(pr);
+  const ta=elh('textarea','t'); ta.style.marginTop='4px';
+  ta.placeholder='Describe the requirement, with an example. e.g. “Set limit tiers from rating bands (AAA–A → tier 1); let us edit the auto-approve / decline thresholds ourselves.”';
+  ta.value=c.notes||''; ta.oninput=()=>{ c.notes=ta.value; scheduleSave(); };
+  wrap.appendChild(ta);
+  return wrap;
+}
+
+function reviewBlock(){
+  const box=elh('div','summary');
+  const prodNames = R.products.map(id=>(PRODUCTS.find(p=>p.id===id)||{}).n).filter(Boolean);
+  let h='';
+  h+=line('Respondent', `${R.name||'—'}  ·  ${R.team||'—'}${R.role?'  ·  '+R.role:''}`);
+  h+=line('Products', prodNames.length?prodNames.map(pill).join(''):'—');
+  Object.keys(AREAS).forEach(a=>{
+    const st=R.areas[a]; const ci=st.customItems||[]; const dec=st.decisions||{};
+    const decList=(AREAS[a].decisions||[]).filter(d=>dec[d.id] && (dec[d.id].choice||dec[d.id].note));
+    if(!st.selected.length && !st.notes && !st.priority && !ci.length && !st.productScope && !decList.length) return;
+    const names=st.selected.map(id=>(AREAS[a].feats.find(f=>f.id===id)||{}).n).filter(Boolean);
+    const custom=ci.map(x=>`<span class="pill" style="border-color:var(--accent)">＋ ${esc(x)}</span>`).join('');
+    const scope=st.productScope==='PERPRODUCT'?'<span class="pill" style="border-color:var(--accent)">per-product</span>':st.productScope==='SAME'?'<span class="pill">same for all products</span>':'';
+    let decHtml='';
+    decList.forEach(d=>{
+      const ch=(d.opts.find(o=>o.id===dec[d.id].choice)||{}).n;
+      const note=dec[d.id].note;
+      decHtml+=`<div style="margin-top:5px"><span style="color:var(--dim)">⚖️ ${esc(d.q)}</span> ${ch?('<span class="pill" style="border-color:var(--accent2)">'+esc(ch)+'</span>'):'<span style="color:var(--dim)">(no choice)</span>'}${note?'<span style="color:var(--muted)"> — “'+esc(note)+'”</span>':''}</div>`;
+    });
+    h+=`<div class="kv"><div class="k">${AREAS[a].icon} ${AREAS[a].title}</div><div>${st.priority?('<b style="color:var(--warn)">['+st.priority+']</b> '):''}${scope}${names.map(pill).join('')}${custom||(names.length||decList.length?'':'<span style="color:var(--dim)">(notes only)</span>')}${st.notes?'<div style="color:var(--muted);margin-top:4px">“'+esc(st.notes)+'”</div>':''}${decHtml}</div></div>`;
+  });
+  R.customAreas.forEach(c=>{ if(!c.title && !c.notes) return;
+    h+=`<div class="kv"><div class="k">➕ ${esc(c.title||'Custom topic')}</div><div>${c.priority?('<b style="color:var(--warn)">['+c.priority+']</b> '):''}${c.notes?'“'+esc(c.notes)+'”':'<span style="color:var(--dim)">(no detail)</span>'}</div></div>`; });
+  ['painPoints','mustHaves','vision'].forEach(k=>{ if(R.freeform[k]) h+=line(k==='painPoints'?'Pain points':k==='mustHaves'?'Must-haves':'2-yr vision', '“'+esc(R.freeform[k])+'”'); });
+  box.innerHTML=h||'<span style="color:var(--dim)">Nothing captured yet — go back and make some selections.</span>';
+  return box;
+}
+const line=(k,v)=>`<div class="kv"><div class="k">${k}</div><div>${v}</div></div>`;
+const pill=(t)=>`<span class="pill">${esc(t)}</span>`;
+const esc=(s)=>String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+// ─────────────────────────────────────────────────────────────────────────────
+function summaryText(){
+  const prodNames=R.products.map(id=>(PRODUCTS.find(p=>p.id===id)||{}).n).filter(Boolean);
+  let s=`UNDERWRITING PLATFORM — REQUIREMENTS\nRespondent: ${R.name} (${R.team})${R.role?' — '+R.role:''}${R.email?' <'+R.email+'>':''}\nProducts: ${prodNames.join(', ')||'—'}\n`;
+  if(R.productNotes) s+=`Product notes: ${R.productNotes}\n`;
+  Object.keys(AREAS).forEach(a=>{ const st=R.areas[a]; const ci=st.customItems||[]; const dec=st.decisions||{};
+    const decList=(AREAS[a].decisions||[]).filter(d=>dec[d.id] && (dec[d.id].choice||dec[d.id].note));
+    if(!st.selected.length&&!st.notes&&!st.priority&&!ci.length&&!st.productScope&&!decList.length) return;
+    const names=st.selected.map(id=>(AREAS[a].feats.find(f=>f.id===id)||{}).n).filter(Boolean);
+    s+=`\n${AREAS[a].title}${st.priority?' ['+st.priority+']':''}${st.productScope==='PERPRODUCT'?' (per-product)':st.productScope==='SAME'?' (same for all products)':''}: ${names.join(', ')}${ci.length?(names.length?'; ':'')+'＋ '+ci.join(' · '):''}`; if(st.notes) s+=`\n  note: ${st.notes}`;
+    decList.forEach(d=>{ const ch=(d.opts.find(o=>o.id===dec[d.id].choice)||{}).n; s+=`\n  ⚖ ${d.q} → ${ch||'(no choice)'}${dec[d.id].note?' — '+dec[d.id].note:''}`; }); });
+  R.customAreas.forEach(c=>{ if(!c.title&&!c.notes) return; s+=`\n[custom] ${c.title||'Untitled'}${c.priority?' ['+c.priority+']':''}: ${c.notes||''}`; });
+  if(R.freeform.painPoints) s+=`\n\nPain points: ${R.freeform.painPoints}`;
+  if(R.freeform.mustHaves) s+=`\nMust-haves: ${R.freeform.mustHaves}`;
+  if(R.freeform.vision) s+=`\n2-yr vision: ${R.freeform.vision}`;
+  const fc=fsCounts();
+  if(fc.MUST+fc.NICE+fc.NOT>0){
+    s+=`\n\n── FEATURE SCOPE (${fc.MUST} must · ${fc.NICE} nice · ${fc.NOT} not-needed · ${fc.scopedWeight}/${FS_WEIGHT} build-units) ──`;
+    FS_CATS.forEach(cat=>{ const rt=R.features.ratings;
+      const must=FS_FEATS[cat.id].filter(f=>rt[f.id]==='MUST').map(f=>f.n);
+      const nice=FS_FEATS[cat.id].filter(f=>rt[f.id]==='NICE').map(f=>f.n);
+      if(!must.length && !nice.length) return;
+      s+=`\n${cat.t}:`; if(must.length) s+=`\n  MUST: ${must.join(', ')}`; if(nice.length) s+=`\n  NICE: ${nice.join(', ')}`;
+    });
+    if(R.features.notes) s+=`\n  notes: ${R.features.notes}`;
+  }
+  return s;
+}
+
+// status bar
+function renderStatusDot(){ const d=$('#status').querySelector('.dot'); if(fileHandle) d.classList.add('live'); }
+function fmt(d){ return d? d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'}):''; }
+function updateStatus(msg){
+  const s=$('#status');
+  if(msg){ s.innerHTML=`<span class="dot"></span><span class="warnc">${msg}</span>`; return; }
+  if(fileHandle){ s.innerHTML=`<span class="dot live"></span>Autosaving to <b>${fileHandle.name}</b>${lastSavedAt?' · saved '+fmt(lastSavedAt):''}`; }
+  else if(!fsSupported){ s.innerHTML=`<span class="dot"></span>This browser can’t autosave to a file — use <b>Download</b> to keep a copy (your draft is kept locally).`; }
+  else { s.innerHTML=`<span class="dot"></span>Draft kept in this browser. Click <b>Save to my file</b> to autosave to a file you can send us.`; }
+  $('#linkBtn').textContent = fileHandle? '💾 Save → '+fileHandle.name : '💾 Save to my file…';
+}
+function toast(msg, warn){ updateStatus(); const s=$('#status'); const prev=s.innerHTML;
+  s.innerHTML=`<span class="dot ${warn?'':'live'}"></span><b style="color:${warn?'var(--warn)':'var(--ok)'}">${msg}</b>`;
+  setTimeout(()=>{ updateStatus(); }, 4200); }
+
+// nav
+function renderAll(){ renderSteps(); renderPanel(); updateStatus();
+  $('#back').disabled = cur===0;
+  $('#next').style.display = cur===STEPS.length-1?'none':'';
+}
+$('#back').onclick=()=>{ if(cur>0){ cur--; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); } };
+$('#next').onclick=()=>{
+  if(cur===0 && !identityOk()){ toast('Please add your name and team to continue.', true); return; }
+  if(cur<STEPS.length-1){ cur++; renderAll(); window.scrollTo({top:0,behavior:'smooth'}); }
+};
+$('#linkBtn').onclick=saveNow;
+$('#appendBtn').onclick=appendToCollection;
+$('#dlBtn').onclick=downloadJSON;
+$('#copyBtn').onclick=()=>{ navigator.clipboard.writeText(summaryText()).then(()=>toast('Summary copied to clipboard.')); };
+
+// Feature-selector tab wiring (static controls bound once; identity mirrors the shared R.name/R.team).
+$('#fs-search').oninput=(e)=>{ fsSearch=e.target.value.trim(); fsCatsRender(); };
+$('#fs-notes').value=R.features.notes||''; $('#fs-notes').oninput=()=>{ R.features.notes=$('#fs-notes').value; scheduleSave(); };
+$('#fs-name').value=R.name||''; $('#fs-name').oninput=()=>{ R.name=$('#fs-name').value; scheduleSave(); renderSteps(); updateStatus(); };
+$('#fs-team').value=R.team||''; $('#fs-team').oninput=()=>{ R.team=$('#fs-team').value; scheduleSave(); renderSteps(); updateStatus(); };
+
+renderModeTabs();
+renderAll();
+if(R.name||R.team) toast('Draft restored — pick up where you left off.');
+// Restore the previously-linked file (across reloads) so Save overwrites it instead of re-prompting.
+if(fsSupported){ idbGet('fileHandle').then(h=>{ if(h){ fileHandle=h; renderStatusDot(); updateStatus(); if(cur===STEPS.length-1) renderPanel(); } }).catch(()=>{}); }
+</script>
+</body>
+</html>

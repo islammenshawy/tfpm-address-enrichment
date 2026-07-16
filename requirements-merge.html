@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<title>Requirements — Merge & Analyze</title>
+<style>
+  :root{
+    --bg:#1a1917;--bg2:#222120;--card:#222120;--card2:#2a2927;--line:rgba(255,255,255,0.10);
+    --text:#f0ede8;--muted:#b5b2ac;--text2:#b5b2ac;--text3:#7a776f;--dim:#7a776f;--accent:#d4a843;--accent2:#9d82d4;
+    --ok:#3ab87a;--warn:#d4a843;--danger:#d9615a;--shadow:0 8px 24px rgba(0,0,0,.42);
+    --border2:rgba(255,255,255,0.14);--bg3:#2a2927;--r:10px;--rsm:7px;--abg:rgba(212,168,67,0.1);--abdr:rgba(212,168,67,0.32);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:radial-gradient(1100px 560px at 85% -10%,#2a231c 0%,var(--bg) 45%) fixed,var(--bg);
+    color:var(--text);font:15px/1.6 'DM Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 20px 80px}
+  .eyebrow{color:var(--accent);font-weight:700;letter-spacing:.18em;text-transform:uppercase;font-size:11px;font-family:'JetBrains Mono',monospace}
+  h1{font-size:30px;margin:.15em 0 .18em;font-weight:800;letter-spacing:-.015em;line-height:1.15;font-family:'Plus Jakarta Sans',sans-serif}
+  h1 .grad{color:var(--accent);-webkit-text-fill-color:var(--accent)}
+  .hdiv{height:0.5px;background:var(--border2);margin:22px 0 2px}
+  .lede{color:var(--text2);max-width:800px;font-size:15px;line-height:1.55}
+  .h2{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--dim);font-weight:700;margin:30px 0 12px;display:flex;gap:10px;align-items:center}
+  .h2 .ln{flex:1;height:1px;background:var(--line)}
+
+  .drop{margin-top:20px;border:2px dashed var(--line);border-radius:12px;padding:34px 20px;text-align:center;transition:.15s;cursor:pointer;background:linear-gradient(180deg,var(--card),var(--bg2))}
+  .drop.hover{border-color:var(--accent);background:linear-gradient(180deg,var(--card2),var(--card))}
+  .drop .big{font-size:17px;font-weight:700;margin-bottom:5px}
+  .drop .sm{color:var(--muted);font-size:13px}
+  .drop input{display:none}
+
+  .summary{display:flex;gap:14px;flex-wrap:wrap;margin:16px 0}
+  .stat{background:var(--card);border:0.5px solid var(--border2);border-radius:12px;padding:11px 15px;min-width:110px}
+  .stat b{display:block;font-size:22px;font-weight:800}
+  .stat span{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.07em}
+
+  .people{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:6px}
+  .pchip{background:var(--card2);border:0.5px solid var(--border2);border-radius:999px;padding:5px 12px;font-size:12.5px}
+  .pchip b{color:var(--text)} .pchip small{color:var(--dim)}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;background:var(--card);border:0.5px solid var(--border2);border-radius:12px;overflow:hidden}
+  th,td{text-align:left;padding:9px 12px;border-bottom:0.5px solid var(--border2);vertical-align:top}
+  th{color:var(--dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em;background:var(--bg2)}
+  tr:last-child td{border-bottom:none}
+  .cov{display:inline-block;min-width:44px;text-align:center;font-weight:700;border-radius:6px;padding:2px 7px;font-size:12px}
+  .cov.full{background:rgba(58,184,122,.16);color:#8fd4b8}
+  .cov.some{background:rgba(212,168,67,.16);color:#e6c884}
+  .cov.none{background:rgba(217,97,90,.16);color:#e6a29c}
+  .bar{height:6px;border-radius:4px;background:var(--line);overflow:hidden;margin-top:5px;max-width:160px}
+  .bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2))}
+  .add{color:var(--accent);font-size:12px}
+  .add .a{display:inline-block;background:var(--card2);border:1px solid var(--accent);border-radius:999px;padding:1px 8px;margin:2px 3px 0 0;font-size:11.5px}
+  .muted{color:var(--dim)}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .btn{border:0.5px solid var(--border2);background:var(--bg3);color:var(--text2);border-radius:var(--rsm);padding:9px 15px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;font-family:'DM Sans',sans-serif}
+  .btn:hover{border-color:var(--border2);color:var(--text);background:var(--card2)}
+  .btn.primary{background:var(--accent);border:none;color:#1a1917;font-weight:700;box-shadow:0 1px 0 0 rgba(255,255,255,.22) inset,0 2px 5px rgba(0,0,0,.4);text-shadow:none}
+  .btn.primary:hover{background:#e0b95f;color:#1a1917}
+  .btn:disabled{opacity:.4;cursor:not-allowed}
+  .toast{margin-top:10px;font-size:13px;color:var(--ok);min-height:18px}
+  .hide{display:none}
+  .gapnote{background:var(--card2);border:0.5px solid var(--border2);border-left:2px solid var(--accent);border-radius:var(--rsm);padding:13px 16px;color:var(--muted);font-size:13px;margin-top:14px;line-height:1.6}
+  .gapnote b{color:var(--text)}
+  footer{margin-top:36px;color:var(--dim);font-size:12px;border-top:0.5px solid var(--border2);padding-top:16px}
+
+  /* Slope exec-brief type roles */
+  h1,.ptitle,.ct,.dqh,.intel .ih{font-family:'Plus Jakarta Sans','DM Sans',sans-serif;letter-spacing:-.015em}
+  .eyebrow,.lab,.cil,.h2,.stat .l,.stat span,.slbl,.prio>span,.morebtn{font-family:'DM Sans',sans-serif}
+  .stat b,.stat .v,.eff,.ai,.cov,.mb,.fbtn .n,.prog,.rolltab td.num,.dqh .tag,.pchip small,.mono{font-family:'JetBrains Mono',monospace}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">Owner tool · requirements aggregation</div>
+  <h1>Merge your team’s responses <span class="grad">→ one artifact to analyze</span></h1>
+  <p class="lede">Drop in the response files your team filled out (from the intake tool). This upserts them into one collection — one current row per person (by name + team) — shows who covered what — <b>requirements AND the feature-scope selection (Must / Nice / Not, incl. the 🧠 AI/ML layer)</b> — and exports a single JSON you can hand back for a gap analysis. Everything runs in your browser; nothing is uploaded.</p>
+
+  <div class="hdiv"></div>
+
+  <label class="drop" id="drop">
+    <div class="big">⬇ Drop response files here, or click to choose</div>
+    <div class="sm">Accepts individual <code>requirements-*.json</code> files and/or a collection file. Select several at once.</div>
+    <input type="file" id="file" accept=".json,application/json" multiple />
+  </label>
+  <div class="toast" id="toast"></div>
+
+  <div id="result" class="hide">
+    <div class="summary" id="stats"></div>
+
+    <div class="h2"><span>Respondents</span><span class="ln"></span></div>
+    <div class="people" id="people"></div>
+
+    <div class="h2"><span>Coverage by area</span><span class="ln"></span><span class="muted">green = most covered · red = nobody yet</span></div>
+    <table id="coverage"><thead><tr><th>Area</th><th>Covered by</th><th>Selected (total)</th><th>Team-added items</th></tr></thead><tbody></tbody></table>
+    <div class="gapnote" id="gapnote"></div>
+
+    <div class="h2"><span>Products requested</span><span class="ln"></span></div>
+    <table id="products"><thead><tr><th>Product</th><th>Requested by</th></tr></thead><tbody></tbody></table>
+
+    <div class="h2"><span>Custom topics added by the team</span><span class="ln"></span></div>
+    <div id="customTopics"></div>
+
+    <div class="h2"><span>Feature scope — what the team wants built</span><span class="ln"></span><span class="muted">🧠 = AI/ML · consensus &amp; disputes across everyone who used the Feature selector</span></div>
+    <div id="featScope"></div>
+
+    <div class="h2"><span>Export</span><span class="ln"></span></div>
+    <div class="actions">
+      <button class="btn primary" id="dlMerged">⬇ Download merged collection (JSON)</button>
+      <button class="btn" id="copyBrief">⧉ Copy analysis brief</button>
+      <button class="btn" id="addMore">➕ Add more files</button>
+      <button class="btn" id="reset">↺ Start over</button>
+    </div>
+    <div class="toast" id="toast2"></div>
+  </div>
+
+  <footer>Merge is an <b>upsert by name + team</b> — re-dropping someone’s newer file updates their row (keeps the latest by save time), it never duplicates. Hand the downloaded JSON to your analyst / to Claude to find gaps, contradictions, and unasked questions across the team.</footer>
+</div>
+
+<script>
+const AREA_LABELS = {
+  parties:'Parties & onboarding', data:'Data sources', models:'Models, rating & limits',
+  riskscope:'Risk model — scope & inputs', risk:'Risk appetite & limits', signals:'Signals & monitoring',
+  decisioning:'Decisioning & autonomy', cadence:'Underwriting cadence & re-underwrite', stipulations:'Stipulations & conditions',
+  pricing:'Pricing, fees & rate cards', adverse:'Adverse action', documents:'Documents & verification',
+};
+const PRODUCT_LABELS = {
+  reverse_factoring:'Reverse factoring', receivables_finance:'Receivables finance', po_finance:'PO / pre-shipment finance',
+  inventory_finance:'Inventory / warehouse finance', distributor_finance:'Distributor finance',
+  dynamic_discounting:'Dynamic discounting', guarantees:'Guarantees / LCs', term_wc:'Term / working-capital loans',
+  other_product:'Something else',
+};
+
+// ── Feature-scope catalogue (generated from the intake tool's FS_ALL — do not hand-edit;
+// regenerate from requirements-intake.html if the catalogue changes). id -> {n,cat,eff,ai}. ──
+const FACE_LABELS={"intake":"🚪 Onboarding & intake","data":"🗄️ Data sources & ingestion","scoring":"🧠 Credit scoring & ML models","rating":"📊 Rating, limits & exposure","decisioning":"⚙️ Decisioning & autonomy","signals":"📡 Monitoring & signals","cadence":"🔁 Underwriting cadence","stips":"📋 Stipulations & conditions","pricing":"🏷️ Pricing, fees & rate cards","docs":"📄 Documents & verification","adverse":"⚖️ Adverse action & fair-lending","crime":"🛡️ KYC / AML / fraud","servicing":"💸 Servicing & money movement","products":"📦 Product lifecycles","marketplace":"🤝 Funding & marketplace","governance":"🏛️ Model governance & risk","org":"🏢 Org, groups & multi-entity","analytics":"📈 Analytics & reporting","platform":"⚡ Platform, scale & resilience","access":"🔐 Access, connectivity & experience"};
+const FEAT_META={"self_portal":{"n":"Self-serve portal onboarding wizard","cat":"intake","eff":"L","ai":""},"invite":{"n":"Invite / campaign onboarding","cat":"intake","eff":"M","ai":""},"api_intake":{"n":"API / ERP-fed intake","cat":"intake","eff":"M","ai":""},"kyb":{"n":"KYB & beneficial-ownership intake","cat":"intake","eff":"L","ai":""},"eidv":{"n":"Identity verification (eIDV)","cat":"intake","eff":"M","ai":""},"banklink":{"n":"Bank link (open banking)","cat":"intake","eff":"M","ai":""},"file_first":{"n":"File-first intake","cat":"intake","eff":"M","ai":""},"dual_role":{"n":"Dual-role (one account, both hats)","cat":"intake","eff":"L","ai":""},"product_aware":{"n":"Product-aware intake → initial underwrite","cat":"intake","eff":"M","ai":""},"coldstart":{"n":"Cold-start handling","cat":"intake","eff":"M","ai":""},"comm_bureau":{"n":"Commercial bureau","cat":"data","eff":"L","ai":""},"owner_bureau":{"n":"Consumer / owner bureau (consent-gated)","cat":"data","eff":"M","ai":""},"open_banking":{"n":"Open banking cash flow","cat":"data","eff":"L","ai":""},"erp":{"n":"ERP / accounting connector","cat":"data","eff":"XL","ai":""},"ar_tape":{"n":"AR / AP aging tape","cat":"data","eff":"M","ai":""},"statements":{"n":"Financial statements + table extraction","cat":"data","eff":"L","ai":""},"edgar":{"n":"Public filings (EDGAR)","cat":"data","eff":"L","ai":""},"sanctions":{"n":"Sanctions / PEP lists","cat":"data","eff":"M","ai":""},"media":{"n":"Adverse media / news","cat":"data","eff":"L","ai":"LLM"},"registry":{"n":"Model registry + versioning (MLflow)","cat":"governance","eff":"L","ai":"ML"},"shipping":{"n":"Vessel / BoL tracking","cat":"data","eff":"M","ai":""},"benchmarks":{"n":"Live benchmark rates","cat":"data","eff":"S","ai":""},"pd_model":{"n":"PD model (gradient-boosted)","cat":"scoring","eff":"XL","ai":"ML"},"scorecard":{"n":"Explainable scorecard “why”","cat":"scoring","eff":"L","ai":"ML"},"feature_pipe":{"n":"Feature-engineering pipeline","cat":"scoring","eff":"XL","ai":"ML"},"feature_gov":{"n":"Feature→source governance","cat":"scoring","eff":"L","ai":"ML"},"missing":{"n":"Missing-data resolution","cat":"scoring","eff":"L","ai":"ML"},"counterparty":{"n":"Counterparty / anchor-buyer risk model","cat":"scoring","eff":"L","ai":"ML"},"graph":{"n":"Graph / network features","cat":"scoring","eff":"L","ai":"ML"},"country":{"n":"Country / macro risk model","cat":"scoring","eff":"M","ai":"ML"},"lgd":{"n":"LGD model (loss given default)","cat":"scoring","eff":"L","ai":"ML"},"calibration":{"n":"Segment calibration","cat":"scoring","eff":"L","ai":"ML"},"real_outcome":{"n":"Real-outcome validation","cat":"scoring","eff":"L","ai":"ML"},"divergence":{"n":"Signal-divergence handling","cat":"scoring","eff":"M","ai":"ML"},"scale":{"n":"Horizontal scale","cat":"platform","eff":"L","ai":""},"tiers":{"n":"Limit tiers by rating","cat":"rating","eff":"M","ai":""},"peer_limit":{"n":"Peer-benchmark limit sizing","cat":"rating","eff":"L","ai":"ML"},"fin_limit":{"n":"Financials-driven sizing","cat":"rating","eff":"M","ai":""},"per_product":{"n":"Per-product sub-limits","cat":"rating","eff":"L","ai":""},"concentration":{"n":"Concentration caps","cat":"rating","eff":"M","ai":""},"country_caps":{"n":"Country exposure caps","cat":"rating","eff":"M","ai":""},"group_caps":{"n":"Group / parent caps (atomic)","cat":"rating","eff":"L","ai":""},"covenants":{"n":"Covenants & borrowing base","cat":"rating","eff":"L","ai":""},"contagion":{"n":"Effective-PD contagion adjustment","cat":"rating","eff":"L","ai":"ML"},"cockpit":{"n":"Manual case-file cockpit","cat":"decisioning","eff":"L","ai":""},"stp":{"n":"Straight-through (auto) decisions","cat":"decisioning","eff":"L","ai":""},"four_eyes":{"n":"Four-eyes / maker-checker","cat":"decisioning","eff":"M","ai":""},"policy_rules":{"n":"Configurable policy rules","cat":"decisioning","eff":"M","ai":""},"thresholds":{"n":"Editable decision thresholds","cat":"decisioning","eff":"M","ai":""},"routing":{"n":"Escalation & routing","cat":"decisioning","eff":"L","ai":""},"reasons":{"n":"Explainable decisions + reason codes","cat":"decisioning","eff":"M","ai":""},"ladder":{"n":"STP autonomy ladder","cat":"decisioning","eff":"L","ai":""},"auto_ready":{"n":"Auto-approve readiness scoring","cat":"decisioning","eff":"M","ai":"ML"},"spine":{"n":"Signal spine (ingest + dedup)","cat":"signals","eff":"L","ai":""},"fin_deteriorate":{"n":"Financial deterioration","cat":"signals","eff":"M","ai":""},"score_drop":{"n":"Score / rating drop","cat":"signals","eff":"M","ai":""},"payment":{"n":"Payment behaviour","cat":"signals","eff":"M","ai":""},"cashflow_det":{"n":"Cash-flow deterioration","cat":"signals","eff":"M","ai":""},"dilution":{"n":"Dilution / disputes","cat":"signals","eff":"M","ai":""},"breach":{"n":"Limit / covenant / concentration breach","cat":"signals","eff":"M","ai":""},"sanctions_rescreen":{"n":"Sanctions / PEP re-screening","cat":"signals","eff":"M","ai":""},"aml_typ":{"n":"AML / TBML typologies","cat":"signals","eff":"XL","ai":"ML"},"fraud":{"n":"Fraud / anomaly","cat":"signals","eff":"L","ai":"ML"},"doc_auth":{"n":"Document authenticity","cat":"signals","eff":"L","ai":"ML"},"deadline":{"n":"Examination / SLA deadline","cat":"signals","eff":"M","ai":""},"contagion_sig":{"n":"Network contagion / group stress","cat":"signals","eff":"L","ai":""},"signal_action":{"n":"Signal → action → worklist","cat":"signals","eff":"M","ai":""},"profile":{"n":"Profile-centric (underwrite once)","cat":"cadence","eff":"M","ai":""},"pertx":{"n":"Per-transaction underwriting","cat":"cadence","eff":"M","ai":""},"hybrid":{"n":"Hybrid — limit + per-draw gate","cat":"cadence","eff":"M","ai":""},"pit":{"n":"Point-in-time scoring","cat":"cadence","eff":"M","ai":""},"periodic":{"n":"Periodic review","cat":"cadence","eff":"M","ai":""},"onsignal":{"n":"Re-underwrite on signal","cat":"cadence","eff":"M","ai":""},"material":{"n":"Material-change trigger","cat":"cadence","eff":"M","ai":""},"validity":{"n":"Data-validity window","cat":"cadence","eff":"S","ai":""},"inflight_lock":{"n":"In-flight assessment lock","cat":"cadence","eff":"M","ai":""},"library":{"n":"Governed stipulation library","cat":"stips","eff":"M","ai":""},"gating":{"n":"Gating vs advisory conditions","cat":"stips","eff":"M","ai":""},"autoraise":{"n":"Auto-raise from data gaps","cat":"stips","eff":"M","ai":""},"field_map":{"n":"Field → stipulation auto-mapping","cat":"stips","eff":"L","ai":""},"verify_wf":{"n":"Verification workflow","cat":"stips","eff":"M","ai":""},"waiver":{"n":"Waivers (reason + four-eyes)","cat":"stips","eff":"S","ai":""},"expiry":{"n":"Expiry / re-trigger","cat":"stips","eff":"S","ai":""},"rate_card":{"n":"Rate-card grid","cat":"pricing","eff":"L","ai":""},"risk_priced":{"n":"Risk-based all-in pricing","cat":"pricing","eff":"M","ai":""},"fees":{"n":"Fee schedules","cat":"pricing","eff":"M","ai":""},"quote":{"n":"Pre-funding indicative quote","cat":"pricing","eff":"M","ai":""},"two_lens":{"n":"Two-lens pricing (internal vs customer)","cat":"pricing","eff":"M","ai":""},"gain_share":{"n":"Gain-share / dynamic discounting","cat":"pricing","eff":"L","ai":""},"sim":{"n":"Pricing impact simulator","cat":"pricing","eff":"L","ai":""},"pr_tiers":{"n":"Pricing tiers by rating / risk","cat":"pricing","eff":"M","ai":""},"pr_gov":{"n":"Pricing governance + overrides","cat":"pricing","eff":"M","ai":""},"guarantee_fee":{"n":"Guarantee / off-balance fee pricing","cat":"pricing","eff":"M","ai":""},"upload":{"n":"Upload + classification","cat":"docs","eff":"M","ai":""},"extract":{"n":"OCR / table extraction","cat":"docs","eff":"L","ai":"ML"},"xval":{"n":"Cross-validation","cat":"docs","eff":"M","ai":"ML"},"3way":{"n":"3-way match","cat":"docs","eff":"M","ai":""},"tamper":{"n":"Tamper / forgery detection","cat":"docs","eff":"XL","ai":"ML"},"localizer":{"n":"Forgery localizer","cat":"docs","eff":"XL","ai":"ML"},"shipment":{"n":"Shipment / BoL verification","cat":"docs","eff":"M","ai":""},"corpus":{"n":"Authenticity corpus (dedup)","cat":"docs","eff":"M","ai":""},"viewer":{"n":"Source-file viewer with field references","cat":"docs","eff":"M","ai":""},"triggers":{"n":"Full adverse-action trigger set","cat":"adverse","eff":"M","ai":""},"reason_codes":{"n":"Structured reason codes","cat":"adverse","eff":"M","ai":""},"principal":{"n":"Principal-reasons statement","cat":"adverse","eff":"M","ai":""},"fcra":{"n":"FCRA notice + dispute rights","cat":"adverse","eff":"M","ai":""},"regb":{"n":"ECOA / Reg B compliance","cat":"adverse","eff":"M","ai":""},"tipping":{"n":"Tipping-off suppression","cat":"adverse","eff":"M","ai":""},"allowlist":{"n":"Reason allowlist / no internal leak","cat":"adverse","eff":"M","ai":""},"record":{"n":"Deterministic notice of record","cat":"adverse","eff":"M","ai":""},"delivery":{"n":"Delivery + timing + retention","cat":"adverse","eff":"M","ai":""},"no_silent":{"n":"No silent declines","cat":"adverse","eff":"S","ai":""},"intl":{"n":"Non-US regimes","cat":"adverse","eff":"L","ai":""},"kyb_reg":{"n":"KYB ownership registry","cat":"crime","eff":"L","ai":""},"cdd":{"n":"CDD / beneficial-ownership certification","cat":"crime","eff":"L","ai":""},"dd_tiers":{"n":"DD tiers + perpetual KYC","cat":"crime","eff":"L","ai":""},"sanctions_screen":{"n":"Sanctions / PEP screening","cat":"crime","eff":"L","ai":""},"aml_tm":{"n":"AML transaction monitoring","cat":"crime","eff":"XL","ai":"ML"},"tbml":{"n":"TBML monitoring","cat":"crime","eff":"XL","ai":"ML"},"fraud_feed":{"n":"Fraud-intelligence feed","cat":"crime","eff":"L","ai":"ML"},"typ_lib":{"n":"Typology library + book sweeps","cat":"crime","eff":"L","ai":""},"case_mgmt":{"n":"Case management + SAR handling","cat":"crime","eff":"L","ai":""},"disburse":{"n":"Disbursement rail","cat":"servicing","eff":"L","ai":""},"collect":{"n":"Collections rail + auto-collection","cat":"servicing","eff":"L","ai":""},"ledger":{"n":"Receivable ledger (double-entry)","cat":"servicing","eff":"XL","ai":""},"cash_app":{"n":"Cash application","cat":"servicing","eff":"L","ai":""},"dunning":{"n":"Dunning / arrears workflow","cat":"servicing","eff":"M","ai":""},"chargeback":{"n":"Chargebacks + statement reconciliation","cat":"servicing","eff":"M","ai":""},"fx":{"n":"FX & multi-currency P&L","cat":"servicing","eff":"M","ai":""},"interest":{"n":"Interest / fee accrual schedules","cat":"servicing","eff":"M","ai":""},"remittance":{"n":"Remittance advice + statements","cat":"servicing","eff":"M","ai":""},"gateway":{"n":"Payments gateway (lossless)","cat":"servicing","eff":"L","ai":""},"rf":{"n":"Reverse factoring","cat":"products","eff":"L","ai":""},"receivables":{"n":"Receivables finance","cat":"products","eff":"L","ai":""},"po":{"n":"PO / pre-shipment finance","cat":"products","eff":"L","ai":""},"distributor":{"n":"Distributor finance","cat":"products","eff":"L","ai":""},"inventory":{"n":"Inventory / warehouse finance","cat":"products","eff":"L","ai":""},"discounting":{"n":"Dynamic discounting","cat":"products","eff":"M","ai":""},"guarantee":{"n":"Guarantee issuance (URDG 758)","cat":"products","eff":"L","ai":""},"term":{"n":"Term / working-capital loans","cat":"products","eff":"L","ai":""},"insurance":{"n":"Credit-insurance registry","cat":"products","eff":"L","ai":""},"funder_onboard":{"n":"Funder / investor onboarding","cat":"marketplace","eff":"L","ai":""},"commitments":{"n":"Capital commitments","cat":"marketplace","eff":"M","ai":""},"waterfall":{"n":"Pro-rata participation waterfall","cat":"marketplace","eff":"L","ai":""},"rate_list_bid":{"n":"Rate / seal / list / bid / allocate","cat":"marketplace","eff":"XL","ai":""},"payout":{"n":"Investor payout rail","cat":"marketplace","eff":"L","ai":""},"esign":{"n":"E-sign + four-eyes rating","cat":"marketplace","eff":"L","ai":""},"irr":{"n":"IRR / investor returns","cat":"marketplace","eff":"M","ai":""},"maker_checker":{"n":"Maker-checker promotion","cat":"governance","eff":"M","ai":""},"gates":{"n":"Promotion gates","cat":"governance","eff":"L","ai":"ML"},"bench":{"n":"Model validation bench","cat":"governance","eff":"L","ai":"ML"},"cards":{"n":"Model cards + surrogate rulebook","cat":"governance","eff":"M","ai":"ML"},"rollback":{"n":"Atomic rollback","cat":"governance","eff":"M","ai":""},"prompt_gov":{"n":"Prompt governance","cat":"governance","eff":"L","ai":"LLM"},"backtest":{"n":"Backtest cadence + drift gate","cat":"governance","eff":"M","ai":"ML"},"output_guard":{"n":"LLM output-side guard","cat":"governance","eff":"M","ai":"LLM"},"privacy":{"n":"Privacy posture + PII redaction","cat":"governance","eff":"M","ai":"LLM"},"tree":{"n":"Parent / sub-org tree","cat":"org","eff":"L","ai":""},"inherit":{"n":"Bank-account inheritance + routing","cat":"org","eff":"M","ai":""},"notch":{"n":"Evidence-based parent notching","cat":"org","eff":"M","ai":""},"shock":{"n":"Directional parent↔sub shock","cat":"org","eff":"L","ai":""},"group_cap":{"n":"Group hard cap (atomic reserve)","cat":"org","eff":"M","ai":""},"rollup":{"n":"Group rollup reports","cat":"org","eff":"M","ai":""},"scope_switch":{"n":"Portal group-scope switcher","cat":"org","eff":"M","ai":""},"residency":{"n":"Residency / data-jurisdiction stamps","cat":"org","eff":"M","ai":""},"portfolio":{"n":"Portfolio analytics","cat":"analytics","eff":"L","ai":""},"payments_cockpit":{"n":"Payments cockpit","cat":"analytics","eff":"L","ai":""},"treasury":{"n":"Treasury analytics","cat":"analytics","eff":"L","ai":""},"wc_analytics":{"n":"Buyer working-capital analytics","cat":"analytics","eff":"M","ai":""},"gl_export":{"n":"GL journal export + period close","cat":"analytics","eff":"L","ai":""},"ifrs":{"n":"IFRS / attested exports","cat":"analytics","eff":"M","ai":""},"saved_reports":{"n":"Saved / scheduled reports","cat":"analytics","eff":"M","ai":""},"ops_health":{"n":"Ops dashboards + health glow","cat":"analytics","eff":"M","ai":"LLM"},"drill":{"n":"Click-through drill + since-last-visit","cat":"analytics","eff":"M","ai":""},"pubsub":{"n":"Event-driven pub/sub (Kafka)","cat":"platform","eff":"L","ai":""},"flows":{"n":"Durable orchestrator flows","cat":"platform","eff":"XL","ai":""},"dlt":{"n":"DLT / poison-pill protection","cat":"platform","eff":"M","ai":""},"metrics_cache":{"n":"Metrics aggregation + caching","cat":"platform","eff":"L","ai":""},"idempotency":{"n":"Idempotency + exposure accounting","cat":"platform","eff":"M","ai":""},"observability":{"n":"Observability (Loki / Grafana)","cat":"platform","eff":"M","ai":""},"monitors":{"n":"Log + console monitor agents","cat":"platform","eff":"M","ai":""},"k8s":{"n":"Kubernetes deployment","cat":"platform","eff":"L","ai":""},"resilience":{"n":"HTTP client resilience","cat":"platform","eff":"M","ai":""},"rbac":{"n":"RBAC / permissions on every endpoint","cat":"access","eff":"L","ai":""},"sso":{"n":"Corporate SSO (OIDC)","cat":"access","eff":"M","ai":""},"api_keys":{"n":"API keys + service tokens","cat":"access","eff":"M","ai":""},"webhooks":{"n":"Outbound webhooks (HMAC)","cat":"access","eff":"M","ai":""},"connectors":{"n":"ERP connectors + PEPPOL/UBL","cat":"access","eff":"L","ai":""},"copilot":{"n":"Grounded AI copilot / tx-chat","cat":"access","eff":"L","ai":"LLM"},"workspace":{"n":"Workspace dock + persistent chat","cat":"access","eff":"M","ai":""},"help":{"n":"Help encyclopedia","cat":"access","eff":"L","ai":"LLM"},"i18n":{"n":"i18n + PWA","cat":"access","eff":"M","ai":""},"theming":{"n":"Unified theming","cat":"access","eff":"S","ai":""}};
+const FS_EFF={S:1,M:3,L:8,XL:20}, FS_TOTAL=195, FS_WEIGHT=1140, FS_AI_COUNT=38;
+
+let merged = {};   // rid -> response (latest)
+const $ = s=>document.querySelector(s);
+
+function ridOf(r){ return (r.respondentId || ((r.name||'')+'|'+(r.team||''))).toLowerCase().replace(/\s+/g,'-') || 'anonymous'; }
+function tsOf(r){ return r.savedAt || (r.meta && r.meta.updatedAt) || ''; }
+function normalize(parsed){
+  if(Array.isArray(parsed)) return parsed;
+  if(parsed && Array.isArray(parsed.responses)) return parsed.responses;
+  if(parsed && (parsed.name || parsed.team || parsed.areas)) return [parsed];
+  return [];
+}
+function ingest(list){
+  let added=0, updated=0, skipped=0;
+  list.forEach(r=>{
+    if(!r || (!r.name && !r.team && !r.areas)) { skipped++; return; }
+    const rid=ridOf(r), cur=merged[rid];
+    if(!cur){ merged[rid]=r; added++; }
+    else if((tsOf(r)||'') >= (tsOf(cur)||'')){ merged[rid]=r; updated++; }
+    else skipped++;
+  });
+  return {added, updated, skipped};
+}
+
+async function handleFiles(files){
+  let ok=0, fail=0, a=0,u=0;
+  for(const f of files){
+    try{ const txt=await f.text(); const parsed=JSON.parse(txt); const list=normalize(parsed);
+      if(!list.length){ fail++; continue; } const r=ingest(list); a+=r.added; u+=r.updated; ok++;
+    }catch(e){ fail++; }
+  }
+  $('#toast').innerHTML = `Loaded ${ok} file${ok!==1?'s':''} · ${a} new, ${u} updated${fail?` · <span style="color:var(--danger)">${fail} could not be read</span>`:''}.`;
+  render();
+}
+
+function render(){
+  const people = Object.values(merged);
+  if(!people.length){ $('#result').classList.add('hide'); return; }
+  $('#result').classList.remove('hide');
+
+  // stats
+  const totalSel = people.reduce((n,r)=> n + Object.values(r.areas||{}).reduce((m,st)=> m + ((st.selected||[]).length),0), 0);
+  const totalAdded = people.reduce((n,r)=> n + Object.values(r.areas||{}).reduce((m,st)=> m + ((st.customItems||[]).length),0) + ((r.customAreas||[]).filter(c=>c.title||c.notes).length), 0);
+  $('#stats').innerHTML = [
+    ['b1', people.length, 'Respondents'],
+    ['b2', Object.keys(AREA_LABELS).length, 'Areas'],
+    ['b3', totalSel, 'Features requested'],
+    ['b4', totalAdded, 'Team-added items'],
+  ].map(([_,b,s])=>`<div class="stat"><b>${b}</b><span>${s}</span></div>`).join('');
+
+  // people
+  $('#people').innerHTML = people.map(r=>`<span class="pchip"><b>${esc(r.name||'—')}</b> <small>· ${esc(r.team||'—')}${r.role?' · '+esc(r.role):''}</small></span>`).join('');
+
+  // coverage
+  const N=people.length;
+  const rows = Object.keys(AREA_LABELS).map(aid=>{
+    const covering = people.filter(r=>{ const st=(r.areas||{})[aid]; return st && ((st.selected||[]).length||st.notes||st.priority||(st.customItems||[]).length); });
+    const sel = covering.reduce((m,r)=> m + ((r.areas[aid].selected||[]).length),0);
+    const items = people.flatMap(r=> ((r.areas||{})[aid]||{}).customItems || []);
+    const pct = Math.round(covering.length/N*100);
+    const cls = covering.length===0?'none':covering.length===N?'full':'some';
+    return {aid, cover:covering.length, pct, cls, sel, items};
+  });
+  $('#coverage tbody').innerHTML = rows.map(r=>`<tr>
+      <td><b>${AREA_LABELS[r.aid]}</b></td>
+      <td><span class="cov ${r.cls}">${r.cover}/${N}</span><div class="bar"><i style="width:${r.pct}%"></i></div></td>
+      <td>${r.sel||'<span class="muted">0</span>'}</td>
+      <td class="add">${r.items.length? [...new Set(r.items)].map(x=>`<span class="a">＋ ${esc(x)}</span>`).join('') : '<span class="muted">—</span>'}</td>
+    </tr>`).join('');
+
+  const gaps = rows.filter(r=>r.cover===0).map(r=>AREA_LABELS[r.aid]);
+  $('#gapnote').innerHTML = gaps.length
+    ? `<b>Nobody has covered yet:</b> ${gaps.join(' · ')}. These are the first questions to chase — or hand the merged file over and ask for a full gap read.`
+    : `<b>Every area has at least one response.</b> Hand the merged file over for a deeper gap read — contradictions, thin coverage, and unasked questions.`;
+
+  // products
+  const prodRows = Object.keys(PRODUCT_LABELS).map(pid=>{
+    const who = people.filter(r=> (r.products||[]).includes(pid)).map(r=>r.name||'—');
+    return {pid, who};
+  }).filter(r=>r.who.length);
+  $('#products tbody').innerHTML = prodRows.length ? prodRows.map(r=>`<tr><td><b>${PRODUCT_LABELS[r.pid]}</b></td><td>${r.who.map(esc).join(', ')}</td></tr>`).join('')
+    : `<tr><td colspan="2" class="muted">No products selected in the loaded responses.</td></tr>`;
+
+  // ── feature scope (second tab of the intake) ──
+  renderFeatureScope(people);
+
+  // custom topics (whole-topic additions)
+
+  const topics = people.flatMap(r=> (r.customAreas||[]).filter(c=>c.title||c.notes).map(c=>({who:r.name||'—', c})));
+  $('#customTopics').innerHTML = topics.length
+    ? topics.map(t=>`<div class="pchip" style="display:block;margin-bottom:6px"><b>${esc(t.c.title||'Untitled')}</b>${t.c.priority?` <small style="color:var(--warn)">[${t.c.priority}]</small>`:''} <small>· ${esc(t.who)}</small>${t.c.notes?`<div class="muted" style="margin-top:3px">“${esc(t.c.notes)}”</div>`:''}</div>`).join('')
+    : `<div class="muted">No custom topics added yet.</div>`;
+}
+
+function renderFeatureScope(people){
+  const box=$('#featScope');
+  const withF = people.filter(r=> r.features && r.features.ratings && Object.keys(r.features.ratings).length);
+  if(!withF.length){ box.innerHTML='<div class="muted">No respondent has used the <b>Feature selector</b> tab yet — those responses carry a <code>features.ratings</code> block.</div>'; return; }
+  const N=withF.length;
+  const tally={};
+  withF.forEach(r=>{ Object.entries(r.features.ratings).forEach(([id,v])=>{ if(!FEAT_META[id]) return;
+    const t=tally[id]||(tally[id]={must:0,nice:0,not:0,mustBy:[],notBy:[]});
+    if(v==='MUST'){t.must++;t.mustBy.push(r.name||'—');} else if(v==='NICE'){t.nice++;} else if(v==='NOT'){t.not++;t.notBy.push(r.name||'—');}
+  }); });
+  const ids=Object.keys(tally);
+  const consensus=ids.filter(id=>tally[id].must>=Math.ceil(N/2)).sort((a,b)=>tally[b].must-tally[a].must);
+  const disputes=ids.filter(id=>tally[id].must>0 && tally[id].not>0).sort((a,b)=>(tally[b].must+tally[b].not)-(tally[a].must+tally[a].not));
+  const unionMust=ids.filter(id=>tally[id].must>0);
+  const unionWeight=unionMust.reduce((s,id)=>s+FS_EFF[FEAT_META[id].eff],0);
+  const aiMust=unionMust.filter(id=>FEAT_META[id].ai);
+  const aiMustML=aiMust.filter(id=>FEAT_META[id].ai==='ML').length, aiMustLLM=aiMust.filter(id=>FEAT_META[id].ai==='LLM').length;
+  const nm=(id)=>`${FEAT_META[id].ai?(FEAT_META[id].ai==='LLM'?'✨ ':'🧠 '):''}${esc(FEAT_META[id].n)}`;
+
+  let h='';
+  h+=`<div class="summary">
+    <div class="stat"><b>${withF.length}/${people.length}</b><span>did feature scope</span></div>
+    <div class="stat"><b>${unionMust.length}</b><span>must-have (anyone)</span></div>
+    <div class="stat"><b>${unionWeight}<span style="font-size:11px">/${FS_WEIGHT}</span></b><span>union build-weight</span></div>
+    <div class="stat"><b>${aiMust.length}</b><span>🧠 AI/ML must-have</span></div>
+    <div class="stat"><b style="color:${disputes.length?'var(--warn)':'var(--ok)'}">${disputes.length}</b><span>disputed</span></div>
+  </div>`;
+
+  h+=`<div class="gapnote" style="background:rgba(157,130,212,.08);border-color:rgba(157,130,212,.3)"><b>🧠 Intelligence layer:</b> the team wants <b>${aiMust.length}</b> model-driven capabilities as must-have (${aiMustML} trained-ML + ${aiMustLLM} LLM). Each needs data, governance, validation and drift monitoring — plan them as an ongoing programme, not a one-off build.</div>`;
+
+  if(disputes.length){
+    h+=`<div class="h2" style="margin-top:20px"><span style="color:var(--warn)">⚠ Disputed — resolve these first</span><span class="ln"></span></div>`;
+    h+=`<table><thead><tr><th>Capability</th><th>Face</th><th>Must vs Not</th><th>Who</th></tr></thead><tbody>`;
+    disputes.forEach(id=>{ const t=tally[id];
+      h+=`<tr><td><b>${nm(id)}</b></td><td class="muted">${esc(FACE_LABELS[FEAT_META[id].cat]||'')}</td>
+        <td><span class="cov full">${t.must} must</span> <span class="cov none">${t.not} not</span></td>
+        <td class="muted">must: ${t.mustBy.map(esc).join(', ')} · not: ${t.notBy.map(esc).join(', ')}</td></tr>`; });
+    h+=`</tbody></table>`;
+  }
+
+  h+=`<div class="h2" style="margin-top:20px"><span>Consensus must-haves</span><span class="ln"></span><span class="muted">≥ half the team marked must</span></div>`;
+  if(consensus.length){
+    h+=`<table><thead><tr><th>Capability</th><th>Face</th><th>Effort</th><th>Must / Nice / Not</th></tr></thead><tbody>`;
+    consensus.forEach(id=>{ const t=tally[id];
+      h+=`<tr><td><b>${nm(id)}</b></td><td class="muted">${esc(FACE_LABELS[FEAT_META[id].cat]||'')}</td>
+        <td class="muted">${FEAT_META[id].eff}</td>
+        <td><span class="cov full">${t.must}</span> <span class="cov some">${t.nice}</span> <span class="cov none">${t.not}</span></td></tr>`; });
+    h+=`</tbody></table>`;
+  } else h+=`<div class="muted">No capability yet has half the team marking it must-have.</div>`;
+
+  box.innerHTML=h;
+}
+
+// ── exports ──
+function mergedArray(){ return Object.values(merged).map(r=>({...r, respondentId: ridOf(r)})); }
+function download(){
+  const blob=new Blob([JSON.stringify({kind:'requirements-collection', mergedAt:new Date().toISOString(), count:Object.keys(merged).length, responses:mergedArray()},null,2)],{type:'application/json'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='requirements-collection.json'; a.click(); URL.revokeObjectURL(a.href);
+  $('#toast2').textContent='Downloaded requirements-collection.json — hand this over for the gap analysis.';
+}
+function brief(){
+  const people=Object.values(merged); let s=`REQUIREMENTS — MERGED (${people.length} respondents)\n`;
+  people.forEach(r=>{
+    s+=`\n=== ${r.name||'—'} · ${r.team||'—'}${r.role?' · '+r.role:''} ===\n`;
+    const prods=(r.products||[]).map(p=>PRODUCT_LABELS[p]||p); if(prods.length) s+=`Products: ${prods.join(', ')}\n`;
+    Object.keys(AREA_LABELS).forEach(aid=>{ const st=(r.areas||{})[aid]; if(!st) return;
+      const n=(st.selected||[]).length, ci=st.customItems||[]; if(!n && !st.notes && !st.priority && !ci.length) return;
+      s+=`- ${AREA_LABELS[aid]}${st.priority?' ['+st.priority+']':''}: ${n} selected${ci.length?'; ＋ '+ci.join(' · '):''}${st.notes?`\n    note: ${st.notes}`:''}\n`; });
+    (r.customAreas||[]).forEach(c=>{ if(c.title||c.notes) s+=`- [custom] ${c.title||'Untitled'}${c.priority?' ['+c.priority+']':''}: ${c.notes||''}\n`; });
+    const f=r.freeform||{}; if(f.painPoints) s+=`Pain points: ${f.painPoints}\n`; if(f.mustHaves) s+=`Must-haves: ${f.mustHaves}\n`; if(f.vision) s+=`Vision: ${f.vision}\n`;
+    if(r.features && r.features.ratings){ const rt=r.features.ratings;
+      const must=Object.keys(rt).filter(id=>rt[id]==='MUST'&&FEAT_META[id]).map(id=>FEAT_META[id].n);
+      const nice=Object.keys(rt).filter(id=>rt[id]==='NICE'&&FEAT_META[id]).map(id=>FEAT_META[id].n);
+      if(must.length) s+=`Feature must-haves: ${must.join(', ')}\n`;
+      if(nice.length) s+=`Feature nice-to-haves: ${nice.join(', ')}\n`;
+      if(r.features.notes) s+=`Feature notes: ${r.features.notes}\n`;
+    }
+  });
+  navigator.clipboard.writeText(s).then(()=> $('#toast2').textContent='Analysis brief copied — paste it to your analyst / to Claude.');
+}
+
+const esc=s=>String(s).replace(/[<>&]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+
+// ── wiring ──
+const drop=$('#drop'), fileInput=$('#file');
+drop.addEventListener('click', ()=> fileInput.click());
+fileInput.addEventListener('change', e=>{ handleFiles([...e.target.files]); e.target.value=''; });
+;['dragenter','dragover'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.add('hover'); }));
+;['dragleave','drop'].forEach(ev=> drop.addEventListener(ev, e=>{ e.preventDefault(); drop.classList.remove('hover'); }));
+drop.addEventListener('drop', e=>{ handleFiles([...e.dataTransfer.files]); });
+$('#dlMerged').onclick=download;
+$('#copyBrief').onclick=brief;
+$('#addMore').onclick=()=> fileInput.click();
+$('#reset').onclick=()=>{ merged={}; $('#result').classList.add('hide'); $('#toast').textContent=''; };
+</script>
+</body>
+</html>
