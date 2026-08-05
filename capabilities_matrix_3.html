@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Capabilities Matrix — Current State</title>
+<style>
+  :root{
+    --navy:#1c2b39;
+    --navy2:#25384a;
+    --teal:#2f6f7e;
+    --ink:#22303c;
+    --muted:#5f6f7c;
+    --line:#dfe5ea;
+    --bg:#f4f6f8;
+    --have:#e9f3ee;
+    --have-b:#2e7d55;
+    --build:#fbeaea;
+    --build-b:#b3423a;
+    --partial:#fdf3e3;
+    --partial-b:#b5811f;
+    --feat:#eef4f6;
+    --feat-b:#2f6f7e;
+    --gold:#8a6d3b;
+    --star:#c79320;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;
+    background:var(--bg);color:var(--ink);
+    padding:32px 28px 44px;line-height:1.45;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1300px;margin:0 auto;background:#fff;border:1px solid var(--line);
+    box-shadow:0 1px 3px rgba(20,40,60,.06);position:relative;}
+  .top{display:flex;justify-content:space-between;align-items:flex-start;
+    padding:26px 34px 0;position:relative;}
+  .top .rule{position:absolute;top:22px;left:34px;width:300px;height:3px;background:var(--gold);}
+  .kicker{font-size:11px;letter-spacing:.22em;color:var(--muted);font-weight:600;text-transform:uppercase;}
+  .draft{background:#f7e733;color:#3a3300;font-size:11px;font-weight:700;
+    letter-spacing:.08em;padding:6px 14px;text-transform:uppercase;white-space:nowrap;}
+  h1{font-size:27px;font-weight:600;color:var(--ink);padding:30px 34px 4px;letter-spacing:-.2px;}
+  .sub{padding:0 34px 20px;color:var(--muted);font-size:14px;max-width:960px;}
+
+  .legend{display:flex;gap:24px;flex-wrap:wrap;padding:0 34px 22px;font-size:12.5px;color:var(--muted);align-items:center;}
+  .legend .li{display:flex;align-items:center;gap:8px;}
+  .dot{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.12);}
+  .d-have{background:var(--have);border-color:var(--have-b);}
+  .d-partial{background:var(--partial);border-color:var(--partial-b);}
+  .d-build{background:var(--build);border-color:var(--build-b);}
+  .d-feat{background:var(--feat);border-color:var(--feat-b);}
+  .star{color:var(--star);font-size:12px;}
+
+  .grid{display:grid;grid-template-columns:150px repeat(4,1fr);padding:0 34px 30px;}
+  .cell{border:1px solid var(--line);padding:14px 15px;}
+  .stage{background:var(--navy);color:#fff;text-align:center;font-weight:700;
+    font-size:13px;letter-spacing:.14em;text-transform:uppercase;padding:13px 6px;
+    border:1px solid var(--navy);}
+  .stage .mat{display:block;font-size:10px;letter-spacing:.1em;font-weight:600;
+    margin-top:5px;opacity:.85;text-transform:uppercase;}
+  .rowlab{background:var(--navy2);color:#fff;font-weight:700;font-size:12px;
+    letter-spacing:.06em;text-transform:uppercase;display:flex;align-items:center;
+    border:1px solid var(--navy2);}
+  .corner{background:#fff;border:none;}
+  .rowlab.have{background:var(--have-b);border-color:var(--have-b);}
+  .rowlab.build{background:var(--build-b);border-color:var(--build-b);}
+  .rowlab.feat{background:var(--feat-b);border-color:var(--feat-b);}
+  ul{list-style:none;}
+  li{position:relative;padding-left:16px;font-size:12.5px;margin-bottom:8px;color:var(--ink);}
+  li:last-child{margin-bottom:0;}
+  li::before{content:"";position:absolute;left:0;top:6px;width:6px;height:6px;border-radius:50%;background:var(--teal);}
+  li.build-i::before{background:var(--build-b);}
+  li.feat-i::before{background:var(--feat-b);}
+  li.pri{font-weight:600;}
+  li.pri::before{content:"\2605";background:none;width:auto;height:auto;top:-1px;left:-1px;
+    color:var(--star);font-size:12px;}
+  li .tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.04em;
+    padding:1px 6px;border-radius:3px;margin-left:4px;vertical-align:1px;}
+  .tag.draft-t{background:#eef1f4;color:#7a8894;border:1px solid #dbe1e7;}
+  .have-cell{background:var(--have);}
+  .partial-cell{background:var(--partial);}
+  .build-cell{background:var(--build);}
+  .feat-cell{background:var(--feat);}
+  .none{color:var(--muted);font-style:italic;font-size:12.5px;padding-left:0;}
+  .none::before{display:none;}
+
+  .foot{display:flex;justify-content:space-between;align-items:center;
+    padding:16px 34px;border-top:1px solid var(--line);background:#fbfcfd;
+    font-size:11.5px;color:var(--muted);}
+  .foot b{color:var(--ink);font-weight:600;}
+  .brand{font-family:Georgia,'Times New Roman',serif;font-size:16px;color:var(--navy);letter-spacing:.3px;}
+  @media(max-width:860px){
+    .grid{grid-template-columns:1fr;}
+    .corner{display:none;}
+    .stage{margin-top:18px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="rule"></div>
+    <div class="kicker">JPMC Internal Use Only</div>
+    <div class="draft">Draft / Illustrative</div>
+  </div>
+
+  <h1>Capabilities Matrix — Current State &amp; Target Features</h1>
+  <p class="sub">High-level view of what we have today, what we need to build, and the highlight features we would stand up
+  across the lending value chain. <span class="star">&#9733;</span> marks priority capabilities.
+  Italic <em>draft</em> items are reasoned placeholders for review.</p>
+
+  <div class="legend">
+    <div class="li"><span class="dot d-have"></span> Have today</div>
+    <div class="li"><span class="dot d-partial"></span> Partial — needs extension</div>
+    <div class="li"><span class="dot d-build"></span> Build — gap to close</div>
+    <div class="li"><span class="dot d-feat"></span> Highlight features</div>
+    <div class="li"><span class="star">&#9733;</span> Priority</div>
+  </div>
+
+  <div class="grid">
+    <!-- header row -->
+    <div class="cell corner"></div>
+    <div class="stage">Origination<span class="mat">Mostly to build</span></div>
+    <div class="stage">Onboarding<span class="mat">Established</span></div>
+    <div class="stage">Underwriting<span class="mat">Manual / vendor</span></div>
+    <div class="stage">Servicing<span class="mat">Largely in place</span></div>
+
+    <!-- HAVE row -->
+    <div class="cell rowlab have">What we<br>have</div>
+    <div class="cell partial-cell">
+      <ul>
+        <li>Application intake channels in place <span class="tag draft-t">draft</span></li>
+        <li>APAR / TPS may support parts of origination <span class="tag draft-t">draft</span></li>
+      </ul>
+    </div>
+    <div class="cell have-cell">
+      <ul>
+        <li>SMBDO onboarding platform exists; configurable for onboarding / KYC workflows</li>
+        <li>APAR / TPS potentially support onboarding &mdash; but still reliant on a sales team using internal tools</li>
+      </ul>
+    </div>
+    <div class="cell partial-cell">
+      <ul>
+        <li>Open Banking connection in place</li>
+        <li>No in-house underwriting decisioning today &mdash; decommissioned</li>
+        <li>Handled via vendor integration (e.g. Mondu) or manually by teams offline</li>
+      </ul>
+    </div>
+    <div class="cell have-cell">
+      <ul>
+        <li>Active cash-flow servicing &mdash; handling payments &amp; collections</li>
+        <li>Full servicing / LMS platform in place</li>
+        <li>APAR / TPS support LMS (loan management)</li>
+      </ul>
+    </div>
+
+    <!-- BUILD row -->
+    <div class="cell rowlab build">What we<br>must build</div>
+    <div class="cell build-cell">
+      <ul>
+        <li class="build-i">End-to-end origination workflow <span class="tag draft-t">draft</span></li>
+        <li class="build-i">Pricing &amp; deal structuring tools <span class="tag draft-t">draft</span></li>
+        <li class="build-i">Pipeline / lead management <span class="tag draft-t">draft</span></li>
+      </ul>
+    </div>
+    <div class="cell build-cell">
+      <ul>
+        <li class="build-i">Automated document collection <span class="tag draft-t">draft</span></li>
+        <li class="build-i">Seamless handoff to underwriting <span class="tag draft-t">draft</span></li>
+        <li class="build-i">Full KYC / AML orchestration <span class="tag draft-t">draft</span></li>
+      </ul>
+    </div>
+    <div class="cell build-cell">
+      <ul>
+        <li class="build-i">Built-in underwriting engine (rules, scoring, decisioning)</li>
+        <li class="build-i">Mature OCR / document-extraction engine</li>
+      </ul>
+    </div>
+    <div class="cell build-cell">
+      <ul>
+        <li class="build-i">Cash-flow servicing with daily active settlement</li>
+        <li class="build-i">Customer self-service &amp; reporting <span class="tag draft-t">draft</span></li>
+      </ul>
+    </div>
+
+    <!-- HIGHLIGHT FEATURES row -->
+    <div class="cell rowlab feat">Highlight<br>features</div>
+    <!-- Origination features -->
+    <div class="cell feat-cell">
+      <ul>
+        <li class="pri">Omni-channel digital intake (web, partner/API)</li>
+        <li class="pri">Pricing &amp; deal-structuring engine</li>
+        <li class="feat-i">Product catalog + real-time pre-qualification</li>
+        <li class="feat-i">Lead / pipeline management with CRM integration</li>
+        <li class="feat-i">Pre-fill from customer data &amp; bureau pulls</li>
+        <li class="feat-i">Real-time application status tracking</li>
+      </ul>
+    </div>
+    <!-- Onboarding features -->
+    <div class="cell feat-cell">
+      <ul>
+        <li class="pri">Configurable KYC / KYB workflows (SMBDO)</li>
+        <li class="pri">Beneficial ownership (UBO) resolution &amp; entity verification</li>
+        <li class="feat-i">Automated document collection + e-signature</li>
+        <li class="feat-i">Identity verification + sanctions / AML screening</li>
+        <li class="feat-i">Straight-through handoff into underwriting</li>
+      </ul>
+    </div>
+    <!-- Underwriting features -->
+    <div class="cell feat-cell">
+      <ul>
+        <li class="pri">Automated decisioning engine (rules + risk scoring)</li>
+        <li class="pri">Intelligent OCR / extraction (financials, tax returns, bank stmts)</li>
+        <li class="feat-i">Credit models: bureau + cash-flow analysis</li>
+        <li class="feat-i">Financial spreading &amp; ratio analysis</li>
+        <li class="feat-i">Policy, exception &amp; referral-queue management</li>
+        <li class="feat-i">Decision audit trail &amp; explainability</li>
+      </ul>
+    </div>
+    <!-- Servicing features -->
+    <div class="cell feat-cell">
+      <ul>
+        <li class="pri">Loan Management System — boarding, billing, amortization</li>
+        <li class="pri">Customer self-service portal</li>
+        <li class="feat-i">Active cash-flow servicing &mdash; payments &amp; collections (ACH, auto-pay, delinquency)</li>
+        <li class="feat-i">Statements, notices &amp; document management</li>
+        <li class="feat-i">Portfolio monitoring &amp; covenant tracking</li>
+        <li class="feat-i">Reporting &amp; analytics dashboards</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="brand">J.P.Morgan</span>
+    <span><b>Current State Assessment</b> &nbsp;·&nbsp; Draft for leadership review &nbsp;·&nbsp; <span class="star">&#9733;</span> priority &nbsp;·&nbsp; italic <em>draft</em> = reasoned placeholder</span>
+  </div>
+</div>
+</body>
+</html>
